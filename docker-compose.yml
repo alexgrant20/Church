@@ -1,0 +1,42 @@
+# Host ports are intentionally non-standard (55432/55433, not 5432/5433):
+# on at least one dev machine a native Postgres install and an unrelated
+# process already held those default ports, so app traffic silently went to
+# the wrong service instead of these containers. Don't "fix" these back to
+# 5432/5433 without checking `docker compose ps` + a host port scan first.
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: churchapp
+      POSTGRES_PASSWORD: churchapp
+      POSTGRES_DB: churchapp_dev
+    ports:
+      - '55432:5432'
+    volumes:
+      - churchapp_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U churchapp -d churchapp_dev']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-test:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: churchapp
+      POSTGRES_PASSWORD: churchapp
+      POSTGRES_DB: churchapp_test
+    ports:
+      - '55433:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U churchapp -d churchapp_test']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  churchapp_pgdata:

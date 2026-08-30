@@ -19,7 +19,8 @@ else in the codebase.
 
 Expected scale: 20,000+ registered users, not concurrent. This does not
 require a distributed-systems architecture; a single well-organized Postgres
-+ single app-server deployment is sufficient.
+
+- single app-server deployment is sufficient.
 
 **Naming convention: all folders, table names, code identifiers, and role
 names are strictly English**, even though the business domain and original
@@ -30,36 +31,36 @@ is the single source of truth for translating the original domain terms
 into the English identifiers used everywhere else in this document and in
 code:
 
-| Indonesian term | English identifier |
-|---|---|
-| Cabang / Gereja Cabang | `branch` |
-| Jemaat / Anggota | `member` |
-| Pendeta | `pastor` |
-| Penugasan | `assignment` |
-| Kelompok | `group` |
-| Admin Kelompok | `group_admin` |
-| Admin Cabang | `branch_admin` |
-| Ibadah | `worship` |
-| Warta | `bulletin` |
-| Ringkasan | `summary` |
-| Persekutuan | `fellowship` |
-| Pembagian Kelompok | group assignment |
-| Service Doa | prayer service |
-| Service Ibadah Kematian | funeral service |
-| Katekisasi | catechism |
-| Pranikah | premarital (counseling) |
-| Retret | retreat |
-| Pelayanan | `ministry` |
-| Paduan Suara | choir |
-| Kolektan | offering collector |
-| Keuangan | `finance` |
-| Persembahan | offering |
-| Perpuluhan | tithe |
-| Donasi | donation |
-| Gaji | payroll |
-| Perpustakaan | `library` |
-| Jadwal | `schedule` |
-| Superadmin | `superadmin` |
+| Indonesian term         | English identifier      |
+| ----------------------- | ----------------------- |
+| Cabang / Gereja Cabang  | `branch`                |
+| Jemaat / Anggota        | `member`                |
+| Pendeta                 | `pastor`                |
+| Penugasan               | `assignment`            |
+| Kelompok                | `group`                 |
+| Admin Kelompok          | `group_admin`           |
+| Admin Cabang            | `branch_admin`          |
+| Ibadah                  | `worship`               |
+| Warta                   | `bulletin`              |
+| Ringkasan               | `summary`               |
+| Persekutuan             | `fellowship`            |
+| Pembagian Kelompok      | group assignment        |
+| Service Doa             | prayer service          |
+| Service Ibadah Kematian | funeral service         |
+| Katekisasi              | catechism               |
+| Pranikah                | premarital (counseling) |
+| Retret                  | retreat                 |
+| Pelayanan               | `ministry`              |
+| Paduan Suara            | choir                   |
+| Kolektan                | offering collector      |
+| Keuangan                | `finance`               |
+| Persembahan             | offering                |
+| Perpuluhan              | tithe                   |
+| Donasi                  | donation                |
+| Gaji                    | payroll                 |
+| Perpustakaan            | `library`               |
+| Jadwal                  | `schedule`              |
+| Superadmin              | `superadmin`            |
 
 ## Project-wide architectural decisions
 
@@ -92,17 +93,17 @@ API mechanical rather than a rewrite.
 **Module build order** (for reference; only Foundation is designed in this
 document):
 
-| # | Module | Scope | Depends on |
-|---|--------|-------|-------------|
-| 1 | Foundation | Auth/session, roles, branch CRUD, pastor assignment, audit log, branch-scoping | — |
-| 2 | Membership | Member registration, family data, birth/death records | Foundation |
-| 3 | Worship | Bulk check-in, bulletin, summary, group assignment, fellowship | Foundation, Membership |
-| 4 | Special Services | Prayer service, funeral service | Foundation, Membership |
-| 5 | Events | Registration flows (concert, catechism, premarital counseling, retreat), incl. no-registration events | Foundation, Membership |
-| 6 | Ministry | Choir/usher/offering-collector scheduling | Foundation, Membership |
-| 7 | Finance | Offerings, tithe, donations, financial mgmt, payroll | Foundation, Membership |
-| 8 | Library | Buy/sell, borrow, donate | Foundation, Membership |
-| 9 | Schedule & Integrations | WA/Email/Message, IG — likely folds into notifications used by Worship/Events rather than standing alone | Foundation |
+| #   | Module                  | Scope                                                                                                    | Depends on             |
+| --- | ----------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------- |
+| 1   | Foundation              | Auth/session, roles, branch CRUD, pastor assignment, audit log, branch-scoping                           | —                      |
+| 2   | Membership              | Member registration, family data, birth/death records                                                    | Foundation             |
+| 3   | Worship                 | Bulk check-in, bulletin, summary, group assignment, fellowship                                           | Foundation, Membership |
+| 4   | Special Services        | Prayer service, funeral service                                                                          | Foundation, Membership |
+| 5   | Events                  | Registration flows (concert, catechism, premarital counseling, retreat), incl. no-registration events    | Foundation, Membership |
+| 6   | Ministry                | Choir/usher/offering-collector scheduling                                                                | Foundation, Membership |
+| 7   | Finance                 | Offerings, tithe, donations, financial mgmt, payroll                                                     | Foundation, Membership |
+| 8   | Library                 | Buy/sell, borrow, donate                                                                                 | Foundation, Membership |
+| 9   | Schedule & Integrations | WA/Email/Message, IG — likely folds into notifications used by Worship/Events rather than standing alone | Foundation             |
 
 ## Foundation: project structure
 
@@ -147,8 +148,11 @@ and — importantly — instantly revocable, which matters for killing a
 compromised branch-admin account immediately rather than waiting out a
 token's expiry.
 
-Password hashing uses `oslo` (scrypt-based, no native bindings), so it
-doesn't constrain the Node-vs-Bun runtime choice for deployment.
+Password hashing uses Node's built-in `node:crypto` (scrypt, NFKC-normalized,
+timing-safe compare) rather than the `oslo` package originally proposed here
+— `oslo` is now deprecated with no maintained scrypt-password helper.
+`node:crypto` keeps the same scrypt-based, zero-native-binding, Bun-safe
+properties without depending on an abandoned package.
 
 ## Roles & branch-scoping
 
@@ -204,10 +208,11 @@ the two queries this table actually needs to serve: "history of this
 record" and "what did this admin do."
 
 Mechanics:
+
 - Request context (`userId`, role assignments, `ip`) is carried through the
   call stack via `AsyncLocalStorage`, set once in `hooks.server.ts`.
 - Mutating service functions call `recordAudit(tx, action, entityType,
-  entityId, diff, metadata)` explicitly — not via an implicit
+entityId, diff, metadata)` explicitly — not via an implicit
   wrapper/interceptor, since Drizzle has no query-hook mechanism to
   intercept writes transparently, and explicit calls are easier to verify
   in code review.
@@ -219,14 +224,14 @@ Mechanics:
 
 ## Schema summary
 
-| Table | Purpose |
-|---|---|
-| `users` | identity: email/phone, password hash, name, status |
-| `sessions` | opaque token, user_id, expires_at |
-| `branches` | branch CRUD |
-| `groups` | stub, extended by the Worship module |
-| `role_assignments` | role + scope (branch/group); supports multi-role and pastor assignment |
-| `audit_logs` | actor_user_id, action, entity_type/id, branch_id, diff (jsonb), metadata (jsonb) |
+| Table              | Purpose                                                                          |
+| ------------------ | -------------------------------------------------------------------------------- |
+| `users`            | identity: email/phone, password hash, name, status                               |
+| `sessions`         | opaque token, user_id, expires_at                                                |
+| `branches`         | branch CRUD                                                                      |
+| `groups`           | stub, extended by the Worship module                                             |
+| `role_assignments` | role + scope (branch/group); supports multi-role and pastor assignment           |
+| `audit_logs`       | actor_user_id, action, entity_type/id, branch_id, diff (jsonb), metadata (jsonb) |
 
 ## Code conventions
 
@@ -249,6 +254,7 @@ Mechanics:
 ## Testing strategy
 
 Following the same layering:
+
 - **Unit tests** (Vitest) on service-layer functions — most business logic
   and edge cases live here, and this is where coverage matters most.
 - **Integration tests** (Vitest) against a real test Postgres
