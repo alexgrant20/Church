@@ -5,10 +5,8 @@
 	"login_password_label": "Password",
 	"login_submit": "Sign in",
 	"error_invalid_credentials": "Invalid email, phone, or password.",
-	"app_name": "ChurchApp",
 	"nav_dashboard": "Dashboard",
 	"nav_branches": "Branches",
-	"nav_profile": "Profile",
 	"dashboard_title": "Dashboard",
 	"branches_title": "Branches",
 	"branches_empty": "No branches yet.",
@@ -23,5 +21,6 @@
 	"account_label": "Account",
 	"branches_col_code": "Code",
 	"branches_col_name": "Name",
-	"branches_count": "Branches: {count}"
+	"branches_count": "Branches: {count}",
+	"nav_me": "Me"
 }

@@ -1,52 +1,44 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages';
+	import BrandMark from '$lib/components/BrandMark.svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
+	import { Label } from '$lib/components/ui/label/index.js';
 	import type { ActionData } from './$types';
 
 	let { form }: { form: ActionData } = $props();
 </script>
 
-<div class="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-	<form
-		method="POST"
-		class="w-full max-w-sm space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
+<div class="density-member min-h-dvh bg-surface text-text min-[1100px]:flex">
+	<div
+		class="flex justify-center bg-logo-field px-4 py-10 min-[1100px]:w-1/2 min-[1100px]:items-center"
 	>
-		<h1 class="text-xl font-semibold text-slate-900">{m.login_title()}</h1>
+		<BrandMark height={32} />
+	</div>
 
-		{#if form?.error}
-			<p class="text-sm text-red-600">{m[form.error]()}</p>
-		{/if}
+	<main class="mx-auto w-full max-w-md px-4 py-10 min-[1100px]:flex min-[1100px]:items-center">
+		<form method="POST" class="flex w-full flex-col gap-5">
+			<h1 class="text-2xl font-semibold">{m.login_title()}</h1>
 
-		<div class="space-y-1">
-			<label for="identifier" class="text-sm font-medium text-slate-700">
-				{m.login_identifier_label()}
-			</label>
-			<input
-				id="identifier"
-				name="identifier"
-				type="text"
-				required
-				class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-			/>
-		</div>
+			{#if form?.error}
+				<p role="alert" class="text-negative">{m[form.error]()}</p>
+			{/if}
 
-		<div class="space-y-1">
-			<label for="password" class="text-sm font-medium text-slate-700">
-				{m.login_password_label()}
-			</label>
-			<input
-				id="password"
-				name="password"
-				type="password"
-				required
-				class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-			/>
-		</div>
+			<div class="flex flex-col gap-2">
+				<Label for="identifier" class="text-[length:inherit] font-semibold">
+					{m.login_identifier_label()}
+				</Label>
+				<Input id="identifier" name="identifier" type="text" required class="h-12" />
+			</div>
 
-		<button
-			type="submit"
-			class="w-full rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white"
-		>
-			{m.login_submit()}
-		</button>
-	</form>
+			<div class="flex flex-col gap-2">
+				<Label for="password" class="text-[length:inherit] font-semibold">
+					{m.login_password_label()}
+				</Label>
+				<Input id="password" name="password" type="password" required class="h-12" />
+			</div>
+
+			<Button type="submit" size="member" class="h-14 w-full">{m.login_submit()}</Button>
+		</form>
+	</main>
 </div>

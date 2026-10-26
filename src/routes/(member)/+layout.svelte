@@ -1,22 +1,26 @@
 <script lang="ts">
-	import { m } from '$lib/paraglide/messages';
-	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import BrandMark from '$lib/components/BrandMark.svelte';
+	import MemberBottomBar, { destinations } from '$lib/components/MemberBottomBar.svelte';
 
 	let { children } = $props();
+
+	const title = $derived(destinations.find((d) => page.url.pathname.startsWith(d.href))?.label());
 </script>
 
-<div class="min-h-screen bg-slate-50 pb-16">
-	<header class="border-b border-slate-200 bg-white p-4">
-		<p class="text-sm font-semibold text-slate-900">{m.app_name()}</p>
-	</header>
+<div
+	class="density-member min-h-dvh bg-ground pb-[calc(4rem+env(safe-area-inset-bottom))] text-text"
+>
+	<div class="mx-auto max-w-160">
+		<header class="flex h-12 items-center gap-3 px-4">
+			<BrandMark height={24} />
+			<span class="truncate font-semibold">{title}</span>
+		</header>
 
-	<main class="p-4">
-		{@render children()}
-	</main>
+		<main class="px-4 py-4">
+			{@render children()}
+		</main>
+	</div>
 
-	<nav
-		class="fixed inset-x-0 bottom-0 flex justify-around border-t border-slate-200 bg-white py-2 text-sm"
-	>
-		<a href={resolve('/profile')} class="px-3 py-1 text-slate-700">{m.nav_profile()}</a>
-	</nav>
+	<MemberBottomBar />
 </div>

@@ -3,12 +3,10 @@
 	"error_invalid_credentials": "Email, telepon, atau kata sandi tidak valid.",
 	"branches_title": "Cabang",
 	"dashboard_title": "Dasbor",
-	"app_name": "ChurchApp",
 	"login_submit": "Masuk",
 	"branches_empty": "Belum ada cabang.",
 	"nav_dashboard": "Dasbor",
 	"nav_branches": "Cabang",
-	"nav_profile": "Profil",
 	"login_identifier_label": "Email atau telepon",
 	"profile_title": "Profil",
 	"login_password_label": "Kata sandi",
@@ -23,5 +21,6 @@
 	"account_label": "Akun",
 	"branches_col_code": "Kode",
 	"branches_col_name": "Nama",
-	"branches_count": "Cabang: {count}"
+	"branches_count": "Cabang: {count}",
+	"nav_me": "Saya"
 }
