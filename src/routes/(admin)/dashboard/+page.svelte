@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages';
+	import PageTitle from '$lib/components/PageTitle.svelte';
 </script>
 
-<h1 class="text-2xl font-semibold text-slate-900">{m.dashboard_title()}</h1>
+<PageTitle title={m.dashboard_title()} />

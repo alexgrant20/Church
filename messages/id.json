@@ -17,5 +17,11 @@
 	"theme_label": "Tema",
 	"theme_light": "Terang",
 	"theme_dark": "Gelap",
-	"theme_system": "Sistem"
+	"theme_system": "Sistem",
+	"nav_main": "Utama",
+	"nav_menu": "Menu",
+	"account_label": "Akun",
+	"branches_col_code": "Kode",
+	"branches_col_name": "Nama",
+	"branches_count": "Cabang: {count}"
 }

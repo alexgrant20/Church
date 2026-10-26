@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { height }: { height: 24 | 32 } = $props();
+	let { height, class: className = '' }: { height: 24 | 32; class?: string } = $props();
 
 	// Logo 32 sits in the 56px desktop tile; logo 24 in the 40px phone tile.
 	const tile = $derived(height === 32 ? 3.5 : 2.5);
@@ -7,7 +7,7 @@
 </script>
 
 <span
-	class="inline-flex shrink-0 items-center rounded-lg bg-logo-field"
+	class="inline-flex shrink-0 items-center rounded-lg bg-logo-field {className}"
 	style:height="{tile}rem"
 	style:padding-inline="{inset}rem"
 >

@@ -17,5 +17,11 @@
 	"theme_label": "主題",
 	"theme_light": "淺色",
 	"theme_dark": "深色",
-	"theme_system": "跟隨系統"
+	"theme_system": "跟隨系統",
+	"nav_main": "主導覽",
+	"nav_menu": "選單",
+	"account_label": "帳戶",
+	"branches_col_code": "代碼",
+	"branches_col_name": "名稱",
+	"branches_count": "分支：{count}"
 }

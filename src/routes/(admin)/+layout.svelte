@@ -1,30 +1,56 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import CircleUserIcon from '@lucide/svelte/icons/circle-user';
 	import { m } from '$lib/paraglide/messages';
-	import { resolve } from '$app/paths';
+	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import AccountPanel from '$lib/components/AccountPanel.svelte';
+	import BrandMark from '$lib/components/BrandMark.svelte';
+	import StaffMenuSheet from '$lib/components/StaffMenuSheet.svelte';
+	import StaffSidebar, { navItems } from '$lib/components/StaffSidebar.svelte';
 
-	let { children } = $props();
+	let { data, children } = $props();
+
+	const title = $derived(navItems.find((i) => page.url.pathname.startsWith(i.href))?.label());
 </script>
 
-<div class="flex min-h-screen bg-slate-50">
-	<aside class="w-56 shrink-0 border-r border-slate-200 bg-white p-4">
-		<p class="mb-6 text-sm font-semibold text-slate-900">{m.app_name()}</p>
-		<nav class="space-y-1 text-sm">
-			<a
-				href={resolve('/dashboard')}
-				class="block rounded-md px-3 py-2 text-slate-700 hover:bg-slate-100"
-			>
-				{m.nav_dashboard()}
-			</a>
-			<a
-				href={resolve('/branches')}
-				class="block rounded-md px-3 py-2 text-slate-700 hover:bg-slate-100"
-			>
-				{m.nav_branches()}
-			</a>
-		</nav>
-	</aside>
+<div class="density-staff min-h-dvh bg-ground text-text min-[1100px]:flex">
+	<StaffSidebar />
 
-	<main class="flex-1 p-6">
-		{@render children()}
-	</main>
+	<div class="flex min-w-0 flex-1 flex-col">
+		<header
+			class="flex h-12 shrink-0 items-center gap-3 px-4 min-[1100px]:justify-end min-[1100px]:px-2"
+		>
+			<div class="flex min-w-0 items-center gap-3 min-[1100px]:hidden">
+				<BrandMark height={24} />
+				<span class="truncate font-semibold">{title}</span>
+			</div>
+			<div class="ml-auto min-[1100px]:hidden">
+				<StaffMenuSheet fullName={data.person.fullName} theme={data.theme} />
+			</div>
+			<div class="hidden min-[1100px]:block">
+				<Dialog.Root>
+					<Dialog.Trigger>
+						{#snippet child({ props })}
+							<Button {...props} variant="ghost" size="icon-staff" aria-label={m.account_label()}>
+								<CircleUserIcon />
+							</Button>
+						{/snippet}
+					</Dialog.Trigger>
+					<Dialog.Content>
+						<Dialog.Header>
+							<Dialog.Title>{m.account_label()}</Dialog.Title>
+						</Dialog.Header>
+						<AccountPanel fullName={data.person.fullName} theme={data.theme} />
+					</Dialog.Content>
+				</Dialog.Root>
+			</div>
+		</header>
+
+		<main
+			class="min-w-0 flex-1 bg-surface px-4 py-4 min-[1100px]:mr-2 min-[1100px]:mb-2 min-[1100px]:rounded-2xl min-[1100px]:border min-[1100px]:border-border min-[1100px]:p-6"
+		>
+			{@render children()}
+		</main>
+	</div>
 </div>
