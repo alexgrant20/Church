@@ -2,6 +2,7 @@ import { db } from '$lib/server/db/client';
 import { createHash } from 'node:crypto';
 import {
 	accounts,
+	attachments,
 	branches,
 	cities,
 	countries,
@@ -15,6 +16,7 @@ import { hashPassword } from '$lib/server/modules/auth/password';
 export type NewBranch = typeof branches.$inferInsert;
 export type NewAccount = typeof accounts.$inferInsert;
 export type NewRegistrationLink = typeof registrationLinks.$inferInsert;
+export type NewAttachment = typeof attachments.$inferInsert;
 export type NewPerson = typeof people.$inferInsert;
 
 let counter = 0;
@@ -106,4 +108,23 @@ export async function makeRegistrationLink(overrides: Partial<NewRegistrationLin
 		})
 		.returning();
 	return link;
+}
+
+export async function makeAttachment(overrides: Partial<NewAttachment> = {}) {
+	const n = ++counter;
+	const [attachment] = await db
+		.insert(attachments)
+		.values({
+			ownerType: 'person',
+			ownerId: overrides.ownerId ?? (await makePerson()).id,
+			purpose: 'profile_photo',
+			storageKey: `test/${n}`,
+			contentType: 'image/jpeg',
+			sizeBytes: 1,
+			sha256: createHash('sha256').update(String(n)).digest('hex'),
+			uploadedByPersonId: overrides.uploadedByPersonId ?? (await makePerson()).id,
+			...overrides
+		})
+		.returning();
+	return attachment;
 }

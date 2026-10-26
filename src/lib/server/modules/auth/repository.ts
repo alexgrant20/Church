@@ -22,7 +22,10 @@ export async function findAccountByIdentifier(identifier: string) {
 }
 
 export async function findRoleAssignmentsByPersonId(personId: string) {
-	return db.select().from(roleAssignments).where(eq(roleAssignments.personId, personId));
+	return db
+		.select()
+		.from(roleAssignments)
+		.where(and(eq(roleAssignments.personId, personId), isNull(roleAssignments.deletedAt)));
 }
 
 export async function insertSession(

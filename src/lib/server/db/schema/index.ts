@@ -3,4 +3,6 @@ export * from './auth';
 export * from './branch';
 export * from './people';
 export * from './roles';
+export * from './system';
+export * from './attachment';
 export * from './audit';

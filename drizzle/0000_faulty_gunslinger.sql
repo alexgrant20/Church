@@ -4,6 +4,8 @@ CREATE TYPE "public"."otp_purpose" AS ENUM('login', 'activation', 'password_rese
 CREATE TYPE "public"."relationship_kind" AS ENUM('parent', 'spouse');--> statement-breakpoint
 CREATE TYPE "public"."sex" AS ENUM('male', 'female');--> statement-breakpoint
 CREATE TYPE "public"."role" AS ENUM('superadmin', 'pastor', 'branch_admin', 'group_admin');--> statement-breakpoint
+CREATE TYPE "public"."attachment_owner" AS ENUM('person', 'branch');--> statement-breakpoint
+CREATE TYPE "public"."attachment_purpose" AS ENUM('profile_photo', 'church_photo');--> statement-breakpoint
 CREATE TABLE "cities" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
 	"region_id" uuid NOT NULL,
@@ -155,12 +157,52 @@ CREATE TABLE "person_relationships" (
 );
 --> statement-breakpoint
 CREATE TABLE "role_assignments" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
 	"person_id" uuid NOT NULL,
 	"role" "role" NOT NULL,
 	"branch_id" uuid,
 	"group_id" uuid,
-	"assigned_at" timestamp with time zone DEFAULT now() NOT NULL
+	"assigned_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone,
+	CONSTRAINT "role_assignments_scope" CHECK (("role_assignments"."role" = 'superadmin' and "role_assignments"."branch_id" is null and "role_assignments"."group_id" is null)
+				or ("role_assignments"."role" in ('pastor', 'branch_admin') and "role_assignments"."branch_id" is not null and "role_assignments"."group_id" is null)
+				or ("role_assignments"."role" = 'group_admin' and "role_assignments"."group_id" is not null and "role_assignments"."branch_id" is null))
+);
+--> statement-breakpoint
+CREATE TABLE "error_logs" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"message" text NOT NULL,
+	"stack" text,
+	"route" varchar(255),
+	"method" varchar(10),
+	"person_id" uuid,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "system_settings" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"key" varchar(100) NOT NULL,
+	"value" jsonb NOT NULL,
+	"updated_by_person_id" uuid,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "system_settings_key_unique" UNIQUE("key")
+);
+--> statement-breakpoint
+CREATE TABLE "attachments" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"owner_type" "attachment_owner" NOT NULL,
+	"owner_id" uuid NOT NULL,
+	"purpose" "attachment_purpose" NOT NULL,
+	"position" smallint DEFAULT 0 NOT NULL,
+	"storage_key" varchar(255) NOT NULL,
+	"content_type" varchar(100) NOT NULL,
+	"size_bytes" integer NOT NULL,
+	"sha256" char(64) NOT NULL,
+	"uploaded_by_person_id" uuid NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone,
+	CONSTRAINT "attachments_storageKey_unique" UNIQUE("storage_key"),
+	CONSTRAINT "attachments_content_type_allowed" CHECK ("attachments"."content_type" in ('image/jpeg', 'image/png', 'image/webp', 'application/pdf'))
 );
 --> statement-breakpoint
 CREATE TABLE "audit_logs" (
@@ -196,8 +238,11 @@ ALTER TABLE "people" ADD CONSTRAINT "people_city_id_cities_id_fk" FOREIGN KEY ("
 ALTER TABLE "person_relationships" ADD CONSTRAINT "person_relationships_person_id_people_id_fk" FOREIGN KEY ("person_id") REFERENCES "public"."people"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "person_relationships" ADD CONSTRAINT "person_relationships_related_person_id_people_id_fk" FOREIGN KEY ("related_person_id") REFERENCES "public"."people"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_person_id_people_id_fk" FOREIGN KEY ("person_id") REFERENCES "public"."people"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_branch_id_branches_id_fk" FOREIGN KEY ("branch_id") REFERENCES "public"."branches"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_group_id_groups_id_fk" FOREIGN KEY ("group_id") REFERENCES "public"."groups"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_branch_id_branches_id_fk" FOREIGN KEY ("branch_id") REFERENCES "public"."branches"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_group_id_groups_id_fk" FOREIGN KEY ("group_id") REFERENCES "public"."groups"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "error_logs" ADD CONSTRAINT "error_logs_person_id_people_id_fk" FOREIGN KEY ("person_id") REFERENCES "public"."people"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "system_settings" ADD CONSTRAINT "system_settings_updated_by_person_id_people_id_fk" FOREIGN KEY ("updated_by_person_id") REFERENCES "public"."people"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "attachments" ADD CONSTRAINT "attachments_uploaded_by_person_id_people_id_fk" FOREIGN KEY ("uploaded_by_person_id") REFERENCES "public"."people"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_actor_person_id_people_id_fk" FOREIGN KEY ("actor_person_id") REFERENCES "public"."people"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_on_behalf_of_person_id_people_id_fk" FOREIGN KEY ("on_behalf_of_person_id") REFERENCES "public"."people"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_branch_id_branches_id_fk" FOREIGN KEY ("branch_id") REFERENCES "public"."branches"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
@@ -222,5 +267,11 @@ CREATE INDEX "people_chinese_name_trgm_idx" ON "people" USING gin ("chinese_name
 CREATE UNIQUE INDEX "person_relationships_uniq" ON "person_relationships" USING btree ("kind","person_id","related_person_id") WHERE "person_relationships"."deleted_at" is null;--> statement-breakpoint
 CREATE INDEX "person_relationships_person_id_index" ON "person_relationships" USING btree ("person_id");--> statement-breakpoint
 CREATE INDEX "person_relationships_related_person_id_index" ON "person_relationships" USING btree ("related_person_id");--> statement-breakpoint
+CREATE INDEX "role_assignments_person_id_index" ON "role_assignments" USING btree ("person_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "role_assignments_uniq" ON "role_assignments" USING btree ("person_id","role",coalesce("branch_id", '00000000-0000-0000-0000-000000000000'),coalesce("group_id", '00000000-0000-0000-0000-000000000000')) WHERE "role_assignments"."deleted_at" is null;--> statement-breakpoint
+CREATE INDEX "error_logs_created_at_index" ON "error_logs" USING btree ("created_at");--> statement-breakpoint
+CREATE UNIQUE INDEX "attachments_owner_position_uniq" ON "attachments" USING btree ("owner_type","owner_id","purpose","position") WHERE "attachments"."deleted_at" is null;--> statement-breakpoint
+CREATE UNIQUE INDEX "attachments_profile_photo_uniq" ON "attachments" USING btree ("owner_id") WHERE "attachments"."purpose" = 'profile_photo' and "attachments"."deleted_at" is null;--> statement-breakpoint
 CREATE INDEX "audit_logs_entity_idx" ON "audit_logs" USING btree ("entity_type","entity_id");--> statement-breakpoint
+CREATE INDEX "audit_logs_branch_created_idx" ON "audit_logs" USING btree ("branch_id","created_at");--> statement-breakpoint
 CREATE INDEX "audit_logs_actor_created_idx" ON "audit_logs" USING btree ("actor_person_id","created_at");
