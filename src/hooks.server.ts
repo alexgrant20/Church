@@ -3,6 +3,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { runWithContext } from '$lib/server/context';
 import { validateSessionToken } from '$lib/server/modules/auth/service';
 import { config } from '$lib/server/config';
+import { readTheme } from '$lib/server/theme';
 import { paraglideMiddleware } from '$lib/paraglide/server';
 
 const handleParaglide: Handle = ({ event, resolve }) =>
@@ -12,6 +13,15 @@ const handleParaglide: Handle = ({ event, resolve }) =>
 			transformPageChunk: ({ html }) => html.replace('%paraglide.lang%', locale)
 		});
 	});
+
+const handleTheme: Handle = ({ event, resolve }) => {
+	const theme = readTheme(event.cookies);
+	event.locals.theme = theme;
+	return resolve(event, {
+		transformPageChunk: ({ html }) =>
+			html.replace('%theme%', theme === 'system' ? '' : ` data-theme="${theme}"`)
+	});
+};
 
 const handleSession: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get(config.SESSION_COOKIE_NAME);
@@ -34,4 +44,4 @@ const handleSession: Handle = async ({ event, resolve }) => {
 	);
 };
 
-export const handle: Handle = sequence(handleParaglide, handleSession);
+export const handle: Handle = sequence(handleParaglide, handleTheme, handleSession);

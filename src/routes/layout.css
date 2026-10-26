@@ -1,1 +1,218 @@
 @import 'tailwindcss';
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-sans/600.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+
+/* Tokens: DESIGN.md section 2. Light is the root; dark is set by cookie or by the OS. */
+:root {
+	--ground: #f8f6f5;
+	--surface: #ffffff;
+	--raised: #f4f3f2;
+	--active: #ebe8e7;
+	--border: #e8e6e5;
+	--rule: #f0efee;
+	--control: #cdcbca;
+
+	--text: #131416;
+	--muted: #5d5f60;
+
+	--brand: #8c0001;
+	--brand-ink: #ffffff;
+	--data: #1b6c80;
+	--focus: #8c0001;
+	--tab: #8c0001;
+
+	--positive: #1e7b4f;
+	--pill-positive-bg: #dcfae5;
+	--pill-positive-ink: #04250e;
+	--negative: #c4242a;
+	--pill-negative-bg: #ffedea;
+	--pill-negative-ink: #831c1e;
+	--warning: #92400e;
+	--pill-warning-bg: #fffbeb;
+	--pill-warning-ink: #92400e;
+	--pill-neutral-bg: #ebe8e7;
+	--pill-neutral-ink: #353736;
+}
+
+:root[data-theme='dark'] {
+	--ground: #0f0f0f;
+	--surface: #171717;
+	--raised: #222222;
+	--active: #2a2a2a;
+	--border: #2e2e2e;
+	--rule: #232323;
+	--control: #4a4a4a;
+
+	--text: #f2f2f2;
+	--muted: #b4b4b4;
+
+	--brand: #a3121a;
+	--brand-ink: #ffffff;
+	--data: #4fb3c8;
+	--focus: #f2f2f2;
+	--tab: #f2f2f2;
+
+	--positive: #3fc07a;
+	--pill-positive-bg: #172a1d;
+	--pill-positive-ink: #3fc07a;
+	--negative: #ef6b7e;
+	--pill-negative-bg: #2c1a20;
+	--pill-negative-ink: #ef6b7e;
+	--warning: #e8a33c;
+	--pill-warning-bg: #2b2111;
+	--pill-warning-ink: #e8a33c;
+	--pill-neutral-bg: #2a2a2a;
+	--pill-neutral-ink: #d0d0d0;
+}
+
+/* Same values as the dark block: "system" has no attribute and follows the OS. */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme='light']) {
+		--ground: #0f0f0f;
+		--surface: #171717;
+		--raised: #222222;
+		--active: #2a2a2a;
+		--border: #2e2e2e;
+		--rule: #232323;
+		--control: #4a4a4a;
+
+		--text: #f2f2f2;
+		--muted: #b4b4b4;
+
+		--brand: #a3121a;
+		--brand-ink: #ffffff;
+		--data: #4fb3c8;
+		--focus: #f2f2f2;
+		--tab: #f2f2f2;
+
+		--positive: #3fc07a;
+		--pill-positive-bg: #172a1d;
+		--pill-positive-ink: #3fc07a;
+		--negative: #ef6b7e;
+		--pill-negative-bg: #2c1a20;
+		--pill-negative-ink: #ef6b7e;
+		--warning: #e8a33c;
+		--pill-warning-bg: #2b2111;
+		--pill-warning-ink: #e8a33c;
+		--pill-neutral-bg: #2a2a2a;
+		--pill-neutral-ink: #d0d0d0;
+	}
+}
+
+/* shadcn-svelte variables point at the tokens (DESIGN.md "Wiring"). */
+:root {
+	--background: var(--surface);
+	--foreground: var(--text);
+	--card: var(--surface);
+	--card-foreground: var(--text);
+	--popover: var(--surface);
+	--popover-foreground: var(--text);
+	--primary: var(--brand);
+	--primary-foreground: var(--brand-ink);
+	--secondary: var(--raised);
+	--secondary-foreground: var(--text);
+	--muted-foreground: var(--muted);
+	--accent: var(--active);
+	--accent-foreground: var(--text);
+	--destructive: var(--negative);
+	--input: var(--control);
+	--ring: var(--focus);
+	--radius: 0.375rem;
+}
+
+@theme inline {
+	--color-ground: var(--ground);
+	--color-surface: var(--surface);
+	--color-raised: var(--raised);
+	--color-active: var(--active);
+	--color-border: var(--border);
+	--color-rule: var(--rule);
+	--color-control: var(--control);
+	--color-text: var(--text);
+	--color-muted: var(--muted);
+	--color-brand: var(--brand);
+	--color-brand-ink: var(--brand-ink);
+	--color-data: var(--data);
+	--color-focus: var(--focus);
+	--color-tab: var(--tab);
+	--color-positive: var(--positive);
+	--color-negative: var(--negative);
+	--color-warning: var(--warning);
+	--color-pill-positive-bg: var(--pill-positive-bg);
+	--color-pill-positive-ink: var(--pill-positive-ink);
+	--color-pill-negative-bg: var(--pill-negative-bg);
+	--color-pill-negative-ink: var(--pill-negative-ink);
+	--color-pill-warning-bg: var(--pill-warning-bg);
+	--color-pill-warning-ink: var(--pill-warning-ink);
+	--color-pill-neutral-bg: var(--pill-neutral-bg);
+	--color-pill-neutral-ink: var(--pill-neutral-ink);
+
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+
+	--radius-md: 0.375rem;
+	--font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+	--font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+html {
+	line-height: 1.5;
+}
+
+/* Plex has no CJK glyphs: use the system faces, never a web font (DESIGN.md section 3). */
+html:lang(zh-Hans) {
+	font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+	line-height: 1.7;
+}
+
+html:lang(zh-Hant) {
+	font-family: 'PingFang TC', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif;
+	line-height: 1.7;
+}
+
+body {
+	background: var(--ground);
+	color: var(--text);
+}
+
+.density-staff {
+	font-size: 0.875rem;
+}
+
+.density-member {
+	font-size: 1.125rem;
+}
+
+.tabular {
+	font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+	outline: 2px solid var(--focus);
+	outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	::before,
+	::after {
+		transition: none !important;
+		animation: none !important;
+	}
+}
