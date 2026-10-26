@@ -54,8 +54,11 @@ Confirmed by the user on 2026-10-26. Items marked *open* are not decided yet. Ea
    - Audit log stores only the fields that changed, with their before and after values. Unchanged fields are not logged.
    - Errors are logged too. A scheduled job deletes error logs older than one month.
 2. **Membership**
-   - Staff create member records. Members do not self-register.
-   - Staff give the person a code they use to claim or activate their account. *Open:* what form this code takes.
+   - People register themselves, one household at a time, from a single-use registration link that staff send. Nobody can register without a link.
+   - The registrant adds their spouse and children. Each person has their own record and a permanent Member ID for their member card. NIK is optional.
+   - Family members activate their own login later with their email or phone and an OTP. Any adult (17 or over) in a household can act for anyone in it.
+   - Branch transfers go through a request approved by the branch admins of both branches. A person moved by staff must acknowledge it.
+   - Schema: `docs/superpowers/specs/2026-10-26-foundation-database-design.md`.
    - Baptism, confirmation (sidi), and marriage are not part of Membership. *Open:* they probably belong to the Events registration module.
 3. **Worship**
    - Check-in works two ways: scan a QR code, or pick a worship service that is happening now or coming up.

@@ -6,6 +6,7 @@ Church management system for GRII (Gereja Reformed Injili Indonesia). It is **no
 - Design rules: `DESIGN.md` (shared) plus the `DESIGN.md` in `src/routes/(admin)/`, `src/routes/(member)/` and `src/lib/components/`. Read the shared file and the one for the folder before any UI work.
 - Module designs: `docs/superpowers/specs/`
 - Domain term mapping (Indonesian to English): `docs/superpowers/specs/2026-08-30-foundation-module-design.md`
+- Foundation schema (people, households, accounts, attachments): `docs/superpowers/specs/2026-10-26-foundation-database-design.md`
 
 > Foundation v2 is being reworked to match this file. Where the code and this file disagree, this file is the target.
 
@@ -73,19 +74,25 @@ Services may call other modules' services, never other modules' repositories.
 - Add an index for every column used in `WHERE`, `JOIN`, or `ORDER BY` on large tables.
 - Uniqueness rules are DB constraints (unique indexes), not check-then-insert code.
 - Postgres uses snake_case and TypeScript uses camelCase. Drizzle maps them; never map by hand.
+- Primary keys are UUID v7 (`uuidv7()`, Postgres 18).
+- **Soft delete only.** Church data is never deleted: set `deleted_at`, filter `deleted_at is null` by default, and make unique indexes partial `where deleted_at is null`. Only `sessions`, `otp_codes`, `login_throttles`, and `error_logs` are hard-deleted.
+- Files go in the polymorphic `attachments` table (`owner_type`, `owner_id`, `purpose`). Every owner type has an access check in the attachment registry; a type without one is denied.
 
 ## Audit log
 
 - Every mutation writes an audit row through `recordAudit(tx, ...)` **inside the same transaction**.
 - `diff` holds **only the changed fields**: `{ field: { before, after } }`. Build it with the shared diff helper. Never store the full record. A create stores `after` values only.
-- Never put secrets in audit rows (password hashes, OTP codes, tokens).
+- Never put secrets in audit rows (password hashes, OTP codes, tokens). A NIK change is recorded as `{ nik: { changed: true } }`.
+- When an adult acts for a household member, the row records both: `actor_person_id` and `on_behalf_of_person_id`.
 
 ## Auth
 
 - Login is an identifier (email or phone) plus password, then an OTP. Both steps are required on every login.
 - OTP delivery: WhatsApp through a third-party provider, with email as the fallback.
 - Password reset is verified by OTP. One reset request per user per 2 minutes.
-- Failed attempts are counted per user. After `LOGIN_MAX_FAILED_ATTEMPTS` failures (env, default 5), reply "try again in 2 minutes" and block further attempts for 2 minutes. Record `last_login` on success.
+- A person is in `people`; their login (email, phone, password) is in `accounts`. A person without an account cannot log in, and adults in their household act for them.
+- Failed attempts are counted per identifier typed, in `login_throttles`, whether or not an account has it. After `LOGIN_MAX_FAILED_ATTEMPTS` failures (env, default 5), reply "try again in 2 minutes" and block further attempts for 2 minutes. Record `last_login_at` on success.
+- Changing or resetting a password, or suspending an account, ends all of that person's sessions.
 - Sessions use an opaque token in an HTTP-only cookie, stored hashed in `sessions`, and can be revoked instantly.
 - Never reveal whether an account exists. Return the same error for an unknown user and a wrong password.
 
