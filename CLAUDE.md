@@ -3,6 +3,7 @@
 Church management system for GRII (Gereja Reformed Injili Indonesia). It is **not deployed**: there are no users or live data, so skip backward-compatibility, cache-busting, and data-migration concerns.
 
 - Product truth (users, features, brand): `PRODUCT.md`
+- Design rules: `DESIGN.md` (shared) plus the `DESIGN.md` in `src/routes/(admin)/`, `src/routes/(member)/` and `src/lib/components/`. Read the shared file and the one for the folder before any UI work.
 - Module designs: `docs/superpowers/specs/`
 - Domain term mapping (Indonesian to English): `docs/superpowers/specs/2026-08-30-foundation-module-design.md`
 

@@ -84,7 +84,7 @@ Confirmed by the user on 2026-10-26. Items marked *open* are not decided yet. Ea
    - WhatsApp and email messaging through a third-party provider. A WhatsApp Business API is available, but a third-party service is preferred.
    - Posts go to Instagram automatically, through the church's Instagram Business account.
 
-**Home page:** every user, including guests, lands on a home page. *Open:* what it shows. The user wants useful information, such as the latest events.
+**Home page:** every user, including guests, lands on a home page. It shows the member's next service (with Check in when check-in is open), this week's warta, and events. Guests see it without the personal blocks. Confirmed by the user on 2026-10-26; layout in `src/routes/(member)/DESIGN.md`.
 
 **Guests (non-members):** can see the home page, read the warta, browse the library, and view and register for events.
 
