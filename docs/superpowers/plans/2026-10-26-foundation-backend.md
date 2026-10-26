@@ -32,29 +32,29 @@
 
 ## File Map
 
-| File | Responsibility |
-| --- | --- |
-| `docker-compose.yml` | Postgres 18, builtin `C.UTF-8` locale |
-| `.env.example`, `.env.test` | env names; committed test-only keys and test DB URL |
-| `vite.config.ts` | new `integration` Vitest project |
-| `src/lib/server/db/migrate.ts` | `runMigrations(url)`: creates `pg_trgm`, runs Drizzle migrator |
-| `scripts/migrate.ts` | CLI wrapper for `db:migrate` |
-| `src/lib/server/db/test/global-setup.ts` | fresh test schema + migrations once per run |
-| `src/lib/server/db/test/reset.ts` | `resetDb()` truncates every table |
-| `src/lib/server/db/test/factories.ts` | test row builders, grown per task |
-| `src/lib/server/crypto.ts` | NIK normalize / encrypt / decrypt / mask, `keyedHash()` |
-| `src/lib/server/db/schema/columns.ts` | shared column builders |
-| `src/lib/server/db/schema/location.ts` | `countries`, `regions`, `cities` |
-| `src/lib/server/db/schema/branch.ts` | `branches`, `groups` |
-| `src/lib/server/db/schema/people.ts` | `households`, `people`, `personRelationships`, `memberCodeCounters` |
-| `src/lib/server/db/schema/auth.ts` | `accounts`, `loginThrottles`, `otpCodes`, `sessions`, `registrationLinks` |
-| `src/lib/server/db/schema/roles.ts` | `roleAssignments` |
-| `src/lib/server/db/schema/system.ts` | `systemSettings`, `errorLogs` |
-| `src/lib/server/db/schema/attachment.ts` | `attachments` |
-| `src/lib/server/db/schema/audit.ts` | `auditLogs` |
-| `src/lib/server/modules/people/member-code.ts` | `nextMemberCode()` |
-| `src/lib/server/modules/registration/repository.ts` | `claimRegistrationLink()` |
-| `scripts/seed/*.ts` | location import and dev data |
+| File                                                | Responsibility                                                            |
+| --------------------------------------------------- | ------------------------------------------------------------------------- |
+| `docker-compose.yml`                                | Postgres 18, builtin `C.UTF-8` locale                                     |
+| `.env.example`, `.env.test`                         | env names; committed test-only keys and test DB URL                       |
+| `vite.config.ts`                                    | new `integration` Vitest project                                          |
+| `src/lib/server/db/migrate.ts`                      | `runMigrations(url)`: creates `pg_trgm`, runs Drizzle migrator            |
+| `scripts/migrate.ts`                                | CLI wrapper for `db:migrate`                                              |
+| `src/lib/server/db/test/global-setup.ts`            | fresh test schema + migrations once per run                               |
+| `src/lib/server/db/test/reset.ts`                   | `resetDb()` truncates every table                                         |
+| `src/lib/server/db/test/factories.ts`               | test row builders, grown per task                                         |
+| `src/lib/server/crypto.ts`                          | NIK normalize / encrypt / decrypt / mask, `keyedHash()`                   |
+| `src/lib/server/db/schema/columns.ts`               | shared column builders                                                    |
+| `src/lib/server/db/schema/location.ts`              | `countries`, `regions`, `cities`                                          |
+| `src/lib/server/db/schema/branch.ts`                | `branches`, `groups`                                                      |
+| `src/lib/server/db/schema/people.ts`                | `households`, `people`, `personRelationships`, `memberCodeCounters`       |
+| `src/lib/server/db/schema/auth.ts`                  | `accounts`, `loginThrottles`, `otpCodes`, `sessions`, `registrationLinks` |
+| `src/lib/server/db/schema/roles.ts`                 | `roleAssignments`                                                         |
+| `src/lib/server/db/schema/system.ts`                | `systemSettings`, `errorLogs`                                             |
+| `src/lib/server/db/schema/attachment.ts`            | `attachments`                                                             |
+| `src/lib/server/db/schema/audit.ts`                 | `auditLogs`                                                               |
+| `src/lib/server/modules/people/member-code.ts`      | `nextMemberCode()`                                                        |
+| `src/lib/server/modules/registration/repository.ts` | `claimRegistrationLink()`                                                 |
+| `scripts/seed/*.ts`                                 | location import and dev data                                              |
 
 Integration tests are named `*.int.test.ts` and sit next to the code they cover.
 
@@ -63,11 +63,13 @@ Integration tests are named `*.int.test.ts` and sit next to the code they cover.
 ### Task 1: Postgres 18 and the integration test harness
 
 **Files:**
+
 - Modify: `docker-compose.yml`, `.env.example`, `vite.config.ts`, `package.json`, `CLAUDE.md` (Commands block)
 - Create: `.env.test`, `src/lib/server/db/migrate.ts`, `scripts/migrate.ts`, `src/lib/server/db/test/global-setup.ts`, `src/lib/server/db/test/reset.ts`, `src/lib/server/db/schema/columns.ts`
 - Test: `src/lib/server/db/harness.int.test.ts`
 
 **Interfaces:**
+
 - Produces: `runMigrations(url: string): Promise<void>`; `resetDb(): Promise<void>`; column builders `id()`, `createdAt()`, `updatedAt()`, `deletedAt()` from `schema/columns.ts`.
 
 - [ ] **Step 1: Move both compose services to Postgres 18**
@@ -118,7 +120,7 @@ Expected: FAIL (global setup file missing).
 
 - [ ] **Step 6: Write `schema/columns.ts`**
 
-`id()` = `uuid().primaryKey().default(sql\`uuidv7()\`)`; `createdAt()` = `timestamp({ withTimezone: true }).notNull().defaultNow()`; `updatedAt()` same plus `.$onUpdate(() => new Date())`; `deletedAt()` = nullable `timestamp({ withTimezone: true })`.
+`id()` = `uuid().primaryKey().default(sql\`uuidv7()\`)`; `createdAt()`=`timestamp({ withTimezone: true }).notNull().defaultNow()`; `updatedAt()`same plus`.$onUpdate(() => new Date())`; `deletedAt()`= nullable`timestamp({ withTimezone: true })`.
 
 - [ ] **Step 7: Run the harness test**
 
@@ -137,11 +139,13 @@ git commit -m "build: Postgres 18 and integration test harness"
 ### Task 2: NIK crypto and keyed hashing
 
 **Files:**
+
 - Modify: `src/lib/server/config.ts`
 - Create: `src/lib/server/crypto.ts`
 - Test: `src/lib/server/crypto.test.ts`
 
 **Interfaces:**
+
 - Consumes: `config.NIK_ENCRYPTION_KEY`, `config.HMAC_KEY` (base64, each decoding to 32 bytes; zod rejects anything else at startup).
 - Produces:
   - `normalizeNik(input: string): string` (strips non-digits; throws `ValidationError('nik.invalid')` unless exactly 16 digits remain)
@@ -207,12 +211,14 @@ git commit -m "feat(crypto): NIK encryption and keyed hashing"
 ### Task 3: Location reference data, branches, groups
 
 **Files:**
+
 - Create: `src/lib/server/db/schema/location.ts`, `src/lib/server/db/test/factories.ts`
 - Modify: `src/lib/server/db/schema/branch.ts`, `schema/index.ts`, `modules/branch/schema.ts`, `modules/branch/repository.ts`, `modules/branch/service.ts`, `modules/branch/service.test.ts`, `routes/(admin)/branches/+page.server.ts`, `routes/(admin)/branches/+page.svelte`
 - Delete: `drizzle/` (regenerated from scratch in this task and every later schema task)
 - Test: `src/lib/server/db/schema/branch.int.test.ts`
 
 **Interfaces:**
+
 - Consumes: column builders (Task 1).
 - Produces:
   - tables `countries`, `regions`, `cities`, `branches`, `groups` exactly as the spec's tables section
@@ -250,7 +256,7 @@ Expected: FAIL (`makeBranch` not exported).
 
 - [ ] **Step 3: Write `location.ts` and the new `branch.ts`, then regenerate the migration**
 
-Uniques and indexes from the spec, including the `gin_trgm_ops` index on `cities.name` (`index().using('gin', sql\`${t.name} gin_trgm_ops\`)`). `branches.code` unique `where deleted_at is null`.
+Uniques and indexes from the spec, including the `gin_trgm_ops` index on `cities.name` (`index().using('gin', sql\`${t.name} gin_trgm_ops\`)`). `branches.code`unique`where deleted_at is null`.
 
 Run: `rm -rf drizzle && bun run db:generate`
 Expected: one new `drizzle/0000_*.sql` containing `create table "branches"` with `"city_id" uuid not null`.
@@ -276,11 +282,13 @@ git commit -m "feat(db): location reference tables and v2 branches"
 ### Task 4: People, households, family tree, Member IDs
 
 **Files:**
+
 - Create: `src/lib/server/db/schema/people.ts`, `src/lib/server/modules/people/member-code.ts`
 - Modify: `schema/index.ts`, `db/test/factories.ts`
 - Test: `src/lib/server/modules/people/people.int.test.ts`
 
 **Interfaces:**
+
 - Consumes: `branches`, `cities`, `makeBranch`, `makeCity` (Task 3); `keyedHash`, `encryptNik` (Task 2).
 - Produces:
   - tables `households`, `people`, `personRelationships`, `memberCodeCounters`; enums `sex` (`male`, `female`), `relationship_kind` (`parent`, `spouse`)
@@ -320,13 +328,17 @@ describe('people', () => {
 	it('rejects a relationship of a person to themselves', async () => {
 		const p = await makePerson();
 		await expect(
-			db.insert(personRelationships).values({ kind: 'parent', personId: p.id, relatedPersonId: p.id })
+			db
+				.insert(personRelationships)
+				.values({ kind: 'parent', personId: p.id, relatedPersonId: p.id })
 		).rejects.toThrow(/check/);
 	});
 	it('stores a couple once, lower id first', async () => {
 		const [a, b] = [await makePerson(), await makePerson()].sort((x, y) => (x.id < y.id ? -1 : 1));
 		await expect(
-			db.insert(personRelationships).values({ kind: 'spouse', personId: b.id, relatedPersonId: a.id })
+			db
+				.insert(personRelationships)
+				.values({ kind: 'spouse', personId: b.id, relatedPersonId: a.id })
 		).rejects.toThrow(/check/);
 	});
 	it('finds a person by part of their Chinese name', async () => {
@@ -370,11 +382,13 @@ git commit -m "feat(db): people, households, family tree, Member IDs"
 The biggest task: it removes `users` and rewires every caller in one commit, so the app compiles and login keeps working.
 
 **Files:**
+
 - Modify: `schema/auth.ts` (rewrite), `schema/roles.ts`, `schema/audit.ts`, `schema/index.ts`, `server/context.ts`, `src/app.d.ts`, `src/hooks.server.ts`, `modules/auth/repository.ts`, `modules/auth/service.ts`, `modules/audit/service.ts`, `modules/pastor/*.ts`, `routes/(admin)/+layout.server.ts`, `routes/(member)/+layout.server.ts`, `routes/(member)/profile/+page.svelte`, `db/test/factories.ts`
 - Create: `src/lib/server/modules/registration/repository.ts`
 - Test: `src/lib/server/modules/auth/auth.int.test.ts`, `src/lib/server/modules/registration/registration.int.test.ts`
 
 **Interfaces:**
+
 - Consumes: `people`, `households`, `makePerson` (Task 4); `hashPassword` (existing).
 - Produces:
   - tables `accounts`, `loginThrottles`, `otpCodes`, `sessions`, `registrationLinks` as the spec; enums `account_status`, `otp_purpose`, `otp_channel`. `accounts.email` partial unique on `lower(email)`.
@@ -402,18 +416,27 @@ describe('login', () => {
 		const p = await makePerson();
 		await makeAccount(p.id, { email: 'sari@mail.com', passwordHash: null });
 		const ip = { ip: '127.0.0.1' };
-		await expect(login({ identifier: 'sari@mail.com', password: 'whatever1' }, ip)).rejects.toThrow('Invalid credentials');
-		await expect(login({ identifier: 'nobody@mail.com', password: 'whatever1' }, ip)).rejects.toThrow('Invalid credentials');
+		await expect(login({ identifier: 'sari@mail.com', password: 'whatever1' }, ip)).rejects.toThrow(
+			'Invalid credentials'
+		);
+		await expect(
+			login({ identifier: 'nobody@mail.com', password: 'whatever1' }, ip)
+		).rejects.toThrow('Invalid credentials');
 	});
 	it('rejects a suspended account', async () => {
 		const p = await makePerson();
 		await makeAccount(p.id, { email: 'a@mail.com', status: 'suspended' });
-		await expect(login({ identifier: 'a@mail.com', password: 'correct-horse' }, { ip: '1' })).rejects.toThrow('Invalid credentials');
+		await expect(
+			login({ identifier: 'a@mail.com', password: 'correct-horse' }, { ip: '1' })
+		).rejects.toThrow('Invalid credentials');
 	});
 	it('logs in, creates a session, and writes the audit row with the person as actor', async () => {
 		const p = await makePerson();
 		await makeAccount(p.id, { email: 'b@mail.com' });
-		const { token } = await login({ identifier: 'b@mail.com', password: 'correct-horse' }, { ip: '1' });
+		const { token } = await login(
+			{ identifier: 'b@mail.com', password: 'correct-horse' },
+			{ ip: '1' }
+		);
 		expect((await validateSessionToken(token)).person?.id).toBe(p.id);
 		const [audit] = await db.select().from(auditLogs);
 		expect(audit.actorPersonId).toBe(p.id);
@@ -431,13 +454,19 @@ describe('registration links', () => {
 	it('can be claimed only once', async () => {
 		const link = await makeRegistrationLink();
 		const [h1, h2] = [await makeHousehold(), await makeHousehold()];
-		expect(await db.transaction((tx) => claimRegistrationLink(tx, link.tokenHash, h1.id))).not.toBeNull();
-		expect(await db.transaction((tx) => claimRegistrationLink(tx, link.tokenHash, h2.id))).toBeNull();
+		expect(
+			await db.transaction((tx) => claimRegistrationLink(tx, link.tokenHash, h1.id))
+		).not.toBeNull();
+		expect(
+			await db.transaction((tx) => claimRegistrationLink(tx, link.tokenHash, h2.id))
+		).toBeNull();
 	});
 	it('cannot be claimed after revocation', async () => {
 		const link = await makeRegistrationLink({ revokedAt: new Date() });
 		const h = await makeHousehold();
-		expect(await db.transaction((tx) => claimRegistrationLink(tx, link.tokenHash, h.id))).toBeNull();
+		expect(
+			await db.transaction((tx) => claimRegistrationLink(tx, link.tokenHash, h.id))
+		).toBeNull();
 	});
 });
 ```
@@ -475,11 +504,13 @@ git commit -m "feat(db): accounts, sessions, registration links replace users"
 ### Task 6: Role rules, settings, attachments, error log
 
 **Files:**
+
 - Create: `src/lib/server/db/schema/system.ts`, `src/lib/server/db/schema/attachment.ts`
 - Modify: `schema/roles.ts`, `schema/audit.ts`, `schema/index.ts`, `db/test/factories.ts`
 - Test: `src/lib/server/db/schema/rules.int.test.ts`
 
 **Interfaces:**
+
 - Consumes: `makePerson`, `makeBranch` (Tasks 3–4).
 - Produces: tables `systemSettings` (with `id`), `errorLogs`, `attachments`; enums `attachment_owner` (`person`, `branch`) and `attachment_purpose` (`profile_photo`, `church_photo`); role scope checks; audit index `(branch_id, created_at)`; factory `makeAttachment(overrides?)`.
 
@@ -491,28 +522,49 @@ describe('schema rules', () => {
 
 	it('rejects a superadmin role with a branch', async () => {
 		const [p, b] = [await makePerson(), await makeBranch()];
-		await expect(db.insert(roleAssignments).values({ personId: p.id, role: 'superadmin', branchId: b.id })).rejects.toThrow(/check/);
+		await expect(
+			db.insert(roleAssignments).values({ personId: p.id, role: 'superadmin', branchId: b.id })
+		).rejects.toThrow(/check/);
 	});
 	it('rejects a group_admin role without a group', async () => {
 		const p = await makePerson();
-		await expect(db.insert(roleAssignments).values({ personId: p.id, role: 'group_admin' })).rejects.toThrow(/check/);
+		await expect(
+			db.insert(roleAssignments).values({ personId: p.id, role: 'group_admin' })
+		).rejects.toThrow(/check/);
 	});
 	it('rejects the same superadmin role twice', async () => {
 		const p = await makePerson();
 		await db.insert(roleAssignments).values({ personId: p.id, role: 'superadmin' });
-		await expect(db.insert(roleAssignments).values({ personId: p.id, role: 'superadmin' })).rejects.toThrow(/unique/);
+		await expect(
+			db.insert(roleAssignments).values({ personId: p.id, role: 'superadmin' })
+		).rejects.toThrow(/unique/);
 	});
 	it('allows one live profile photo per person, and a new one after soft delete', async () => {
 		const p = await makePerson();
-		const first = await makeAttachment({ ownerType: 'person', ownerId: p.id, purpose: 'profile_photo' });
-		await expect(makeAttachment({ ownerType: 'person', ownerId: p.id, purpose: 'profile_photo', position: 1 })).rejects.toThrow(/unique/);
+		const first = await makeAttachment({
+			ownerType: 'person',
+			ownerId: p.id,
+			purpose: 'profile_photo'
+		});
+		await expect(
+			makeAttachment({ ownerType: 'person', ownerId: p.id, purpose: 'profile_photo', position: 1 })
+		).rejects.toThrow(/unique/);
 		await db.update(attachments).set({ deletedAt: new Date() }).where(eq(attachments.id, first.id));
-		await expect(makeAttachment({ ownerType: 'person', ownerId: p.id, purpose: 'profile_photo' })).resolves.toBeDefined();
+		await expect(
+			makeAttachment({ ownerType: 'person', ownerId: p.id, purpose: 'profile_photo' })
+		).resolves.toBeDefined();
 	});
 	it('allows many church photos per branch in order', async () => {
 		const b = await makeBranch();
-		await makeAttachment({ ownerType: 'branch', ownerId: b.id, purpose: 'church_photo', position: 0 });
-		await expect(makeAttachment({ ownerType: 'branch', ownerId: b.id, purpose: 'church_photo', position: 1 })).resolves.toBeDefined();
+		await makeAttachment({
+			ownerType: 'branch',
+			ownerId: b.id,
+			purpose: 'church_photo',
+			position: 0
+		});
+		await expect(
+			makeAttachment({ ownerType: 'branch', ownerId: b.id, purpose: 'church_photo', position: 1 })
+		).resolves.toBeDefined();
 	});
 });
 ```
@@ -546,11 +598,13 @@ git commit -m "feat(db): role rules, settings, attachments, error log"
 ### Task 7: Seed data
 
 **Files:**
+
 - Create: `scripts/seed/index.ts`, `scripts/seed/locations.ts`, `scripts/seed/dev-data.ts`, `scripts/seed/SOURCES.md`
 - Modify: `package.json` (`"db:seed": "bun scripts/seed/index.ts"`), `.gitignore` (`.seed-cache/`)
 - Test: `scripts/seed/locations.test.ts` (parsers only)
 
 **Interfaces:**
+
 - Consumes: schema tables (Tasks 3–6), `nextMemberCode` (Task 4), `hashPassword`. The seed opens its own Drizzle client from `process.env.DATABASE_URL` and never imports `$lib/server/config`.
 - Produces:
   - `parseWilayahSql(sql: string): { provinces: { code: string; name: string }[]; cities: { code: string; provinceCode: string; name: string }[] }`

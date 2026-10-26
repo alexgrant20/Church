@@ -42,7 +42,7 @@ Built for one Reformed Evangelical church and its own branch structure, roles, a
 
 ## Feature Scope
 
-Confirmed by the user on 2026-10-26. Items marked *open* are not decided yet. Each module gets its own spec before it is built.
+Confirmed by the user on 2026-10-26. Items marked _open_ are not decided yet. Each module gets its own spec before it is built.
 
 1. **Foundation**
    - Every login needs a password plus a one-time code (OTP). Codes go over WhatsApp through a third-party provider, with email as the fallback.
@@ -59,12 +59,12 @@ Confirmed by the user on 2026-10-26. Items marked *open* are not decided yet. Ea
    - Family members activate their own login later with their email or phone and an OTP. Any adult (17 or over) in a household can act for anyone in it.
    - Branch transfers go through a request approved by the branch admins of both branches. A person moved by staff must acknowledge it.
    - Schema: `docs/superpowers/specs/2026-10-26-foundation-database-design.md`.
-   - Baptism, confirmation (sidi), and marriage are not part of Membership. *Open:* they probably belong to the Events registration module.
+   - Baptism, confirmation (sidi), and marriage are not part of Membership. _Open:_ they probably belong to the Events registration module.
 3. **Worship**
    - Check-in works two ways: scan a QR code, or pick a worship service that is happening now or coming up.
    - One family member can check in their spouse and children together.
    - The warta (bulletin) and ringkasan (sermon summary) are printed together on one paper sheet today. They move into the app.
-   - *Open:* whether a pastor or a `branch_admin` writes them.
+   - _Open:_ whether a pastor or a `branch_admin` writes them.
 4. **Special Services** (prayer and funeral services)
    - Members request a service.
    - A `branch_admin` or `superadmin` approves it.

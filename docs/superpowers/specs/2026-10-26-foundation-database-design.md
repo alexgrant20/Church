@@ -157,16 +157,16 @@ are `timestamptz`, names are snake_case (Drizzle `casing: 'snake_case'`).
 
 ### `branches`
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | uuid | |
-| `code` | varchar(8) | unique, uppercase letters, used in Member ID (`JKT`), never changes |
-| `name` | varchar(255) | |
-| `address_line` | varchar(500) | street and number |
-| `postal_code` | varchar(10) | nullable |
-| `city_id` | uuid | FK cities, not null |
-| `timezone` | varchar(50) | IANA name (`Asia/Jakarta`), for service times |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type         | Notes                                                               |
+| -------------------------- | ------------ | ------------------------------------------------------------------- |
+| `id`                       | uuid         |                                                                     |
+| `code`                     | varchar(8)   | unique, uppercase letters, used in Member ID (`JKT`), never changes |
+| `name`                     | varchar(255) |                                                                     |
+| `address_line`             | varchar(500) | street and number                                                   |
+| `postal_code`              | varchar(10)  | nullable                                                            |
+| `city_id`                  | uuid         | FK cities, not null                                                 |
+| `timezone`                 | varchar(50)  | IANA name (`Asia/Jakarta`), for service times                       |
+| `created_at`, `updated_at` | timestamptz  |                                                                     |
 
 ### `groups` (stub, unchanged)
 
@@ -174,37 +174,37 @@ are `timestamptz`, names are snake_case (Drizzle `casing: 'snake_case'`).
 
 ### `households`
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | uuid | |
-| `created_at` | timestamptz | |
+| Column       | Type        | Notes |
+| ------------ | ----------- | ----- |
+| `id`         | uuid        |       |
+| `created_at` | timestamptz |       |
 
 A household with no people left is soft-deleted by the service that moved its
 last person out.
 
 ### `people`
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | uuid | |
-| `member_code` | varchar(20) | unique, not null, the Member ID |
-| `full_name` | varchar(255) | not null, as on the KTP |
-| `nickname` | varchar(100) | nullable, what people call them |
-| `chinese_name` | varchar(50) | nullable (`王美玲`) |
-| `sex` | enum `sex`: `male`, `female` | not null |
-| `birth_date` | date | not null |
-| `birth_city_id` | uuid | FK cities, nullable |
-| `nik_encrypted` | bytea | nullable, AES-256-GCM |
-| `nik_hash` | char(64) | nullable, HMAC-SHA-256 of the NIK, unique where not null |
-| `preferred_locale` | varchar(7) | not null, default `id`: language of WA and email messages |
-| `home_branch_id` | uuid | FK branches, not null |
-| `household_id` | uuid | FK households, not null |
-| `registered_by_person_id` | uuid | FK people, nullable (null for the registrant) |
-| `address_line` | varchar(500) | not null, street, number, RT/RW |
-| `postal_code` | varchar(10) | nullable |
-| `city_id` | uuid | FK cities, not null: where the person lives |
-| `deleted_at` | timestamptz | nullable; soft delete |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type                         | Notes                                                     |
+| -------------------------- | ---------------------------- | --------------------------------------------------------- |
+| `id`                       | uuid                         |                                                           |
+| `member_code`              | varchar(20)                  | unique, not null, the Member ID                           |
+| `full_name`                | varchar(255)                 | not null, as on the KTP                                   |
+| `nickname`                 | varchar(100)                 | nullable, what people call them                           |
+| `chinese_name`             | varchar(50)                  | nullable (`王美玲`)                                       |
+| `sex`                      | enum `sex`: `male`, `female` | not null                                                  |
+| `birth_date`               | date                         | not null                                                  |
+| `birth_city_id`            | uuid                         | FK cities, nullable                                       |
+| `nik_encrypted`            | bytea                        | nullable, AES-256-GCM                                     |
+| `nik_hash`                 | char(64)                     | nullable, HMAC-SHA-256 of the NIK, unique where not null  |
+| `preferred_locale`         | varchar(7)                   | not null, default `id`: language of WA and email messages |
+| `home_branch_id`           | uuid                         | FK branches, not null                                     |
+| `household_id`             | uuid                         | FK households, not null                                   |
+| `registered_by_person_id`  | uuid                         | FK people, nullable (null for the registrant)             |
+| `address_line`             | varchar(500)                 | not null, street, number, RT/RW                           |
+| `postal_code`              | varchar(10)                  | nullable                                                  |
+| `city_id`                  | uuid                         | FK cities, not null: where the person lives               |
+| `deleted_at`               | timestamptz                  | nullable; soft delete                                     |
+| `created_at`, `updated_at` | timestamptz                  |                                                           |
 
 Only the city is stored. Province or state and country come from the city
 through `cities.region_id` and `regions.country_id`, so they can never
@@ -220,19 +220,19 @@ where nik_hash is not null`.
 Every file in the app: member photos, church photos, and later documents,
 event posters, book covers.
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | uuid | |
-| `owner_type` | enum `attachment_owner`: `person`, `branch` | later modules add values |
-| `owner_id` | uuid | the owner's `id` in that table |
-| `purpose` | enum `attachment_purpose`: `profile_photo`, `church_photo` | later modules add values |
-| `position` | smallint | display order within owner and purpose, 0 first |
-| `storage_key` | varchar(255) | unique; where the bytes live, never a URL or full path |
-| `content_type` | varchar(100) | from an allow list (`image/jpeg`, `image/png`, `image/webp`, `application/pdf`) |
-| `size_bytes` | integer | |
-| `sha256` | char(64) | of the content |
-| `uploaded_by_person_id` | uuid | FK people |
-| `created_at` | timestamptz | |
+| Column                  | Type                                                       | Notes                                                                           |
+| ----------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `id`                    | uuid                                                       |                                                                                 |
+| `owner_type`            | enum `attachment_owner`: `person`, `branch`                | later modules add values                                                        |
+| `owner_id`              | uuid                                                       | the owner's `id` in that table                                                  |
+| `purpose`               | enum `attachment_purpose`: `profile_photo`, `church_photo` | later modules add values                                                        |
+| `position`              | smallint                                                   | display order within owner and purpose, 0 first                                 |
+| `storage_key`           | varchar(255)                                               | unique; where the bytes live, never a URL or full path                          |
+| `content_type`          | varchar(100)                                               | from an allow list (`image/jpeg`, `image/png`, `image/webp`, `application/pdf`) |
+| `size_bytes`            | integer                                                    |                                                                                 |
+| `sha256`                | char(64)                                                   | of the content                                                                  |
+| `uploaded_by_person_id` | uuid                                                       | FK people                                                                       |
+| `created_at`            | timestamptz                                                |                                                                                 |
 
 - Index `(owner_type, owner_id, purpose, position)`: loads every attachment of
   a page of owners in one `WHERE owner_type = $1 AND owner_id IN (...)` query,
@@ -259,19 +259,19 @@ delete only), so there is no cleanup job.
 
 Country 1 → many regions (province or state) 1 → many cities.
 
-| Table | Column | Notes |
-| --- | --- | --- |
-| `countries` | `id` | uuid |
-| | `iso2` | char(2), unique, ISO 3166-1 alpha-2 (`ID`, `AU`, `CN`) |
-| | `name` | varchar(100), English name (`Australia`) |
-| `regions` | `id` | uuid |
-| | `country_id` | FK countries, not null |
-| | `code` | varchar(10), nullable, official code (`31` for DKI Jakarta) |
-| | `name` | varchar(150) (`DKI Jakarta`, `New South Wales`) |
-| `cities` | `id` | uuid |
-| | `region_id` | FK regions, not null |
-| | `code` | varchar(10), nullable, official code (`31.71`) |
-| | `name` | varchar(150) (`Kota Jakarta Pusat`, `Sydney`) |
+| Table       | Column       | Notes                                                       |
+| ----------- | ------------ | ----------------------------------------------------------- |
+| `countries` | `id`         | uuid                                                        |
+|             | `iso2`       | char(2), unique, ISO 3166-1 alpha-2 (`ID`, `AU`, `CN`)      |
+|             | `name`       | varchar(100), English name (`Australia`)                    |
+| `regions`   | `id`         | uuid                                                        |
+|             | `country_id` | FK countries, not null                                      |
+|             | `code`       | varchar(10), nullable, official code (`31` for DKI Jakarta) |
+|             | `name`       | varchar(150) (`DKI Jakarta`, `New South Wales`)             |
+| `cities`    | `id`         | uuid                                                        |
+|             | `region_id`  | FK regions, not null                                        |
+|             | `code`       | varchar(10), nullable, official code (`31.71`)              |
+|             | `name`       | varchar(150) (`Kota Jakarta Pusat`, `Sydney`)               |
 
 - Unique `(country_id, name)` on regions and `(region_id, name)` on cities.
   Indexes on `regions.country_id`, `cities.region_id`, and a trigram index on
@@ -286,11 +286,11 @@ Country 1 → many regions (province or state) 1 → many cities.
 
 ### `member_code_counters`
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `branch_id` | uuid | FK branches, part of PK |
-| `year` | smallint | part of PK |
-| `last_number` | integer | not null |
+| Column        | Type     | Notes                   |
+| ------------- | -------- | ----------------------- |
+| `branch_id`   | uuid     | FK branches, part of PK |
+| `year`        | smallint | part of PK              |
+| `last_number` | integer  | not null                |
 
 Primary key `(branch_id, year)`, no `id`. The next Member ID comes from
 `INSERT ... ON CONFLICT DO UPDATE SET last_number = last_number + 1 RETURNING`
@@ -299,15 +299,15 @@ number.
 
 ### `person_relationships` (the family tree)
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | uuid | |
-| `kind` | enum `relationship_kind`: `parent`, `spouse` | |
-| `person_id` | uuid | FK people, restrict. For `parent`: the parent |
-| `related_person_id` | uuid | FK people, restrict. For `parent`: the child |
-| `started_on` | date | nullable, spouse only (wedding) |
-| `ended_on` | date | nullable, spouse only |
-| `created_at` | timestamptz | |
+| Column              | Type                                         | Notes                                         |
+| ------------------- | -------------------------------------------- | --------------------------------------------- |
+| `id`                | uuid                                         |                                               |
+| `kind`              | enum `relationship_kind`: `parent`, `spouse` |                                               |
+| `person_id`         | uuid                                         | FK people, restrict. For `parent`: the parent |
+| `related_person_id` | uuid                                         | FK people, restrict. For `parent`: the child  |
+| `started_on`        | date                                         | nullable, spouse only (wedding)               |
+| `ended_on`          | date                                         | nullable, spouse only                         |
+| `created_at`        | timestamptz                                  |                                               |
 
 Checks: `person_id <> related_person_id`; for `spouse`, `person_id <
 related_person_id` so each couple is stored once. Unique `(kind, person_id,
@@ -318,16 +318,16 @@ only, never these rows. Grandchildren are parent rows two steps away.
 
 ### `accounts` (login)
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `person_id` | uuid | PK, FK people |
-| `email` | varchar(255) | nullable, unique, stored lowercased |
-| `phone` | varchar(20) | nullable, unique, stored E.164 (`+62812...`) |
-| `password_hash` | varchar(255) | null until activated |
-| `activated_at` | timestamptz | null until activated |
-| `last_login_at` | timestamptz | nullable |
-| `status` | enum `account_status`: `active`, `suspended` | default `active` |
-| `created_at`, `updated_at` | timestamptz | |
+| Column                     | Type                                         | Notes                                        |
+| -------------------------- | -------------------------------------------- | -------------------------------------------- |
+| `person_id`                | uuid                                         | PK, FK people                                |
+| `email`                    | varchar(255)                                 | nullable, unique, stored lowercased          |
+| `phone`                    | varchar(20)                                  | nullable, unique, stored E.164 (`+62812...`) |
+| `password_hash`            | varchar(255)                                 | null until activated                         |
+| `activated_at`             | timestamptz                                  | null until activated                         |
+| `last_login_at`            | timestamptz                                  | nullable                                     |
+| `status`                   | enum `account_status`: `active`, `suspended` | default `active`                             |
+| `created_at`, `updated_at` | timestamptz                                  |                                              |
 
 Check: `email is not null or phone is not null`. The row is created when the
 registrant (or any adult in the household) enters an email or phone for a
@@ -336,12 +336,12 @@ every session of that person in the same transaction.
 
 ### `login_throttles`
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `identifier_hash` | char(64) | PK, HMAC of the normalized email or phone typed |
-| `failed_count` | smallint | not null, default 0 |
-| `locked_until` | timestamptz | nullable |
-| `updated_at` | timestamptz | |
+| Column            | Type        | Notes                                           |
+| ----------------- | ----------- | ----------------------------------------------- |
+| `identifier_hash` | char(64)    | PK, HMAC of the normalized email or phone typed |
+| `failed_count`    | smallint    | not null, default 0                             |
+| `locked_until`    | timestamptz | nullable                                        |
+| `updated_at`      | timestamptz |                                                 |
 
 Counts failures per identifier typed, whether or not an account has it, so an
 unknown email locks exactly like a real one and the lockout reveals nothing.
@@ -351,18 +351,18 @@ day. No `id`: the hash is the key.
 
 ### `otp_codes`
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | uuid | |
-| `person_id` | uuid | FK people, cascade |
-| `purpose` | enum `otp_purpose`: `login`, `activation`, `password_reset` | |
-| `channel` | enum `otp_channel`: `whatsapp`, `email` | |
-| `code_hash` | char(64) | HMAC-SHA-256 of the 6-digit code with a server key; plain SHA-256 of 6 digits is reversible |
-| `challenge_hash` | char(64) | unique, hash of the token in the step-2 cookie |
-| `attempts` | smallint | default 0; the code dies after 5 wrong tries |
-| `expires_at` | timestamptz | 5 minutes after creation |
-| `consumed_at` | timestamptz | nullable |
-| `created_at` | timestamptz | |
+| Column           | Type                                                        | Notes                                                                                       |
+| ---------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `id`             | uuid                                                        |                                                                                             |
+| `person_id`      | uuid                                                        | FK people, cascade                                                                          |
+| `purpose`        | enum `otp_purpose`: `login`, `activation`, `password_reset` |                                                                                             |
+| `channel`        | enum `otp_channel`: `whatsapp`, `email`                     |                                                                                             |
+| `code_hash`      | char(64)                                                    | HMAC-SHA-256 of the 6-digit code with a server key; plain SHA-256 of 6 digits is reversible |
+| `challenge_hash` | char(64)                                                    | unique, hash of the token in the step-2 cookie                                              |
+| `attempts`       | smallint                                                    | default 0; the code dies after 5 wrong tries                                                |
+| `expires_at`     | timestamptz                                                 | 5 minutes after creation                                                                    |
+| `consumed_at`    | timestamptz                                                 | nullable                                                                                    |
+| `created_at`     | timestamptz                                                 |                                                                                             |
 
 Index `(person_id, purpose, created_at)`: serves "one password reset per 2
 minutes", "at most 3 codes per person per purpose per 15 minutes", and finding
@@ -371,13 +371,13 @@ browser that passed step 1. A scheduled job deletes rows older than 1 day.
 
 ### `sessions`
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | char(64) | PK, SHA-256 of the cookie token (not a UUID; it is a hash) |
-| `person_id` | uuid | FK people, cascade: who logged in |
-| `acting_as_person_id` | uuid | FK people, set null: who they act as, null = self |
-| `expires_at` | timestamptz | |
-| `created_at` | timestamptz | |
+| Column                | Type        | Notes                                                      |
+| --------------------- | ----------- | ---------------------------------------------------------- |
+| `id`                  | char(64)    | PK, SHA-256 of the cookie token (not a UUID; it is a hash) |
+| `person_id`           | uuid        | FK people, cascade: who logged in                          |
+| `acting_as_person_id` | uuid        | FK people, set null: who they act as, null = self          |
+| `expires_at`          | timestamptz |                                                            |
+| `created_at`          | timestamptz |                                                            |
 
 Index `person_id` (revoke all sessions of a person). Switching to act as a
 household member updates `acting_as_person_id`; the service checks the
@@ -386,17 +386,17 @@ access at once.
 
 ### `registration_links`
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | uuid | |
-| `token_hash` | char(64) | unique, SHA-256 of the token in the link |
-| `branch_id` | uuid | FK branches: the registrant's home branch |
-| `created_by_person_id` | uuid | FK people: the staff member |
-| `note` | varchar(255) | nullable, who it was for (`Budi, sent by WA`) |
-| `used_at` | timestamptz | nullable |
-| `household_id` | uuid | FK households, nullable: set when used |
-| `revoked_at` | timestamptz | nullable |
-| `created_at` | timestamptz | |
+| Column                 | Type         | Notes                                         |
+| ---------------------- | ------------ | --------------------------------------------- |
+| `id`                   | uuid         |                                               |
+| `token_hash`           | char(64)     | unique, SHA-256 of the token in the link      |
+| `branch_id`            | uuid         | FK branches: the registrant's home branch     |
+| `created_by_person_id` | uuid         | FK people: the staff member                   |
+| `note`                 | varchar(255) | nullable, who it was for (`Budi, sent by WA`) |
+| `used_at`              | timestamptz  | nullable                                      |
+| `household_id`         | uuid         | FK households, nullable: set when used        |
+| `revoked_at`           | timestamptz  | nullable                                      |
+| `created_at`           | timestamptz  |                                               |
 
 Single use is enforced in SQL: registration runs `UPDATE registration_links
 SET used_at = now(), household_id = $1 WHERE token_hash = $2 AND used_at IS
@@ -414,13 +414,13 @@ group_id)` with `NULLS NOT DISTINCT`. Index `person_id`.
 
 ### `system_settings`
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | uuid | so audit rows can point at it |
-| `key` | varchar(100) | unique |
-| `value` | jsonb | not null |
-| `updated_by_person_id` | uuid | FK people, nullable |
-| `updated_at` | timestamptz | |
+| Column                 | Type         | Notes                         |
+| ---------------------- | ------------ | ----------------------------- |
+| `id`                   | uuid         | so audit rows can point at it |
+| `key`                  | varchar(100) | unique                        |
+| `value`                | jsonb        | not null                      |
+| `updated_by_person_id` | uuid         | FK people, nullable           |
+| `updated_at`           | timestamptz  |                               |
 
 One key for now: `household.adults_act_for_activated_adults`, boolean, default
 `true` (seeded). Code reads settings through one zod map of known keys, so an
@@ -441,15 +441,15 @@ a developer; people are only soft-deleted, so history keeps every name.
 
 ### `error_logs`
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | uuid | |
-| `message` | text | |
-| `stack` | text | nullable |
-| `route` | varchar(255) | nullable |
-| `method` | varchar(10) | nullable |
-| `person_id` | uuid | FK people, set null |
-| `created_at` | timestamptz | |
+| Column       | Type         | Notes               |
+| ------------ | ------------ | ------------------- |
+| `id`         | uuid         |                     |
+| `message`    | text         |                     |
+| `stack`      | text         | nullable            |
+| `route`      | varchar(255) | nullable            |
+| `method`     | varchar(10)  | nullable            |
+| `person_id`  | uuid         | FK people, set null |
+| `created_at` | timestamptz  |                     |
 
 Index `created_at` for the monthly purge. Before saving, the logger replaces
 emails, phone numbers, and 16-digit numbers in `message` and `stack` with

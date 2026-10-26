@@ -2,12 +2,12 @@
 
 Design rules shared by every screen of the GRII app. Product facts and audiences are in `PRODUCT.md`; code rules are in `CLAUDE.md`. Where this file gives a number, use that number.
 
-| File | Covers |
-| --- | --- |
-| `DESIGN.md` (this file) | Densities, colour (light and dark), type, formatting, brand mark, languages, motion |
-| `src/routes/(admin)/DESIGN.md` | Staff shell, list, detail and settings screens, check-in and serving cover |
-| `src/routes/(member)/DESIGN.md` | Member shell, bottom bar, home, sizes for older users |
-| `src/lib/components/DESIGN.md` | Buttons, dialogs, sheets, toasts, selects, pills, icons, states |
+| File                            | Covers                                                                              |
+| ------------------------------- | ----------------------------------------------------------------------------------- |
+| `DESIGN.md` (this file)         | Densities, colour (light and dark), type, formatting, brand mark, languages, motion |
+| `src/routes/(admin)/DESIGN.md`  | Staff shell, list, detail and settings screens, check-in and serving cover          |
+| `src/routes/(member)/DESIGN.md` | Member shell, bottom bar, home, sizes for older users                               |
+| `src/lib/components/DESIGN.md`  | Buttons, dialogs, sheets, toasts, selects, pills, icons, states                     |
 
 Read this file and the file for the folder you are working in before any UI work.
 
@@ -17,13 +17,13 @@ Style: **framed sheet** (dealt by tasteskill, seed 1632897614). One tinted frame
 
 One set of tokens and components serves two audiences. Every screen picks one density.
 
-| | Staff (`(admin)`) | Member (`(member)`) |
-| --- | --- | --- |
-| Main device | Desktop or laptop, long sessions | Phone, quick visits |
-| Body text | 14px (`0.875rem`) | 18px (`1.125rem`) |
-| Secondary text | 12px | 15px |
-| Page title | 22px / 600 | 24px / 600 |
-| Touch target | 32px controls, 48px rows | 48px minimum, 56px for the main action |
+|                | Staff (`(admin)`)                | Member (`(member)`)                    |
+| -------------- | -------------------------------- | -------------------------------------- |
+| Main device    | Desktop or laptop, long sessions | Phone, quick visits                    |
+| Body text      | 14px (`0.875rem`)                | 18px (`1.125rem`)                      |
+| Secondary text | 12px                             | 15px                                   |
+| Page title     | 22px / 600                       | 24px / 600                             |
+| Touch target   | 32px controls, 48px rows         | 48px minimum, 56px for the main action |
 
 All sizes are in `rem`, so OS text scaling works. Never set a pixel `font-size` on `html`. At 200% text size, layouts reflow and nothing is cut off or overlaps.
 
@@ -35,23 +35,34 @@ Breakpoints: phone up to 640px, tablet 641-1099px, desktop 1100px and wider.
 
 ```css
 :root {
-  --ground:   #f8f6f5;  /* the frame: one low-chroma step of the brand hue */
-  --surface:  #ffffff;  /* the sheet and cards */
-  --raised:   #f4f3f2;  /* wells, settings panels */
-  --active:   #ebe8e7;  /* active nav pill, selected row */
-  --border:   #e8e6e5;  --rule: #f0efee;  --control: #cdcbca;
+	--ground: #f8f6f5; /* the frame: one low-chroma step of the brand hue */
+	--surface: #ffffff; /* the sheet and cards */
+	--raised: #f4f3f2; /* wells, settings panels */
+	--active: #ebe8e7; /* active nav pill, selected row */
+	--border: #e8e6e5;
+	--rule: #f0efee;
+	--control: #cdcbca;
 
-  --text:     #131416;  --muted: #5d5f60;
+	--text: #131416;
+	--muted: #5d5f60;
 
-  --brand:    #8c0001;  --brand-ink: #ffffff;
-  --data:     #1b6c80;  /* the one chart hue */
-  --focus:    #8c0001;
-  --tab:      #8c0001;  /* active tab underline */
+	--brand: #8c0001;
+	--brand-ink: #ffffff;
+	--data: #1b6c80; /* the one chart hue */
+	--focus: #8c0001;
+	--tab: #8c0001; /* active tab underline */
 
-  --positive: #1e7b4f;  --pill-positive-bg: #dcfae5;  --pill-positive-ink: #04250e;
-  --negative: #c4242a;  --pill-negative-bg: #ffedea;  --pill-negative-ink: #831c1e;
-  --warning:  #92400e;  --pill-warning-bg:  #fffbeb;  --pill-warning-ink:  #92400e;
-  --pill-neutral-bg: #ebe8e7;  --pill-neutral-ink: #353736;
+	--positive: #1e7b4f;
+	--pill-positive-bg: #dcfae5;
+	--pill-positive-ink: #04250e;
+	--negative: #c4242a;
+	--pill-negative-bg: #ffedea;
+	--pill-negative-ink: #831c1e;
+	--warning: #92400e;
+	--pill-warning-bg: #fffbeb;
+	--pill-warning-ink: #92400e;
+	--pill-neutral-bg: #ebe8e7;
+	--pill-neutral-ink: #353736;
 }
 ```
 
@@ -60,21 +71,35 @@ Breakpoints: phone up to 640px, tablet 641-1099px, desktop 1100px and wider.
 True neutral greys, no navy or slate. Surfaces separate by lightness alone.
 
 ```css
-:root[data-theme="dark"] {
-  --ground:   #0f0f0f;  --surface: #171717;  --raised: #222222;  --active: #2a2a2a;
-  --border:   #2e2e2e;  --rule:    #232323;  --control: #4a4a4a;
+:root[data-theme='dark'] {
+	--ground: #0f0f0f;
+	--surface: #171717;
+	--raised: #222222;
+	--active: #2a2a2a;
+	--border: #2e2e2e;
+	--rule: #232323;
+	--control: #4a4a4a;
 
-  --text:     #f2f2f2;  --muted:   #b4b4b4;
+	--text: #f2f2f2;
+	--muted: #b4b4b4;
 
-  --brand:    #a3121a;  --brand-ink: #ffffff;  /* lifted from #8c0001 so the button reads on dark */
-  --data:     #4fb3c8;
-  --focus:    #f2f2f2;  /* a red ring on dark would read as an error */
-  --tab:      #f2f2f2;
+	--brand: #a3121a;
+	--brand-ink: #ffffff; /* lifted from #8c0001 so the button reads on dark */
+	--data: #4fb3c8;
+	--focus: #f2f2f2; /* a red ring on dark would read as an error */
+	--tab: #f2f2f2;
 
-  --positive: #3fc07a;  --pill-positive-bg: #172a1d;  --pill-positive-ink: #3fc07a;
-  --negative: #ef6b7e;  --pill-negative-bg: #2c1a20;  --pill-negative-ink: #ef6b7e;
-  --warning:  #e8a33c;  --pill-warning-bg:  #2b2111;  --pill-warning-ink:  #e8a33c;
-  --pill-neutral-bg: #2a2a2a;  --pill-neutral-ink: #d0d0d0;
+	--positive: #3fc07a;
+	--pill-positive-bg: #172a1d;
+	--pill-positive-ink: #3fc07a;
+	--negative: #ef6b7e;
+	--pill-negative-bg: #2c1a20;
+	--pill-negative-ink: #ef6b7e;
+	--warning: #e8a33c;
+	--pill-warning-bg: #2b2111;
+	--pill-warning-ink: #e8a33c;
+	--pill-neutral-bg: #2a2a2a;
+	--pill-neutral-ink: #d0d0d0;
 }
 ```
 
@@ -119,7 +144,7 @@ Never hand-build a number or date string.
 
 - **Money** is rupiah with `.` as the thousands separator and no decimals, in every locale: `Rp 1.250.000`. Always format with the `id-ID` locale, whatever the UI language, because `en` and `zh` print `IDR 1,250,000`:
   ```ts
-  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })
+  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
   ```
   Put this in one shared formatter, not in each component.
 - **Other numbers** (counts, attendance) use the UI locale with `Intl.NumberFormat(locale)`.
