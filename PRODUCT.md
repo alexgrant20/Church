@@ -105,7 +105,8 @@ Confirmed by the user on 2026-10-26. Items marked *open* are not decided yet. Ea
 ## Evidence on Hand
 
 - Logo: `static/brand/grii-logo-source.png` (886×443 PNG, white on transparent), scraped from pusat.grii.org. The user confirmed it as the logo to use. Because it is white, it only works on dark or `#8C0001` backgrounds. There is no vector version.
-- The only official brand color on record is the primary `#8C0001`. Do not present any other color as official.- No testimonials, statistics, or member counts may be fabricated. The 20,000+ figure is a planning estimate, not a public claim.
+- The only official brand color on record is the primary `#8C0001`. Do not present any other color as official.
+- No testimonials, statistics, or member counts may be fabricated. The 20,000+ figure is a planning estimate, not a public claim.
 
 ## Product Principles
 
