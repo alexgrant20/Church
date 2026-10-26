@@ -5,4 +5,4 @@
 </script>
 
 <h1 class="text-lg font-semibold text-slate-900">Profile</h1>
-<p class="mt-2 text-sm text-slate-600">{data.user.name}</p>
+<p class="mt-2 text-sm text-slate-600">{data.person.fullName}</p>

@@ -5,7 +5,7 @@ import { config } from '$lib/server/config';
 import { ValidationError } from '$lib/server/errors';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	if (locals.user) throw redirect(303, '/');
+	if (locals.person) throw redirect(303, '/');
 };
 
 export const actions: Actions = {

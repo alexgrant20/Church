@@ -5,15 +5,21 @@ import { config } from '$lib/server/config';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get(config.SESSION_COOKIE_NAME);
-	const { user, roleAssignments } = token
+	const { person, actingAsPersonId, roleAssignments } = token
 		? await validateSessionToken(token)
-		: { user: null, roleAssignments: [] };
+		: { person: null, actingAsPersonId: null, roleAssignments: [] };
 
-	event.locals.user = user;
+	event.locals.person = person;
+	event.locals.actingAsPersonId = actingAsPersonId;
 	event.locals.roleAssignments = roleAssignments;
 
 	return runWithContext(
-		{ userId: user?.id ?? null, roleAssignments, ip: event.getClientAddress() },
+		{
+			personId: person?.id ?? null,
+			actingAsPersonId,
+			roleAssignments,
+			ip: event.getClientAddress()
+		},
 		() => resolve(event)
 	);
 };

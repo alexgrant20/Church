@@ -6,7 +6,8 @@ declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
-			user: { id: string; email: string | null; name: string } | null;
+			person: { id: string; fullName: string } | null;
+			actingAsPersonId: string | null;
 			roleAssignments: RoleAssignment[];
 		}
 		// interface PageData {}

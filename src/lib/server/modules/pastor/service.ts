@@ -12,8 +12,8 @@ export async function assignPastor(input: unknown) {
 
 	await getBranch(data.branchId); // throws NotFoundError if the branch doesn't exist
 
-	if (await repo.findPastorAssignment(data.userId, data.branchId)) {
-		throw new ValidationError('User is already assigned as pastor for this branch');
+	if (await repo.findPastorAssignment(data.personId, data.branchId)) {
+		throw new ValidationError('Person is already assigned as pastor for this branch');
 	}
 
 	return db.transaction(async (tx) => {
@@ -23,7 +23,7 @@ export async function assignPastor(input: unknown) {
 			entityType: 'role_assignment',
 			entityId: assignment.id,
 			branchId: data.branchId,
-			actorUserId: ctx.userId,
+			actorPersonId: ctx.personId,
 			diff: { after: data }
 		});
 		return assignment;

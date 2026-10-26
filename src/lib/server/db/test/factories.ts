@@ -1,7 +1,20 @@
 import { db } from '$lib/server/db/client';
-import { branches, cities, countries, households, people, regions } from '$lib/server/db/schema';
+import { createHash } from 'node:crypto';
+import {
+	accounts,
+	branches,
+	cities,
+	countries,
+	households,
+	people,
+	regions,
+	registrationLinks
+} from '$lib/server/db/schema';
+import { hashPassword } from '$lib/server/modules/auth/password';
 
 export type NewBranch = typeof branches.$inferInsert;
+export type NewAccount = typeof accounts.$inferInsert;
+export type NewRegistrationLink = typeof registrationLinks.$inferInsert;
 export type NewPerson = typeof people.$inferInsert;
 
 let counter = 0;
@@ -65,4 +78,32 @@ export async function makePerson(overrides: Partial<NewPerson> = {}) {
 		})
 		.returning();
 	return person;
+}
+
+export async function makeAccount(personId: string, overrides: Partial<NewAccount> = {}) {
+	const n = ++counter;
+	const [account] = await db
+		.insert(accounts)
+		.values({
+			personId,
+			email: `person${n}@mail.test`,
+			passwordHash: await hashPassword('correct-horse'),
+			activatedAt: new Date(),
+			...overrides
+		})
+		.returning();
+	return account;
+}
+
+export async function makeRegistrationLink(overrides: Partial<NewRegistrationLink> = {}) {
+	const [link] = await db
+		.insert(registrationLinks)
+		.values({
+			tokenHash: createHash('sha256').update(String(++counter)).digest('hex'),
+			branchId: overrides.branchId ?? (await makeBranch()).id,
+			createdByPersonId: overrides.createdByPersonId ?? (await makePerson()).id,
+			...overrides
+		})
+		.returning();
+	return link;
 }

@@ -1,20 +1,14 @@
 import { pgTable, uuid, pgEnum, timestamp } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+import { people } from './people';
 import { branches, groups } from './branch';
 
-export const roleEnum = pgEnum('role', [
-	'superadmin',
-	'pastor',
-	'branch_admin',
-	'group_admin',
-	'member'
-]);
+export const roleEnum = pgEnum('role', ['superadmin', 'pastor', 'branch_admin', 'group_admin']);
 
 export const roleAssignments = pgTable('role_assignments', {
 	id: uuid().primaryKey().defaultRandom(),
-	userId: uuid()
+	personId: uuid()
 		.notNull()
-		.references(() => users.id, { onDelete: 'cascade' }),
+		.references(() => people.id, { onDelete: 'restrict' }),
 	role: roleEnum().notNull(),
 	branchId: uuid().references(() => branches.id, { onDelete: 'cascade' }),
 	groupId: uuid().references(() => groups.id, { onDelete: 'cascade' }),

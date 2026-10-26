@@ -16,7 +16,7 @@ export async function createBranch(input: unknown) {
 			entityType: 'branch',
 			entityId: branch.id,
 			branchId: branch.id,
-			actorUserId: ctx.userId,
+			actorPersonId: ctx.personId,
 			diff: { after: data }
 		});
 		return branch;

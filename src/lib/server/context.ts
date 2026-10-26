@@ -1,13 +1,14 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 
 export type RoleAssignment = {
-	role: 'superadmin' | 'pastor' | 'branch_admin' | 'group_admin' | 'member';
+	role: 'superadmin' | 'pastor' | 'branch_admin' | 'group_admin';
 	branchId: string | null;
 	groupId: string | null;
 };
 
 export type RequestContext = {
-	userId: string | null;
+	personId: string | null;
+	actingAsPersonId: string | null;
 	roleAssignments: RoleAssignment[];
 	ip: string;
 };

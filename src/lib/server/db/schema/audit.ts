@@ -1,12 +1,13 @@
 import { pgTable, uuid, varchar, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+import { people } from './people';
 import { branches } from './branch';
 
 export const auditLogs = pgTable(
 	'audit_logs',
 	{
 		id: uuid().primaryKey().defaultRandom(),
-		actorUserId: uuid().references(() => users.id, { onDelete: 'set null' }),
+		actorPersonId: uuid().references(() => people.id, { onDelete: 'set null' }),
+		onBehalfOfPersonId: uuid().references(() => people.id, { onDelete: 'set null' }),
 		action: varchar({ length: 100 }).notNull(),
 		entityType: varchar({ length: 100 }).notNull(),
 		entityId: uuid().notNull(),
@@ -17,6 +18,6 @@ export const auditLogs = pgTable(
 	},
 	(table) => [
 		index('audit_logs_entity_idx').on(table.entityType, table.entityId),
-		index('audit_logs_actor_created_idx').on(table.actorUserId, table.createdAt)
+		index('audit_logs_actor_created_idx').on(table.actorPersonId, table.createdAt)
 	]
 );

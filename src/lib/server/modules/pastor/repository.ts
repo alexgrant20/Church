@@ -5,22 +5,22 @@ import type { Transaction } from '$lib/server/db/client';
 
 export async function insertPastorAssignment(
 	tx: Transaction,
-	data: { userId: string; branchId: string }
+	data: { personId: string; branchId: string }
 ) {
 	const [assignment] = await tx
 		.insert(roleAssignments)
-		.values({ userId: data.userId, role: 'pastor', branchId: data.branchId, groupId: null })
+		.values({ personId: data.personId, role: 'pastor', branchId: data.branchId, groupId: null })
 		.returning();
 	return assignment;
 }
 
-export async function findPastorAssignment(userId: string, branchId: string) {
+export async function findPastorAssignment(personId: string, branchId: string) {
 	const [row] = await db
 		.select()
 		.from(roleAssignments)
 		.where(
 			and(
-				eq(roleAssignments.userId, userId),
+				eq(roleAssignments.personId, personId),
 				eq(roleAssignments.branchId, branchId),
 				eq(roleAssignments.role, 'pastor')
 			)

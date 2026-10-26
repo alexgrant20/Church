@@ -9,13 +9,14 @@ type RecordAuditInput = {
 	branchId: string | null;
 	diff?: unknown;
 	metadata?: unknown;
-	actorUserId?: string | null;
+	actorPersonId?: string | null;
 };
 
 export async function recordAudit(tx: Transaction, input: RecordAuditInput) {
 	const ctx = safeGetContext();
 	await tx.insert(auditLogs).values({
-		actorUserId: input.actorUserId ?? ctx?.userId ?? null,
+		actorPersonId: input.actorPersonId ?? ctx?.personId ?? null,
+		onBehalfOfPersonId: ctx?.actingAsPersonId ?? null,
 		action: input.action,
 		entityType: input.entityType,
 		entityId: input.entityId,

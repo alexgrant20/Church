@@ -1,32 +1,53 @@
 import { db } from '$lib/server/db/client';
-import { users, sessions } from '$lib/server/db/schema/auth';
+import { accounts, people, sessions } from '$lib/server/db/schema';
 import { roleAssignments } from '$lib/server/db/schema/roles';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import type { Transaction } from '$lib/server/db/client';
 
-export async function findUserByEmailOrPhone(identifier: string) {
-	const [user] = await db.select().from(users).where(eq(users.email, identifier)).limit(1);
-	return user ?? null;
+export async function findAccountByIdentifier(identifier: string) {
+	const match = identifier.includes('@')
+		? sql`lower(${accounts.email}) = lower(${identifier})`
+		: eq(accounts.phone, identifier);
+	const [account] = await db
+		.select({
+			personId: accounts.personId,
+			passwordHash: accounts.passwordHash,
+			status: accounts.status
+		})
+		.from(accounts)
+		.innerJoin(people, eq(people.id, accounts.personId))
+		.where(and(match, isNull(people.deletedAt)))
+		.limit(1);
+	return account ?? null;
 }
 
-export async function findRoleAssignmentsByUserId(userId: string) {
-	return db.select().from(roleAssignments).where(eq(roleAssignments.userId, userId));
+export async function findRoleAssignmentsByPersonId(personId: string) {
+	return db.select().from(roleAssignments).where(eq(roleAssignments.personId, personId));
 }
 
 export async function insertSession(
 	tx: Transaction,
-	data: { id: string; userId: string; expiresAt: Date }
+	data: { id: string; personId: string; expiresAt: Date }
 ) {
 	const [session] = await tx.insert(sessions).values(data).returning();
 	return session;
 }
 
+export async function touchLastLogin(tx: Transaction, personId: string) {
+	await tx.update(accounts).set({ lastLoginAt: new Date() }).where(eq(accounts.personId, personId));
+}
+
 export async function findSessionById(sessionId: string) {
 	const [row] = await db
-		.select({ session: sessions, user: users })
+		.select({
+			expiresAt: sessions.expiresAt,
+			actingAsPersonId: sessions.actingAsPersonId,
+			personId: people.id,
+			fullName: people.fullName
+		})
 		.from(sessions)
-		.innerJoin(users, eq(sessions.userId, users.id))
-		.where(eq(sessions.id, sessionId))
+		.innerJoin(people, eq(sessions.personId, people.id))
+		.where(and(eq(sessions.id, sessionId), isNull(people.deletedAt)))
 		.limit(1);
 	return row ?? null;
 }

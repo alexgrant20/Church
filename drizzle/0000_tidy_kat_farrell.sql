@@ -1,7 +1,9 @@
-CREATE TYPE "public"."user_status" AS ENUM('active', 'inactive', 'suspended');--> statement-breakpoint
+CREATE TYPE "public"."account_status" AS ENUM('active', 'suspended');--> statement-breakpoint
+CREATE TYPE "public"."otp_channel" AS ENUM('whatsapp', 'email');--> statement-breakpoint
+CREATE TYPE "public"."otp_purpose" AS ENUM('login', 'activation', 'password_reset');--> statement-breakpoint
 CREATE TYPE "public"."relationship_kind" AS ENUM('parent', 'spouse');--> statement-breakpoint
 CREATE TYPE "public"."sex" AS ENUM('male', 'female');--> statement-breakpoint
-CREATE TYPE "public"."role" AS ENUM('superadmin', 'pastor', 'branch_admin', 'group_admin', 'member');--> statement-breakpoint
+CREATE TYPE "public"."role" AS ENUM('superadmin', 'pastor', 'branch_admin', 'group_admin');--> statement-breakpoint
 CREATE TABLE "cities" (
 	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
 	"region_id" uuid NOT NULL,
@@ -25,23 +27,60 @@ CREATE TABLE "regions" (
 	CONSTRAINT "regions_country_name_uniq" UNIQUE("country_id","name")
 );
 --> statement-breakpoint
-CREATE TABLE "sessions" (
-	"id" varchar(255) PRIMARY KEY NOT NULL,
-	"user_id" uuid NOT NULL,
-	"expires_at" timestamp with time zone NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "users" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+CREATE TABLE "accounts" (
+	"person_id" uuid PRIMARY KEY NOT NULL,
 	"email" varchar(255),
-	"phone" varchar(32),
-	"password_hash" varchar(255) NOT NULL,
-	"name" varchar(255) NOT NULL,
-	"status" "user_status" DEFAULT 'active' NOT NULL,
+	"phone" varchar(20),
+	"password_hash" varchar(255),
+	"activated_at" timestamp with time zone,
+	"last_login_at" timestamp with time zone,
+	"status" "account_status" DEFAULT 'active' NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "users_email_unique" UNIQUE("email"),
-	CONSTRAINT "users_phone_unique" UNIQUE("phone")
+	CONSTRAINT "accounts_phone_unique" UNIQUE("phone"),
+	CONSTRAINT "accounts_email_or_phone" CHECK ("accounts"."email" is not null or "accounts"."phone" is not null)
+);
+--> statement-breakpoint
+CREATE TABLE "login_throttles" (
+	"identifier_hash" char(64) PRIMARY KEY NOT NULL,
+	"failed_count" smallint DEFAULT 0 NOT NULL,
+	"locked_until" timestamp with time zone,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "otp_codes" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"person_id" uuid NOT NULL,
+	"purpose" "otp_purpose" NOT NULL,
+	"channel" "otp_channel" NOT NULL,
+	"code_hash" char(64) NOT NULL,
+	"challenge_hash" char(64) NOT NULL,
+	"attempts" smallint DEFAULT 0 NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL,
+	"consumed_at" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "otp_codes_challengeHash_unique" UNIQUE("challenge_hash")
+);
+--> statement-breakpoint
+CREATE TABLE "registration_links" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"token_hash" char(64) NOT NULL,
+	"branch_id" uuid NOT NULL,
+	"created_by_person_id" uuid NOT NULL,
+	"note" varchar(255),
+	"used_at" timestamp with time zone,
+	"household_id" uuid,
+	"revoked_at" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone
+);
+--> statement-breakpoint
+CREATE TABLE "sessions" (
+	"id" char(64) PRIMARY KEY NOT NULL,
+	"person_id" uuid NOT NULL,
+	"acting_as_person_id" uuid,
+	"expires_at" timestamp with time zone NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "branches" (
@@ -117,7 +156,7 @@ CREATE TABLE "person_relationships" (
 --> statement-breakpoint
 CREATE TABLE "role_assignments" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"user_id" uuid NOT NULL,
+	"person_id" uuid NOT NULL,
 	"role" "role" NOT NULL,
 	"branch_id" uuid,
 	"group_id" uuid,
@@ -126,7 +165,8 @@ CREATE TABLE "role_assignments" (
 --> statement-breakpoint
 CREATE TABLE "audit_logs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"actor_user_id" uuid,
+	"actor_person_id" uuid,
+	"on_behalf_of_person_id" uuid,
 	"action" varchar(100) NOT NULL,
 	"entity_type" varchar(100) NOT NULL,
 	"entity_id" uuid NOT NULL,
@@ -138,7 +178,13 @@ CREATE TABLE "audit_logs" (
 --> statement-breakpoint
 ALTER TABLE "cities" ADD CONSTRAINT "cities_region_id_regions_id_fk" FOREIGN KEY ("region_id") REFERENCES "public"."regions"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "regions" ADD CONSTRAINT "regions_country_id_countries_id_fk" FOREIGN KEY ("country_id") REFERENCES "public"."countries"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "accounts" ADD CONSTRAINT "accounts_person_id_people_id_fk" FOREIGN KEY ("person_id") REFERENCES "public"."people"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "otp_codes" ADD CONSTRAINT "otp_codes_person_id_people_id_fk" FOREIGN KEY ("person_id") REFERENCES "public"."people"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "registration_links" ADD CONSTRAINT "registration_links_branch_id_branches_id_fk" FOREIGN KEY ("branch_id") REFERENCES "public"."branches"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "registration_links" ADD CONSTRAINT "registration_links_created_by_person_id_people_id_fk" FOREIGN KEY ("created_by_person_id") REFERENCES "public"."people"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "registration_links" ADD CONSTRAINT "registration_links_household_id_households_id_fk" FOREIGN KEY ("household_id") REFERENCES "public"."households"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_person_id_people_id_fk" FOREIGN KEY ("person_id") REFERENCES "public"."people"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_acting_as_person_id_people_id_fk" FOREIGN KEY ("acting_as_person_id") REFERENCES "public"."people"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "branches" ADD CONSTRAINT "branches_city_id_cities_id_fk" FOREIGN KEY ("city_id") REFERENCES "public"."cities"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "groups" ADD CONSTRAINT "groups_branch_id_branches_id_fk" FOREIGN KEY ("branch_id") REFERENCES "public"."branches"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "member_code_counters" ADD CONSTRAINT "member_code_counters_branch_id_branches_id_fk" FOREIGN KEY ("branch_id") REFERENCES "public"."branches"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
@@ -149,14 +195,20 @@ ALTER TABLE "people" ADD CONSTRAINT "people_registered_by_person_id_people_id_fk
 ALTER TABLE "people" ADD CONSTRAINT "people_city_id_cities_id_fk" FOREIGN KEY ("city_id") REFERENCES "public"."cities"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "person_relationships" ADD CONSTRAINT "person_relationships_person_id_people_id_fk" FOREIGN KEY ("person_id") REFERENCES "public"."people"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "person_relationships" ADD CONSTRAINT "person_relationships_related_person_id_people_id_fk" FOREIGN KEY ("related_person_id") REFERENCES "public"."people"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_person_id_people_id_fk" FOREIGN KEY ("person_id") REFERENCES "public"."people"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_branch_id_branches_id_fk" FOREIGN KEY ("branch_id") REFERENCES "public"."branches"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_group_id_groups_id_fk" FOREIGN KEY ("group_id") REFERENCES "public"."groups"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_actor_user_id_users_id_fk" FOREIGN KEY ("actor_user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_actor_person_id_people_id_fk" FOREIGN KEY ("actor_person_id") REFERENCES "public"."people"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_on_behalf_of_person_id_people_id_fk" FOREIGN KEY ("on_behalf_of_person_id") REFERENCES "public"."people"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_branch_id_branches_id_fk" FOREIGN KEY ("branch_id") REFERENCES "public"."branches"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "cities_region_id_index" ON "cities" USING btree ("region_id");--> statement-breakpoint
 CREATE INDEX "cities_name_trgm_idx" ON "cities" USING gin ("name" gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "regions_country_id_index" ON "regions" USING btree ("country_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "accounts_email_uniq" ON "accounts" USING btree (lower("email")) WHERE "accounts"."email" is not null;--> statement-breakpoint
+CREATE INDEX "otp_codes_person_id_purpose_created_at_index" ON "otp_codes" USING btree ("person_id","purpose","created_at");--> statement-breakpoint
+CREATE UNIQUE INDEX "registration_links_token_hash_uniq" ON "registration_links" USING btree ("token_hash") WHERE "registration_links"."deleted_at" is null;--> statement-breakpoint
+CREATE INDEX "registration_links_branch_id_created_at_index" ON "registration_links" USING btree ("branch_id","created_at");--> statement-breakpoint
+CREATE INDEX "sessions_person_id_index" ON "sessions" USING btree ("person_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "branches_code_uniq" ON "branches" USING btree ("code") WHERE "branches"."deleted_at" is null;--> statement-breakpoint
 CREATE INDEX "branches_city_id_index" ON "branches" USING btree ("city_id");--> statement-breakpoint
 CREATE INDEX "groups_branch_id_index" ON "groups" USING btree ("branch_id");--> statement-breakpoint
@@ -171,4 +223,4 @@ CREATE UNIQUE INDEX "person_relationships_uniq" ON "person_relationships" USING 
 CREATE INDEX "person_relationships_person_id_index" ON "person_relationships" USING btree ("person_id");--> statement-breakpoint
 CREATE INDEX "person_relationships_related_person_id_index" ON "person_relationships" USING btree ("related_person_id");--> statement-breakpoint
 CREATE INDEX "audit_logs_entity_idx" ON "audit_logs" USING btree ("entity_type","entity_id");--> statement-breakpoint
-CREATE INDEX "audit_logs_actor_created_idx" ON "audit_logs" USING btree ("actor_user_id","created_at");
+CREATE INDEX "audit_logs_actor_created_idx" ON "audit_logs" USING btree ("actor_person_id","created_at");
