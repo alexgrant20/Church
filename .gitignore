@@ -32,3 +32,5 @@ blob-report/
 
 # Paraglide generated
 src/lib/paraglide
+
+project.inlang/cache

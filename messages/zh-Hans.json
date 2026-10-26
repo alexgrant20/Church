@@ -12,5 +12,10 @@
 	"login_identifier_label": "电子邮件或电话",
 	"login_password_label": "密码",
 	"login_title": "登录",
-	"profile_title": "个人资料"
+	"profile_title": "个人资料",
+	"common_close": "关闭",
+	"theme_label": "主题",
+	"theme_light": "浅色",
+	"theme_dark": "深色",
+	"theme_system": "跟随系统"
 }

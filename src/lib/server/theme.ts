@@ -1,6 +1,5 @@
 import type { Cookies } from '@sveltejs/kit';
-
-export type Theme = 'light' | 'dark' | 'system';
+import type { Theme } from '$lib/theme';
 
 export const THEME_COOKIE = 'theme';
 

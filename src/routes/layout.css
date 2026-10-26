@@ -3,6 +3,7 @@
 @import '@fontsource/ibm-plex-sans/500.css';
 @import '@fontsource/ibm-plex-sans/600.css';
 @import '@fontsource/ibm-plex-mono/400.css';
+@import 'tw-animate-css';
 
 /* Tokens: DESIGN.md section 2. Light is the root; dark is set by cookie or by the OS. */
 :root {
@@ -17,6 +18,7 @@
 	--text: #131416;
 	--muted: #5d5f60;
 
+	--logo-field: #8c0001; /* the white logo only ever sits on this, in both themes */
 	--brand: #8c0001;
 	--brand-ink: #ffffff;
 	--data: #1b6c80;
@@ -132,6 +134,7 @@
 	--color-control: var(--control);
 	--color-text: var(--text);
 	--color-muted: var(--muted);
+	--color-logo-field: var(--logo-field);
 	--color-brand: var(--brand);
 	--color-brand-ink: var(--brand-ink);
 	--color-data: var(--data);

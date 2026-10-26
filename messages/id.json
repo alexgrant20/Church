@@ -12,5 +12,10 @@
 	"login_identifier_label": "Email atau telepon",
 	"profile_title": "Profil",
 	"login_password_label": "Kata sandi",
-	"login_title": "Masuk"
+	"login_title": "Masuk",
+	"common_close": "Tutup",
+	"theme_label": "Tema",
+	"theme_light": "Terang",
+	"theme_dark": "Gelap",
+	"theme_system": "Sistem"
 }

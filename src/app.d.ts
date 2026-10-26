@@ -1,7 +1,7 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 import type { RoleAssignment } from '$lib/server/context';
-import type { Theme } from '$lib/server/theme';
+import type { Theme } from '$lib/theme';
 
 declare global {
 	namespace App {

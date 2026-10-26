@@ -12,5 +12,10 @@
 	"login_identifier_label": "電子郵件或電話",
 	"login_password_label": "密碼",
 	"login_title": "登入",
-	"profile_title": "個人檔案"
+	"profile_title": "個人檔案",
+	"common_close": "關閉",
+	"theme_label": "主題",
+	"theme_light": "淺色",
+	"theme_dark": "深色",
+	"theme_system": "跟隨系統"
 }
