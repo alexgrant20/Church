@@ -5,16 +5,17 @@
 # 5432/5433 without checking `docker compose ps` + a host port scan first.
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: churchapp
       POSTGRES_PASSWORD: churchapp
       POSTGRES_DB: churchapp_dev
+      POSTGRES_INITDB_ARGS: '--locale-provider=builtin --builtin-locale=C.UTF-8'
     ports:
       - '55432:5432'
     volumes:
-      - churchapp_pgdata:/var/lib/postgresql/data
+      - churchapp_pgdata:/var/lib/postgresql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U churchapp -d churchapp_dev']
       interval: 5s
@@ -22,16 +23,17 @@ services:
       retries: 10
 
   postgres-test:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: churchapp
       POSTGRES_PASSWORD: churchapp
       POSTGRES_DB: churchapp_test
+      POSTGRES_INITDB_ARGS: '--locale-provider=builtin --builtin-locale=C.UTF-8'
     ports:
       - '55433:5432'
     tmpfs:
-      - /var/lib/postgresql/data
+      - /var/lib/postgresql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U churchapp -d churchapp_test']
       interval: 5s

@@ -14,14 +14,14 @@ Church management system for GRII (Gereja Reformed Injili Indonesia). It is **no
 
 SvelteKit 2 + Svelte 5 (runes), TypeScript, Tailwind 4, Drizzle ORM + Postgres, zod 4, adapter-node, Bun. Installable PWA. There is no native app.
 
-| Concern       | Choice                                                              |
-| ------------- | ------------------------------------------------------------------- |
-| State         | Svelte 5 runes + SvelteKit `load` / form actions. No store library. |
-| Forms         | `sveltekit-superforms` + zod schema shared by client and server     |
-| i18n (UI)     | Paraglide JS. Locales: `en` (base), `id`, `zh-Hans`, `zh-Hant`      |
+| Concern       | Choice                                                                                |
+| ------------- | ------------------------------------------------------------------------------------- |
+| State         | Svelte 5 runes + SvelteKit `load` / form actions. No store library.                   |
+| Forms         | `sveltekit-superforms` + zod schema shared by client and server                       |
+| i18n (UI)     | Paraglide JS. Locales: `en` (base), `id`, `zh-Hans`, `zh-Hant`                        |
 | UI components | shadcn-svelte on Bits UI, copied into `src/lib/components/ui/`. Toasts: svelte-sonner |
-| Data fetching | SvelteKit `load` + `+server.ts` JSON endpoints. No TanStack Query.  |
-| Long lists    | Keyset pagination + `@tanstack/svelte-virtual`                      |
+| Data fetching | SvelteKit `load` + `+server.ts` JSON endpoints. No TanStack Query.                    |
+| Long lists    | Keyset pagination + `@tanstack/svelte-virtual`                                        |
 
 ## Commands
 
@@ -30,9 +30,11 @@ bun run dev            # dev server
 bun run check          # svelte-check (types)
 bun run lint           # prettier + eslint
 bun run test:unit      # vitest
+bun run test:int       # integration tests against the test Postgres
 bun run test:e2e       # playwright
 bun run db:generate    # drizzle migration from schema
 bun run db:migrate
+bun run db:seed        # location data and dev households
 ```
 
 Postgres runs in docker-compose on ports 55432 (dev) and 55433 (test).

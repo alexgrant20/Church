@@ -16,7 +16,8 @@
 		"test": "bun run test:unit -- --run && bun run test:e2e",
 		"test:unit": "vitest",
 		"db:generate": "drizzle-kit generate",
-		"db:migrate": "drizzle-kit migrate",
+		"test:int": "vitest --project integration --run",
+		"db:migrate": "bun scripts/migrate.ts",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio"
 	},

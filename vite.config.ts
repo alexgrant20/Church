@@ -1,4 +1,5 @@
 import tailwindcss from '@tailwindcss/vite';
+import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import adapter from '@sveltejs/adapter-node';
@@ -38,8 +39,20 @@ export default defineConfig({
 				test: {
 					name: 'server',
 					environment: 'node',
-					include: ['src/**/*.{test,spec}.{js,ts}'],
-					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
+					include: ['src/**/*.{test,spec}.{js,ts}', 'scripts/**/*.test.ts'],
+					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}', 'src/**/*.int.test.ts']
+				}
+			},
+
+			{
+				extends: './vite.config.ts',
+				test: {
+					name: 'integration',
+					environment: 'node',
+					include: ['src/**/*.int.test.ts'],
+					fileParallelism: false,
+					globalSetup: ['src/lib/server/db/test/global-setup.ts'],
+					env: loadEnv('test', process.cwd(), '')
 				}
 			}
 		]
