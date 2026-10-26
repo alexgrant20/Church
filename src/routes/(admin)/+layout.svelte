@@ -14,7 +14,7 @@
 	const title = $derived(navItems.find((i) => page.url.pathname.startsWith(i.href))?.label());
 </script>
 
-<div class="density-staff min-h-dvh bg-ground text-text min-[1100px]:flex">
+<div class="density-staff flex min-h-dvh bg-ground text-text">
 	<StaffSidebar />
 
 	<div class="flex min-w-0 flex-1 flex-col">

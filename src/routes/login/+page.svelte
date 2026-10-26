@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages';
-	import BrandMark from '$lib/components/BrandMark.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
@@ -13,7 +12,7 @@
 	<div
 		class="flex justify-center bg-logo-field px-4 py-10 min-[1100px]:w-1/2 min-[1100px]:items-center"
 	>
-		<BrandMark height={32} />
+		<img src="/brand/grii-logo-source.png" alt="GRII" class="h-20 w-auto" />
 	</div>
 
 	<main class="mx-auto w-full max-w-md px-4 py-10 min-[1100px]:flex min-[1100px]:items-center">
