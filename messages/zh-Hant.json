@@ -1,0 +1,16 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"branches_title": "分支",
+	"error_invalid_credentials": "電子郵件、電話或密碼無效。",
+	"branches_empty": "尚無分支。",
+	"login_submit": "登入",
+	"dashboard_title": "儀表板",
+	"app_name": "ChurchApp",
+	"nav_profile": "個人檔案",
+	"nav_branches": "分支",
+	"nav_dashboard": "儀表板",
+	"login_identifier_label": "電子郵件或電話",
+	"login_password_label": "密碼",
+	"login_title": "登入",
+	"profile_title": "個人檔案"
+}

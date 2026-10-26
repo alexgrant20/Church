@@ -1,9 +1,19 @@
 import type { Handle } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
 import { runWithContext } from '$lib/server/context';
 import { validateSessionToken } from '$lib/server/modules/auth/service';
 import { config } from '$lib/server/config';
+import { paraglideMiddleware } from '$lib/paraglide/server';
 
-export const handle: Handle = async ({ event, resolve }) => {
+const handleParaglide: Handle = ({ event, resolve }) =>
+	paraglideMiddleware(event.request, ({ request, locale }) => {
+		event.request = request;
+		return resolve(event, {
+			transformPageChunk: ({ html }) => html.replace('%paraglide.lang%', locale)
+		});
+	});
+
+const handleSession: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get(config.SESSION_COOKIE_NAME);
 	const { person, actingAsPersonId, roleAssignments } = token
 		? await validateSessionToken(token)
@@ -23,3 +33,5 @@ export const handle: Handle = async ({ event, resolve }) => {
 		() => resolve(event)
 	);
 };
+
+export const handle: Handle = sequence(handleParaglide, handleSession);

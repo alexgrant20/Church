@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages';
 	import type { ActionData } from './$types';
 
 	let { form }: { form: ActionData } = $props();
@@ -9,14 +10,16 @@
 		method="POST"
 		class="w-full max-w-sm space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
 	>
-		<h1 class="text-xl font-semibold text-slate-900">Sign in</h1>
+		<h1 class="text-xl font-semibold text-slate-900">{m.login_title()}</h1>
 
-		{#if form?.message}
-			<p class="text-sm text-red-600">{form.message}</p>
+		{#if form?.error}
+			<p class="text-sm text-red-600">{m[form.error]()}</p>
 		{/if}
 
 		<div class="space-y-1">
-			<label for="identifier" class="text-sm font-medium text-slate-700">Email or phone</label>
+			<label for="identifier" class="text-sm font-medium text-slate-700">
+				{m.login_identifier_label()}
+			</label>
 			<input
 				id="identifier"
 				name="identifier"
@@ -27,7 +30,9 @@
 		</div>
 
 		<div class="space-y-1">
-			<label for="password" class="text-sm font-medium text-slate-700">Password</label>
+			<label for="password" class="text-sm font-medium text-slate-700">
+				{m.login_password_label()}
+			</label>
 			<input
 				id="password"
 				name="password"
@@ -41,7 +46,7 @@
 			type="submit"
 			class="w-full rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white"
 		>
-			Sign in
+			{m.login_submit()}
 		</button>
 	</form>
 </div>

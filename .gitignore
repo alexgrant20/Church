@@ -29,3 +29,6 @@ blob-report/
 
 # Seed downloads
 .seed-cache/
+
+# Paraglide generated
+src/lib/paraglide

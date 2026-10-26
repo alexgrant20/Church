@@ -20,10 +20,12 @@
 		"db:migrate": "bun scripts/migrate.ts",
 		"db:seed": "bun scripts/seed/index.ts",
 		"db:push": "drizzle-kit push",
-		"db:studio": "drizzle-kit studio"
+		"db:studio": "drizzle-kit studio",
+		"i18n:translate": "bunx @inlang/cli machine translate --project ./project.inlang"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
+		"@inlang/paraglide-js": "^2.29.1",
 		"@playwright/test": "^1.60.0",
 		"@sveltejs/adapter-node": "^5.5.4",
 		"@sveltejs/kit": "^2.63.0",

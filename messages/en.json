@@ -1,0 +1,16 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"login_title": "Sign in",
+	"login_identifier_label": "Email or phone",
+	"login_password_label": "Password",
+	"login_submit": "Sign in",
+	"error_invalid_credentials": "Invalid email, phone, or password.",
+	"app_name": "ChurchApp",
+	"nav_dashboard": "Dashboard",
+	"nav_branches": "Branches",
+	"nav_profile": "Profile",
+	"dashboard_title": "Dashboard",
+	"branches_title": "Branches",
+	"branches_empty": "No branches yet.",
+	"profile_title": "Profile"
+}

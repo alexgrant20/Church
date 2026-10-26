@@ -29,7 +29,7 @@ export const actions: Actions = {
 			});
 		} catch (err) {
 			if (err instanceof ValidationError) {
-				return fail(400, { message: err.message });
+				return fail(400, { error: 'error_invalid_credentials' as const });
 			}
 			throw err;
 		}
