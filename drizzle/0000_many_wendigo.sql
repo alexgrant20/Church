@@ -1,5 +1,28 @@
 CREATE TYPE "public"."user_status" AS ENUM('active', 'inactive', 'suspended');--> statement-breakpoint
 CREATE TYPE "public"."role" AS ENUM('superadmin', 'pastor', 'branch_admin', 'group_admin', 'member');--> statement-breakpoint
+CREATE TABLE "cities" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"region_id" uuid NOT NULL,
+	"code" varchar(10),
+	"name" varchar(150) NOT NULL,
+	CONSTRAINT "cities_region_name_uniq" UNIQUE("region_id","name")
+);
+--> statement-breakpoint
+CREATE TABLE "countries" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"iso2" char(2) NOT NULL,
+	"name" varchar(100) NOT NULL,
+	CONSTRAINT "countries_iso2_unique" UNIQUE("iso2")
+);
+--> statement-breakpoint
+CREATE TABLE "regions" (
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"country_id" uuid NOT NULL,
+	"code" varchar(10),
+	"name" varchar(150) NOT NULL,
+	CONSTRAINT "regions_country_name_uniq" UNIQUE("country_id","name")
+);
+--> statement-breakpoint
 CREATE TABLE "sessions" (
 	"id" varchar(255) PRIMARY KEY NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -20,17 +43,23 @@ CREATE TABLE "users" (
 );
 --> statement-breakpoint
 CREATE TABLE "branches" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
+	"code" varchar(8) NOT NULL,
 	"name" varchar(255) NOT NULL,
-	"address" varchar(500),
+	"address_line" varchar(500) NOT NULL,
+	"postal_code" varchar(10),
+	"city_id" uuid NOT NULL,
+	"timezone" varchar(50) NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone
 );
 --> statement-breakpoint
 CREATE TABLE "groups" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
 	"branch_id" uuid NOT NULL,
-	"name" varchar(255) NOT NULL
+	"name" varchar(255) NOT NULL,
+	"deleted_at" timestamp with time zone
 );
 --> statement-breakpoint
 CREATE TABLE "role_assignments" (
@@ -54,12 +83,21 @@ CREATE TABLE "audit_logs" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+ALTER TABLE "cities" ADD CONSTRAINT "cities_region_id_regions_id_fk" FOREIGN KEY ("region_id") REFERENCES "public"."regions"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "regions" ADD CONSTRAINT "regions_country_id_countries_id_fk" FOREIGN KEY ("country_id") REFERENCES "public"."countries"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "groups" ADD CONSTRAINT "groups_branch_id_branches_id_fk" FOREIGN KEY ("branch_id") REFERENCES "public"."branches"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "branches" ADD CONSTRAINT "branches_city_id_cities_id_fk" FOREIGN KEY ("city_id") REFERENCES "public"."cities"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "groups" ADD CONSTRAINT "groups_branch_id_branches_id_fk" FOREIGN KEY ("branch_id") REFERENCES "public"."branches"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_branch_id_branches_id_fk" FOREIGN KEY ("branch_id") REFERENCES "public"."branches"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_group_id_groups_id_fk" FOREIGN KEY ("group_id") REFERENCES "public"."groups"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_actor_user_id_users_id_fk" FOREIGN KEY ("actor_user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_branch_id_branches_id_fk" FOREIGN KEY ("branch_id") REFERENCES "public"."branches"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "cities_region_id_index" ON "cities" USING btree ("region_id");--> statement-breakpoint
+CREATE INDEX "cities_name_trgm_idx" ON "cities" USING gin ("name" gin_trgm_ops);--> statement-breakpoint
+CREATE INDEX "regions_country_id_index" ON "regions" USING btree ("country_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "branches_code_uniq" ON "branches" USING btree ("code") WHERE "branches"."deleted_at" is null;--> statement-breakpoint
+CREATE INDEX "branches_city_id_index" ON "branches" USING btree ("city_id");--> statement-breakpoint
+CREATE INDEX "groups_branch_id_index" ON "groups" USING btree ("branch_id");--> statement-breakpoint
 CREATE INDEX "audit_logs_entity_idx" ON "audit_logs" USING btree ("entity_type","entity_id");--> statement-breakpoint
 CREATE INDEX "audit_logs_actor_created_idx" ON "audit_logs" USING btree ("actor_user_id","created_at");
