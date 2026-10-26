@@ -1,7 +1,8 @@
 import { db } from '$lib/server/db/client';
-import { branches, cities, countries, regions } from '$lib/server/db/schema';
+import { branches, cities, countries, households, people, regions } from '$lib/server/db/schema';
 
 export type NewBranch = typeof branches.$inferInsert;
+export type NewPerson = typeof people.$inferInsert;
 
 let counter = 0;
 // Base-26 letters, so unique codes (iso2, branch code) never collide within a run.
@@ -40,4 +41,28 @@ export async function makeBranch(overrides: Partial<NewBranch> = {}) {
 		})
 		.returning();
 	return branch;
+}
+
+export async function makeHousehold() {
+	const [household] = await db.insert(households).values({}).returning();
+	return household;
+}
+
+export async function makePerson(overrides: Partial<NewPerson> = {}) {
+	const n = ++counter;
+	const [person] = await db
+		.insert(people)
+		.values({
+			memberCode: `T-${n}`,
+			fullName: `Person ${n}`,
+			sex: 'male',
+			birthDate: '1990-01-01',
+			addressLine: 'Jl. Test 1',
+			homeBranchId: overrides.homeBranchId ?? (await makeBranch()).id,
+			householdId: overrides.householdId ?? (await makeHousehold()).id,
+			cityId: overrides.cityId ?? (await makeCity()).id,
+			...overrides
+		})
+		.returning();
+	return person;
 }
