@@ -26,3 +26,6 @@ test-results
 playwright-report/
 blob-report/
 .taste-skill/
+
+# Seed downloads
+.seed-cache/

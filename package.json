@@ -18,6 +18,7 @@
 		"db:generate": "drizzle-kit generate",
 		"test:int": "vitest --project integration --run",
 		"db:migrate": "bun scripts/migrate.ts",
+		"db:seed": "bun scripts/seed/index.ts",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio"
 	},
