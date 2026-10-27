@@ -5,6 +5,15 @@ import { otpCodes } from '$lib/server/db/schema';
 type NewCode = typeof otpCodes.$inferInsert;
 const MAX_ATTEMPTS = 5;
 
+// Serializes issuing per person and purpose so the rate checks cannot race.
+export async function lockPersonPurpose(
+	tx: Transaction,
+	personId: string,
+	purpose: NewCode['purpose']
+): Promise<void> {
+	await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${personId} || ':' || ${purpose}))`);
+}
+
 export async function recentCreatedAt(
 	tx: Transaction,
 	personId: string,

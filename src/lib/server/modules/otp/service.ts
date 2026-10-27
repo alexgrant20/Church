@@ -18,6 +18,7 @@ export async function issueOtp(
 	tx: Transaction,
 	input: { personId: string; purpose: OtpPurpose; channel: Channel }
 ): Promise<{ code: string; challengeToken: string }> {
+	await repo.lockPersonPurpose(tx, input.personId, input.purpose);
 	const now = new Date();
 	const recent = await repo.recentCreatedAt(
 		tx,

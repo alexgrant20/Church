@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { isNull } from 'drizzle-orm';
+import { otpCodes } from '$lib/server/db/schema';
 import { db } from '$lib/server/db/client';
 import { resetDb } from '$lib/server/db/test/reset';
 import { makePerson } from '$lib/server/db/test/factories';
@@ -57,6 +59,15 @@ describe('otp', () => {
 		expect(
 			results.filter((r) => r instanceof Error && r.message === 'error_invalid_code')
 		).toHaveLength(1);
+	});
+	it('lets only one of two parallel issues through', async () => {
+		const p = await makePerson();
+		const results = await Promise.allSettled([issue(p.id), issue(p.id)]);
+		expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+		const failed = results.find((r) => r.status === 'rejected');
+		expect((failed as PromiseRejectedResult).reason.message).toBe('error_resend_wait');
+		const live = await db.select().from(otpCodes).where(isNull(otpCodes.consumedAt));
+		expect(live).toHaveLength(1);
 	});
 	it('a new code kills the previous one', async () => {
 		const p = await makePerson();
