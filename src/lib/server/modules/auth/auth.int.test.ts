@@ -8,7 +8,8 @@ import { findAccountByIdentifier } from './repository';
 import { normalizeIdentifier } from './identifier';
 import { DeliveryError, type OutgoingMessage } from '$lib/server/modules/messaging/sender';
 import * as sender from '$lib/server/modules/messaging/sender';
-import { login, verifyLogin, validateSessionToken } from './service';
+import * as password from './password';
+import { login, resendLoginCode, verifyLogin, validateSessionToken } from './service';
 
 const ip = { ip: '127.0.0.1' };
 let sent: OutgoingMessage[];
@@ -96,6 +97,57 @@ describe('login', () => {
 		await expect(
 			login({ identifier: '+6281234567891', password: 'correct-horse' }, ip)
 		).rejects.toThrow('error_code_not_sent');
+	});
+	it('a suspended account cannot finish a login it started', async () => {
+		const p = await makePerson();
+		await makeAccount(p.id, { email: 'd@mail.com' });
+		const { challengeToken } = await login(
+			{ identifier: 'd@mail.com', password: 'correct-horse' },
+			ip
+		);
+		await db.update(accounts).set({ status: 'suspended' });
+		await expect(verifyLogin({ challengeToken, code: sent[0].params.code }, ip)).rejects.toThrow(
+			'error_invalid_code'
+		);
+		expect(await db.select().from(sessions)).toHaveLength(0);
+	});
+	it('verifies a password once even for an unknown identifier', async () => {
+		const verify = vi.spyOn(password, 'verifyPassword');
+		await expect(
+			login({ identifier: 'nobody@mail.com', password: 'whatever1' }, ip)
+		).rejects.toThrow('error_invalid_credentials');
+		expect(verify).toHaveBeenCalledTimes(1);
+	});
+	it('a wrong code is refused', async () => {
+		const p = await makePerson();
+		await makeAccount(p.id, { email: 'e@mail.com' });
+		const { challengeToken } = await login(
+			{ identifier: 'e@mail.com', password: 'correct-horse' },
+			ip
+		);
+		const code = sent[0].params.code;
+		await expect(
+			verifyLogin({ challengeToken, code: code === '000000' ? '111111' : '000000' }, ip)
+		).rejects.toThrow('error_invalid_code');
+	});
+	it('resend replaces the challenge and rejects an unknown token', async () => {
+		vi.useFakeTimers({ toFake: ['Date'] });
+		const p = await makePerson();
+		await makeAccount(p.id, { email: 'f@mail.com' });
+		const first = await login({ identifier: 'f@mail.com', password: 'correct-horse' }, ip);
+		vi.advanceTimersByTime(61_000);
+		const second = await resendLoginCode(first.challengeToken);
+		expect(sent).toHaveLength(2);
+		await expect(
+			verifyLogin({ challengeToken: first.challengeToken, code: sent[0].params.code }, ip)
+		).rejects.toThrow('error_invalid_code');
+		const { token } = await verifyLogin(
+			{ challengeToken: second.challengeToken, code: sent[1].params.code },
+			ip
+		);
+		expect((await validateSessionToken(token)).person?.id).toBe(p.id);
+		await expect(resendLoginCode('unknown-token')).rejects.toThrow('error_invalid_code');
+		vi.useRealTimers();
 	});
 	it('rejects an account with neither email nor phone', async () => {
 		const p = await makePerson();

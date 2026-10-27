@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db/client';
 import * as repo from './repository';
-import { verifyPassword } from './password';
+import { hashPassword, verifyPassword } from './password';
 import { generateSessionToken, hashSessionToken } from './token';
 import { ValidationError } from '$lib/server/errors';
 import { loginSchema } from './schema';
@@ -13,6 +13,9 @@ import { recordAudit } from '$lib/server/modules/audit/service';
 
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 30;
 
+let dummyHashPromise: Promise<string> | undefined;
+const dummyHash = () => (dummyHashPromise ??= hashPassword('not-a-real-password'));
+
 // The audit row is written at code verification, so the ip is recorded there; meta stays for the caller contract.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function login(input: unknown, _meta: { ip: string }) {
@@ -24,11 +27,9 @@ export async function login(input: unknown, _meta: { ip: string }) {
 
 	const account = await repo.findAccountByIdentifier(normalized);
 	// Same error for unknown, unactivated, suspended and wrong password: never reveal which.
-	if (
-		!account?.passwordHash ||
-		account.status !== 'active' ||
-		!(await verifyPassword(password, account.passwordHash))
-	) {
+	// Every failure path pays one hash verification so response time does not reveal the account.
+	const passwordOk = await verifyPassword(password, account?.passwordHash ?? (await dummyHash()));
+	if (!account?.passwordHash || account.status !== 'active' || !passwordOk) {
 		await recordFailure(throttleKey);
 		throw new ValidationError('error_invalid_credentials');
 	}
@@ -56,6 +57,9 @@ export async function verifyLogin(
 	meta?: { ip: string }
 ) {
 	const personId = await verifyOtp({ ...input, purpose: 'login' });
+	// The account may have been suspended or removed since the password step.
+	const account = await repo.findContactByPersonId(personId);
+	if (!account?.activatedAt) throw new ValidationError('error_invalid_code');
 	const token = generateSessionToken();
 	const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
