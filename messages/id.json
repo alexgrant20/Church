@@ -42,5 +42,12 @@
 	"activate_password_label": "Kata sandi baru",
 	"activate_password_rule": "Minimal 8 karakter",
 	"activate_done": "Akun Anda sudah aktif. Masuk dengan kata sandi baru Anda.",
-	"error_password_too_short": "Gunakan kata sandi minimal 8 karakter."
+	"error_password_too_short": "Gunakan kata sandi minimal 8 karakter.",
+	"registration_approved_email_subject": "Pendaftaran GRII Anda disetujui",
+	"registration_approved_email_body": "Halo {name}, pendaftaran Anda disetujui. Atur kata sandi di sini untuk mengaktifkan akun: {activateUrl}",
+	"registration_approved_email_partial": "Seseorang yang Anda daftarkan belum dapat ditambahkan. Kantor gereja akan menghubungi Anda.",
+	"registration_needs_fix_email_subject": "Mohon perbaiki pendaftaran GRII Anda",
+	"registration_needs_fix_email_body": "Halo {name}, kantor gereja meminta perbaikan pada pendaftaran Anda: {reason}\n\nPerbaiki di sini: {fixUrl}",
+	"consent_request_email_subject": "{registrantName} menambahkan Anda ke pendaftaran GRII",
+	"consent_request_email_body": "{registrantName} menambahkan Anda ke pendaftaran GRII. Mohon tinjau dan jawab di sini: {consentUrl}"
 }

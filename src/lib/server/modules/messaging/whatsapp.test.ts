@@ -34,6 +34,23 @@ describe('buildWhatsAppTemplate', () => {
 	});
 });
 
+describe('buildWhatsAppTemplate for registration templates', () => {
+	it('needs_fix omits the reason', () => {
+		const body = JSON.stringify(
+			buildWhatsAppTemplate({
+				channel: 'whatsapp',
+				to: '+62811',
+				template: 'registration_needs_fix',
+				locale: 'id',
+				params: { name: 'Ann', fixUrl: 'https://x.test/f', reason: 'SECRET-REASON' }
+			})
+		);
+		expect(body).toContain('registration_needs_fix');
+		expect(body).toContain('https://x.test/f');
+		expect(body).not.toContain('SECRET-REASON');
+	});
+});
+
 describe('sendWhatsApp', () => {
 	afterEach(() => vi.unstubAllGlobals());
 

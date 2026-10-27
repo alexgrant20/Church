@@ -42,5 +42,12 @@
 	"activate_password_label": "新密码",
 	"activate_password_rule": "至少 8 个字符",
 	"activate_done": "您的账户已激活。请使用新密码登录。",
-	"error_password_too_short": "密码至少需要 8 个字符。"
+	"error_password_too_short": "密码至少需要 8 个字符。",
+	"registration_approved_email_subject": "您的 GRII 注册已通过",
+	"registration_approved_email_body": "{name} 您好，您的注册已通过。请在此设置密码以激活账户：{activateUrl}",
+	"registration_approved_email_partial": "您登记的某位人员暂时无法添加。教会办公室会与您联系。",
+	"registration_needs_fix_email_subject": "请更正您的 GRII 注册",
+	"registration_needs_fix_email_body": "{name} 您好，教会办公室需要您更正注册资料：{reason}\n\n请在此更正：{fixUrl}",
+	"consent_request_email_subject": "{registrantName} 将您加入了 GRII 注册",
+	"consent_request_email_body": "{registrantName} 将您加入了 GRII 注册。请在此查看并回复：{consentUrl}"
 }

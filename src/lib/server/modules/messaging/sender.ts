@@ -5,7 +5,8 @@ import { logMessage } from './log';
 import { sendWhatsApp } from './whatsapp';
 
 export type Channel = 'whatsapp' | 'email';
-export type MessageTemplate = 'otp';
+export type MessageTemplate =
+	'otp' | 'registration_approved' | 'registration_needs_fix' | 'consent_request';
 export type OutgoingMessage = {
 	channel: Channel;
 	to: string;

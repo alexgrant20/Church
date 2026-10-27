@@ -1,6 +1,6 @@
 import { config } from '$lib/server/config';
 import type { Locale } from '$lib/paraglide/runtime';
-import { DeliveryError, type OutgoingMessage } from './sender';
+import { DeliveryError, type MessageTemplate, type OutgoingMessage } from './sender';
 
 const metaLanguage: Record<Locale, string> = {
 	en: 'en',
@@ -9,8 +9,30 @@ const metaLanguage: Record<Locale, string> = {
 	'zh-Hant': 'zh_TW'
 };
 
-export function buildWhatsAppTemplate(msg: OutgoingMessage): object {
+// Body variables in the order the Meta template declares them. needs_fix omits the reason:
+// free text from staff does not belong in a utility template.
+const bodyParams: Record<MessageTemplate, string[]> = {
+	otp: ['code'],
+	registration_approved: ['name', 'activateUrl', 'someoneNotAdded'],
+	registration_needs_fix: ['name', 'fixUrl'],
+	consent_request: ['registrantName', 'consentUrl']
+};
+
+function components(msg: OutgoingMessage) {
+	const body = {
+		type: 'body',
+		parameters: bodyParams[msg.template].map((k) => ({ type: 'text', text: msg.params[k] }))
+	};
+	if (msg.template !== 'otp') return [body];
 	const code = msg.params.code;
+	// Meta's authentication template: the code fills both the body and the copy-code button.
+	return [
+		body,
+		{ type: 'button', sub_type: 'url', index: '0', parameters: [{ type: 'text', text: code }] }
+	];
+}
+
+export function buildWhatsAppTemplate(msg: OutgoingMessage): object {
 	return {
 		messaging_product: 'whatsapp',
 		to: msg.to.replace(/^\+/, ''),
@@ -18,16 +40,7 @@ export function buildWhatsAppTemplate(msg: OutgoingMessage): object {
 		template: {
 			name: msg.template,
 			language: { code: metaLanguage[msg.locale] },
-			// Meta's authentication template: the code fills both the body and the copy-code button.
-			components: [
-				{ type: 'body', parameters: [{ type: 'text', text: code }] },
-				{
-					type: 'button',
-					sub_type: 'url',
-					index: '0',
-					parameters: [{ type: 'text', text: code }]
-				}
-			]
+			components: components(msg)
 		}
 	};
 }

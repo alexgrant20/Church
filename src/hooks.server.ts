@@ -1,9 +1,10 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, ServerInit } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { runWithContext } from '$lib/server/context';
 import { validateSessionToken } from '$lib/server/modules/auth/service';
 import { config } from '$lib/server/config';
 import { readTheme } from '$lib/server/theme';
+import { runJobs } from '$lib/server/jobs';
 import { paraglideMiddleware } from '$lib/paraglide/server';
 
 const handleParaglide: Handle = ({ event, resolve }) =>
@@ -45,3 +46,11 @@ const handleSession: Handle = async ({ event, resolve }) => {
 };
 
 export const handle: Handle = sequence(handleParaglide, handleTheme, handleSession);
+
+export const init: ServerInit = () => {
+	if (process.env.NODE_ENV === 'test') return;
+	setInterval(
+		() => runJobs().catch((err) => console.error('job run failed', err.name)),
+		5 * 60_000
+	);
+};

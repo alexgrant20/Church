@@ -42,5 +42,12 @@
 	"activate_password_label": "New password",
 	"activate_password_rule": "At least 8 characters",
 	"activate_done": "Your account is active. Sign in with your new password.",
-	"error_password_too_short": "Use at least 8 characters for the password."
+	"error_password_too_short": "Use at least 8 characters for the password.",
+	"registration_approved_email_subject": "Your GRII registration is approved",
+	"registration_approved_email_body": "Hello {name}, your registration is approved. Set your password here to activate your account: {activateUrl}",
+	"registration_approved_email_partial": "Someone you registered could not be added yet. The church office will contact you.",
+	"registration_needs_fix_email_subject": "Please correct your GRII registration",
+	"registration_needs_fix_email_body": "Hello {name}, the church office needs a correction to your registration: {reason}\n\nCorrect it here: {fixUrl}",
+	"consent_request_email_subject": "{registrantName} added you to a GRII registration",
+	"consent_request_email_body": "{registrantName} added you to a GRII registration. Please review and answer here: {consentUrl}"
 }
