@@ -20,5 +20,7 @@
 	"branches_col_name": "Name",
 	"branches_count": "Branches: {count}",
 	"nav_me": "Me",
-	"sign_out": "Sign out"
+	"sign_out": "Sign out",
+	"otp_email_subject": "Your GRII sign-in code",
+	"otp_email_body": "Your code is {code}. It expires in 5 minutes. Never share it."
 }

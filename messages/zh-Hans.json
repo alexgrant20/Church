@@ -20,5 +20,7 @@
 	"branches_col_name": "名称",
 	"branches_count": "分支：{count}",
 	"nav_me": "我",
-	"sign_out": "退出登录"
+	"sign_out": "退出登录",
+	"otp_email_subject": "您的 GRII 登录验证码",
+	"otp_email_body": "您的验证码是 {code}。5 分钟内有效。请勿告诉任何人。"
 }

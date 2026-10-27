@@ -34,6 +34,7 @@
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@tailwindcss/vite": "^4.3.0",
 		"@types/node": "^24",
+		"@types/nodemailer": "^8.0.2",
 		"@vitest/browser-playwright": "^4.1.8",
 		"bits-ui": "^2.20.0",
 		"clsx": "^2.1.1",
@@ -63,6 +64,7 @@
 		"@fontsource/ibm-plex-mono": "^5.3.0",
 		"@fontsource/ibm-plex-sans": "^5.3.0",
 		"drizzle-orm": "^0.45.2",
+		"nodemailer": "^10.2.1",
 		"postgres": "^3.4.9",
 		"zod": "^4.5.4"
 	}
