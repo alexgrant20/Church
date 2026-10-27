@@ -24,7 +24,7 @@ export async function startActivation(input: unknown): Promise<{ challengeToken:
 	try {
 		return { challengeToken: await sendCode(account) };
 	} catch (err) {
-		// Resend limits and delivery failures would otherwise tell an outsider the account exists.
+		// Resend limits would otherwise tell an outsider the account exists.
 		if (err instanceof ValidationError) return { challengeToken: generateSessionToken() };
 		throw err;
 	}
@@ -38,7 +38,10 @@ async function sendCode(account: repo.LoginAccount) {
 			channel: otpChannel(account)
 		})
 	);
-	await deliverOtp(account, code);
+	// Not awaited: the reply must not depend on, or time, the provider round trip.
+	deliverOtp(account, code).catch((err) =>
+		console.error('Activation code delivery failed', err instanceof Error ? err.name : 'unknown')
+	);
 	return challengeToken;
 }
 

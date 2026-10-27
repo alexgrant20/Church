@@ -77,6 +77,16 @@ describe('account activation', () => {
 		).rejects.toThrow('error_invalid_code');
 	});
 
+	it('replies even when delivery never settles', async () => {
+		await unactivated();
+		vi.spyOn(sender, 'sendMessage').mockImplementation(() => new Promise<void>(() => {}));
+		const reply = await Promise.race([
+			startActivation({ identifier: 'sari@mail.com' }),
+			new Promise((r) => setTimeout(() => r('timeout'), 2000))
+		]);
+		expect(reply).toEqual({ challengeToken: expect.any(String) });
+	});
+
 	it('writes one audit row without the password hash', async () => {
 		const p = await unactivated();
 		const { challengeToken } = await startActivation({ identifier: 'sari@mail.com' });
