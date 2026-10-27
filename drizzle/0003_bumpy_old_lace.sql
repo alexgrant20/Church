@@ -1,0 +1,1 @@
+CREATE INDEX "people_name_birth_idx" ON "people" USING btree (lower(trim("full_name")),"birth_date");

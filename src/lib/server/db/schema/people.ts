@@ -76,6 +76,7 @@ export const people = pgTable(
 			sql`(${t.memberCode} is not null) = ${t.isMember}`
 		),
 		check('people_nik_hash_hex', sql`${t.nikHash} ~ '^[0-9a-f]{64}$'`),
+		index('people_name_birth_idx').on(sql`lower(trim(${t.fullName}))`, t.birthDate),
 		index('people_full_name_trgm_idx').using('gin', sql`${t.fullName} gin_trgm_ops`),
 		index('people_nickname_trgm_idx').using('gin', sql`${t.nickname} gin_trgm_ops`),
 		index('people_chinese_name_trgm_idx').using('gin', sql`${t.chineseName} gin_trgm_ops`)
