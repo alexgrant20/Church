@@ -1,24 +1,62 @@
 import { db } from '$lib/server/db/client';
-import { accounts, people, sessions } from '$lib/server/db/schema';
+import { accounts, people, sessions, loginThrottles } from '$lib/server/db/schema';
 import { roleAssignments } from '$lib/server/db/schema/roles';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import type { Transaction } from '$lib/server/db/client';
+import { config } from '$lib/server/config';
+import type { Identifier } from './identifier';
 
-export async function findAccountByIdentifier(identifier: string) {
-	const match = identifier.includes('@')
-		? sql`lower(${accounts.email}) = lower(${identifier})`
-		: eq(accounts.phone, identifier);
+const LOCK_MS = 2 * 60_000;
+
+export async function findAccountByIdentifier(identifier: Identifier) {
+	const match =
+		identifier.kind === 'email'
+			? sql`lower(${accounts.email}) = ${identifier.value}`
+			: eq(accounts.phone, identifier.value);
 	const [account] = await db
 		.select({
 			personId: accounts.personId,
 			passwordHash: accounts.passwordHash,
-			status: accounts.status
+			status: accounts.status,
+			email: accounts.email,
+			phone: accounts.phone,
+			activatedAt: accounts.activatedAt,
+			preferredLocale: people.preferredLocale
 		})
 		.from(accounts)
 		.innerJoin(people, eq(people.id, accounts.personId))
 		.where(and(match, isNull(people.deletedAt)))
 		.limit(1);
 	return account ?? null;
+}
+
+export async function findLockedUntil(identifierHash: string) {
+	const [row] = await db
+		.select({ lockedUntil: loginThrottles.lockedUntil })
+		.from(loginThrottles)
+		.where(eq(loginThrottles.identifierHash, identifierHash));
+	return row?.lockedUntil ?? null;
+}
+
+// Time is compared on the JS side so tests can fake Date. An expired lock restarts the count.
+export async function upsertFailure(identifierHash: string) {
+	const now = new Date();
+	const count = sql`case when ${loginThrottles.lockedUntil} < ${now.toISOString()}::timestamptz then 1 else ${loginThrottles.failedCount} + 1 end`;
+	await db
+		.insert(loginThrottles)
+		.values({ identifierHash, failedCount: 1 })
+		.onConflictDoUpdate({
+			target: loginThrottles.identifierHash,
+			set: {
+				failedCount: count,
+				lockedUntil: sql`case when ${count} >= ${config.LOGIN_MAX_FAILED_ATTEMPTS} then ${new Date(now.getTime() + LOCK_MS).toISOString()}::timestamptz else null end`,
+				updatedAt: now
+			}
+		});
+}
+
+export async function deleteThrottle(identifierHash: string) {
+	await db.delete(loginThrottles).where(eq(loginThrottles.identifierHash, identifierHash));
 }
 
 export async function findRoleAssignmentsByPersonId(personId: string) {

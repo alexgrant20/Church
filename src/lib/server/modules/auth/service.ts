@@ -4,6 +4,7 @@ import { verifyPassword } from './password';
 import { generateSessionToken, hashSessionToken } from './token';
 import { ValidationError } from '$lib/server/errors';
 import { loginSchema } from './schema';
+import { normalizeIdentifier } from './identifier';
 import { recordAudit } from '$lib/server/modules/audit/service';
 
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 30;
@@ -11,7 +12,7 @@ const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 30;
 export async function login(input: unknown, meta: { ip: string }) {
 	const { identifier, password } = loginSchema.parse(input);
 
-	const account = await repo.findAccountByIdentifier(identifier);
+	const account = await repo.findAccountByIdentifier(normalizeIdentifier(identifier));
 	// Same error for unknown, unactivated, suspended and wrong password: never reveal which.
 	if (
 		!account?.passwordHash ||

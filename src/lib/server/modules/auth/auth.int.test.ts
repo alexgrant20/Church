@@ -5,6 +5,7 @@ import { resetDb } from '$lib/server/db/test/reset';
 import { expectDbError } from '$lib/server/db/test/expect-db-error';
 import { makeAccount, makePerson } from '$lib/server/db/test/factories';
 import { findAccountByIdentifier } from './repository';
+import { normalizeIdentifier } from './identifier';
 import { login, validateSessionToken } from './service';
 
 describe('login', () => {
@@ -13,7 +14,9 @@ describe('login', () => {
 	it('finds an account by email in any letter case', async () => {
 		const p = await makePerson();
 		await makeAccount(p.id, { email: 'budi@mail.com' });
-		expect((await findAccountByIdentifier('Budi@Mail.com'))?.personId).toBe(p.id);
+		expect((await findAccountByIdentifier(normalizeIdentifier('Budi@Mail.com')))?.personId).toBe(
+			p.id
+		);
 	});
 	it('gives the same error for an unknown user and an unactivated account', async () => {
 		const p = await makePerson();
