@@ -8,9 +8,8 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import AccountPanel from './AccountPanel.svelte';
 	import { navItems } from './StaffSidebar.svelte';
-	import type { Theme } from '$lib/theme';
 
-	let { fullName, theme }: { fullName: string; theme: Theme } = $props();
+	let { fullName }: { fullName: string } = $props();
 
 	let open = $state(false);
 	afterNavigate(() => (open = false));
@@ -47,6 +46,6 @@
 				{/each}
 			</ul>
 		</nav>
-		<AccountPanel {fullName} {theme} />
+		<AccountPanel {fullName} />
 	</Sheet.Content>
 </Sheet.Root>

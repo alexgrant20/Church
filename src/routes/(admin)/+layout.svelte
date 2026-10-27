@@ -8,6 +8,7 @@
 	import BrandMark from '$lib/components/BrandMark.svelte';
 	import StaffMenuSheet from '$lib/components/StaffMenuSheet.svelte';
 	import StaffSidebar, { navItems } from '$lib/components/StaffSidebar.svelte';
+	import ThemeSwitch from '$lib/components/ThemeSwitch.svelte';
 
 	let { data, children } = $props();
 
@@ -25,8 +26,11 @@
 				<BrandMark height={24} />
 				<span class="truncate font-semibold">{title}</span>
 			</div>
-			<div class="ml-auto min-[1100px]:hidden">
-				<StaffMenuSheet fullName={data.person.fullName} theme={data.theme} />
+			<div class="ml-auto">
+				<ThemeSwitch current={data.theme} />
+			</div>
+			<div class="min-[1100px]:hidden">
+				<StaffMenuSheet fullName={data.person.fullName} />
 			</div>
 			<div class="hidden min-[1100px]:block">
 				<Dialog.Root>
@@ -41,7 +45,7 @@
 						<Dialog.Header>
 							<Dialog.Title>{m.account_label()}</Dialog.Title>
 						</Dialog.Header>
-						<AccountPanel fullName={data.person.fullName} theme={data.theme} />
+						<AccountPanel fullName={data.person.fullName} />
 					</Dialog.Content>
 				</Dialog.Root>
 			</div>

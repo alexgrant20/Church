@@ -14,7 +14,7 @@ Rules for the `(admin)` screens. Shared tokens, type, and formatting are in the 
   - The branch switcher showing the current branch's name. Staff with several branches choose here.
   - The modules. Each item is a 16px outline icon plus a 14px label on a 34px row. The active item is an `--active` pill with the label unchanged. Group labels are 12px grey sentence case.
   - Settings and the user row at the bottom.
-- **Top bar:** a search box (about 548×32, centred) and the account button. Nothing else.
+- **Top bar:** a search box (about 548×32, centred), the theme switch, and the account button. Nothing else.
 - A nav item shows a count only when it is a queue that needs action, such as "Service requests 3".
 
 ### Tablet (641-1099px)
@@ -24,7 +24,7 @@ The sidebar folds into the phone top bar. Tables keep 4-5 columns, with secondar
 ### Phone (640px and narrower)
 
 - The frame disappears and the sheet becomes the screen, with 16px side margins.
-- **Top bar,** 48px on `--ground`: a `#8c0001` logo tile 40px tall (logo 24px), the screen title, and at most one action.
+- **Top bar,** 48px on `--ground`: a `#8c0001` logo tile 40px tall (logo 24px), the screen title, the theme switch, and at most one action.
 - A menu button opens a full-screen sheet with the modules, the branch switcher, and the account.
 
 ## 2. The title row

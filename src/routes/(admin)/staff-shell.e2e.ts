@@ -39,3 +39,13 @@ test('branch list shows the seeded branches by code and name', async ({ page }) 
 	await expect(page.getByRole('heading', { level: 1, name: 'Branches' })).toBeVisible();
 	await expect(page.getByRole('row', { name: /JKT.*GRII Pusat/ })).toBeVisible();
 });
+for (const width of [1440, 390]) {
+	test(`top bar holds the theme switch at ${width}px`, async ({ page }) => {
+		await page.setViewportSize({ width, height: 900 });
+		await page.goto('/branches');
+		const theme = page.getByRole('banner').getByRole('button', { name: 'Dark' });
+		await expect(theme).toBeVisible();
+		await theme.click();
+		await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+	});
+}

@@ -105,7 +105,7 @@ True neutral greys, no navy or slate. Surfaces separate by lightness alone.
 
 Every text pair above passes 4.5:1 in both themes (checked by calculation).
 
-- **Choosing a theme:** the default follows the OS (`prefers-color-scheme`). The user can override it with Light, Dark, or System in their settings. The choice is stored in a cookie so the server renders the right theme and the page never flashes.
+- **Choosing a theme:** the default follows the OS (`prefers-color-scheme`). The user can override it with the Light/Dark toggle in the top bar. The choice is stored in a cookie so the server renders the right theme and the page never flashes.
 - **The logo field** stays `#8c0001` in both themes. Only the button colour lifts.
 - **Photos and the QR code** keep a white backing in dark mode so they scan and read correctly.
 

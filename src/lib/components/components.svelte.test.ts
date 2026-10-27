@@ -21,10 +21,13 @@ describe('GRII components', () => {
 		const pill = screen.getByText('Active');
 		expect(getComputedStyle(pill.element()).whiteSpace).toBe('nowrap');
 	});
-	it('ThemeSwitch offers three named options and marks the current one', async () => {
-		const screen = render(ThemeSwitch, { current: 'system' });
-		await expect.element(screen.getByRole('radio', { name: 'System' })).toBeChecked();
-		await expect.element(screen.getByRole('radio', { name: 'Dark' })).not.toBeChecked();
+	it('ThemeSwitch is one Dark toggle that flips the page theme', async () => {
+		const screen = render(ThemeSwitch, { current: 'light' });
+		const toggle = screen.getByRole('button', { name: 'Dark' });
+		await expect.element(toggle).toHaveAttribute('aria-pressed', 'false');
+		await toggle.click();
+		await expect.element(toggle).toHaveAttribute('aria-pressed', 'true');
+		expect(document.documentElement.dataset.theme).toBe('dark');
 	});
 	it('a focused button shows a 2px focus ring', async () => {
 		const screen = render(Button, { children: textSnippet('Save') });

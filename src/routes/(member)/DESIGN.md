@@ -15,7 +15,7 @@ Members use phones, and many are older or less used to apps. Design every screen
 ## 2. Shell
 
 - 16px side margins. No sidebar at any width.
-- **Top bar,** 48px on `--ground`: a `#8c0001` logo tile 40px tall (logo 24px), the screen title, and at most one action.
+- **Top bar,** 48px on `--ground`: a `#8c0001` logo tile 40px tall (logo 24px), the screen title, the theme switch, and at most one action.
 - **Bottom bar** with four destinations, each a 24px icon over a 14px label: Home, Worship, Events, Me. The bar is 64px tall plus the safe-area inset. The current destination's label and icon are in `--text`; the others are `--muted`.
 - **Wider than 640px:** the same layout in a centred column of at most 640px. The bottom bar stays.
 - Guests see the same shell. Me becomes Sign in.

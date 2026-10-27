@@ -5,6 +5,18 @@
 @import '@fontsource/ibm-plex-mono/400.css';
 @import 'tw-animate-css';
 
+/* dark: follows the cookie first, then the OS, like the tokens below. */
+@custom-variant dark {
+	&:where([data-theme='dark'] *) {
+		@slot;
+	}
+	@media (prefers-color-scheme: dark) {
+		&:where(:root:not([data-theme='light']) *) {
+			@slot;
+		}
+	}
+}
+
 /* Tokens: DESIGN.md section 2. Light is the root; dark is set by cookie or by the OS. */
 :root {
 	--ground: #f8f6f5;

@@ -13,7 +13,7 @@ shadcn-svelte components live in `src/lib/components/ui/` and are restyled with 
 - **Inputs:** 40px / 48px tall, with the label above the field. No placeholder standing in for a label. A field's limit (for example, password rules) stays visible under it and is tied to it with `aria-describedby`.
 - **Status pill:** 20px / 24px tall, using the pill pairs in the root `DESIGN.md`. It never shrinks or wraps.
 - **Icons:** one outline set (lucide, which shadcn-svelte uses), 16px / 24px, in `--muted`. Never inside a coloured circle or square. An icon-only button always has an `aria-label`.
-- **Theme switch:** Light, Dark, or System, as a three-option segmented control in settings.
+- **Theme switch:** one ghost icon button in the top bar that toggles Light and Dark (moon in light, sun in dark; named "Dark" with `aria-pressed`). 32px on staff screens, 48px on member screens. With no choice saved, the theme follows the OS.
 
 ## 2. States
 

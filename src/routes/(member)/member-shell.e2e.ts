@@ -20,3 +20,14 @@ test('member profile uses 18px body text and 48px tap targets', async ({ page })
 	const me = page.getByRole('link', { name: 'Me' });
 	expect((await me.boundingBox())!.height).toBeGreaterThanOrEqual(48);
 });
+test('top bar holds the theme switch with 48px targets', async ({ page }) => {
+	await page.setViewportSize({ width: 390, height: 844 });
+	await page.goto('/profile');
+	const theme = page.getByRole('banner').getByRole('button', { name: 'Dark' });
+	await expect(theme).toBeVisible();
+	expect((await theme.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+	await theme.click();
+	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+	const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
+	expect(overflow).toBe(false);
+});
