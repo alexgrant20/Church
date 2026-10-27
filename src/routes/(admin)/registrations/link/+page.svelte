@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { toast } from 'svelte-sonner';
 	import { m } from '$lib/paraglide/messages';
 	import BranchSelect from '$lib/components/BranchSelect.svelte';
@@ -16,6 +17,11 @@
 		data.link ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(data.link.qrSvg)}` : ''
 	);
 
+	function pickBranch(branch: { id: string }) {
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- the path is resolved; only the query is added
+		goto(`${resolve('/registrations/link')}?branch=${branch.id}`, { replaceState: true });
+	}
+
 	async function copy(url: string) {
 		await navigator.clipboard.writeText(url);
 		toast.success(m.link_copied());
@@ -28,12 +34,7 @@
 
 {#if data.canChooseBranch}
 	<div class="mt-4 max-w-sm">
-		<BranchSelect
-			name="branch"
-			value={data.branch?.id ?? null}
-			{names}
-			onchange={(b) => goto(`?branch=${b.id}`, { replaceState: true })}
-		/>
+		<BranchSelect name="branch" value={data.branch?.id ?? null} {names} onchange={pickBranch} />
 	</div>
 {/if}
 
