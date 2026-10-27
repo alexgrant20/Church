@@ -12,7 +12,7 @@ import type { OutgoingMessage } from '$lib/server/modules/messaging/sender';
 import * as repo from './decide-repository';
 import { findSameNameAndBirth, type BranchScope } from './review-repository';
 import { reviewScope } from './review-service';
-import { consentMessage } from './submit';
+import { consentMessage } from './intake';
 
 type Registration = NonNullable<Awaited<ReturnType<typeof repo.claimPending>>>;
 

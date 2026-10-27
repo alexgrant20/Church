@@ -100,10 +100,14 @@ export const registrationConsents = pgTable(
 		tokenHash: char({ length: 64 }).unique(),
 		decision: consentDecisionEnum().notNull().default('waiting'),
 		decidedAt: timestamp({ withTimezone: true }),
-		recordedByPersonId: uuid().references(() => people.id, { onDelete: 'restrict' })
+		recordedByPersonId: uuid().references(() => people.id, { onDelete: 'restrict' }),
+		// A resubmitted registration can drop a match; the old consent is kept, not deleted.
+		deletedAt: deletedAt()
 	},
 	(t) => [
-		uniqueIndex('registration_consents_person_uniq').on(t.registrationId, t.personIndex),
+		uniqueIndex('registration_consents_person_uniq')
+			.on(t.registrationId, t.personIndex)
+			.where(sql`${t.deletedAt} is null`),
 		index().on(t.matchedPersonId)
 	]
 );

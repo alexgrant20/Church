@@ -1,4 +1,4 @@
-import { and, asc, count, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { db } from '$lib/server/db/client';
 import { branches, registrationConsents, registrations } from '$lib/server/db/schema';
 import type { Cursor } from '$lib/server/pagination';
@@ -30,7 +30,13 @@ export function listQueue({ status, scope, cursor, limit }: Queue) {
 			waitingConsents: sql<number>`(count(${registrationConsents.id}) filter (where ${registrationConsents.decision} = 'waiting'))::int`
 		})
 		.from(registrations)
-		.leftJoin(registrationConsents, eq(registrationConsents.registrationId, registrations.id))
+		.leftJoin(
+			registrationConsents,
+			and(
+				eq(registrationConsents.registrationId, registrations.id),
+				isNull(registrationConsents.deletedAt)
+			)
+		)
 		.where(and(eq(registrations.status, status), inScope(scope), after))
 		.groupBy(registrations.id)
 		.orderBy(asc(registrations.submittedAt), asc(registrations.id))
@@ -68,7 +74,12 @@ export function consentsOf(registrationId: string) {
 			inPersonOnly: sql<boolean>`${registrationConsents.tokenHash} is null`
 		})
 		.from(registrationConsents)
-		.where(eq(registrationConsents.registrationId, registrationId));
+		.where(
+			and(
+				eq(registrationConsents.registrationId, registrationId),
+				isNull(registrationConsents.deletedAt)
+			)
+		);
 }
 
 type Candidate = { fullName: string; birthDate: string };

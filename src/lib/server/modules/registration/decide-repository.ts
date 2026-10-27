@@ -39,7 +39,12 @@ export function lockConsents(tx: Transaction, registrationId: string) {
 			decision: registrationConsents.decision
 		})
 		.from(registrationConsents)
-		.where(eq(registrationConsents.registrationId, registrationId))
+		.where(
+			and(
+				eq(registrationConsents.registrationId, registrationId),
+				isNull(registrationConsents.deletedAt)
+			)
+		)
 		.for('update');
 }
 
@@ -56,7 +61,8 @@ export async function markConsentGiven(
 			and(
 				eq(registrationConsents.registrationId, registrationId),
 				eq(registrationConsents.personIndex, personIndex),
-				eq(registrationConsents.decision, 'waiting')
+				eq(registrationConsents.decision, 'waiting'),
+				isNull(registrationConsents.deletedAt)
 			)
 		)
 		.returning({ id: registrationConsents.id });
