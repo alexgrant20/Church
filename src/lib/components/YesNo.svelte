@@ -10,7 +10,12 @@
 	}: { name: string; value: boolean | null; legend: string; error?: string } = $props();
 </script>
 
-<fieldset id={name} aria-describedby={error ? `${name}-error` : undefined} class="min-w-0">
+<fieldset
+	id={name}
+	data-invalid={error ? true : undefined}
+	aria-describedby={error ? `${name}-error` : undefined}
+	class="min-w-0"
+>
 	<legend class="mb-2 font-semibold">{legend}</legend>
 	<div class="flex flex-wrap gap-2">
 		{#each [true, false] as option (option)}

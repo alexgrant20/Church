@@ -10,6 +10,7 @@ export default async function globalSetup() {
 	const sql = postgres(url);
 	await sql`delete from otp_codes`;
 	await sql`delete from login_throttles`;
+	await sql`delete from registration_throttles`;
 	// The activation test consumes the seeded unactivated account, so put it back.
 	await sql`update accounts set password_hash = null, activated_at = null where email = 'sari@grii.test'`;
 	await sql.end();

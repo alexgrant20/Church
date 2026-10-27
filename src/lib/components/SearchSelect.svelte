@@ -90,7 +90,11 @@
 		query = (event.currentTarget as HTMLInputElement).value;
 		open = true;
 		clearTimeout(timer);
-		timer = setTimeout(() => search(query), 250);
+		// Old results go at once, so Enter can never pick a match for the previous text.
+		const next = createInfiniteList<T>(fetchJsonPage(endpoint, { q: query }));
+		list = next;
+		active = -1;
+		timer = setTimeout(() => next.loadMore(), 250);
 	}
 
 	function onkeydown(event: KeyboardEvent) {

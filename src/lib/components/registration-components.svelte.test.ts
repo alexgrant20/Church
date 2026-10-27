@@ -49,6 +49,33 @@ describe('CitySelect', () => {
 		await expect.element(screen.getByRole('combobox')).toHaveValue('Jakarta Barat');
 	});
 
+	it('never lets Enter pick a result of an older search', async () => {
+		const other = { id: '0190a000-0000-7000-8000-000000000003', name: 'Aceh', region: 'NAD' };
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async (url: string) =>
+				Response.json({ items: url.includes('q=jak') ? [jakarta] : [other], nextCursor: null })
+			)
+		);
+		const onchange = vi.fn();
+		const screen = render(CitySelect, {
+			value: null,
+			names: {},
+			label: 'City',
+			name: 'c',
+			onchange
+		});
+		await screen.getByRole('combobox', { name: 'City' }).click();
+		await expect.element(screen.getByRole('option', { name: /Aceh/ })).toBeVisible();
+		await userEvent.keyboard('jak');
+		await expect.element(screen.getByRole('option', { name: /Aceh/ })).not.toBeInTheDocument();
+		await userEvent.keyboard('{ArrowDown}{Enter}');
+		await expect.element(screen.getByRole('option', { name: /Jakarta Barat/ })).toBeVisible();
+		await userEvent.keyboard('{ArrowDown}{Enter}');
+		expect(onchange).toHaveBeenCalledTimes(1);
+		expect(onchange).toHaveBeenCalledWith(jakarta);
+	});
+
 	it('shows the empty state', async () => {
 		stubCities([]);
 		const screen = render(CitySelect, { value: null, names: {}, label: 'City', name: 'city' });

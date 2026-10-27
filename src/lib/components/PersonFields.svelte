@@ -2,6 +2,7 @@
 	import { m } from '$lib/paraglide/messages';
 	import { EDUCATIONS, OCCUPATIONS } from '$lib/registration/options';
 	import type { Person } from '$lib/registration/blank';
+	import AddressFields from './AddressFields.svelte';
 	import CitySelect from './CitySelect.svelte';
 	import Field from './Field.svelte';
 	import SacramentFields from './SacramentFields.svelte';
@@ -82,7 +83,7 @@
 	{@render text('nickname', m.field_nickname())}
 	{@render text('chineseName', m.field_chinese_name(), 'text', m.common_optional())}
 
-	<fieldset id="{id}-sex" class="min-w-0">
+	<fieldset id="{id}-sex" data-invalid={errorAt(errors, 'sex') ? true : undefined} class="min-w-0">
 		<legend class="mb-2 font-semibold">{m.field_sex()}</legend>
 		<div class="flex flex-wrap gap-2">
 			{#each ['male', 'female'] as const as sex (sex)}
@@ -117,43 +118,11 @@
 	{@render text('email', m.field_email(), 'email', contactHint)}
 	{@render text('phone', m.field_phone(), 'tel', contactHint)}
 
-	<Field
-		id="{id}-address-line"
-		label={m.field_address_line()}
-		error={errorAt(errors, 'address.line')}
-	>
-		{#snippet children({ describedby, invalid })}
-			<Input
-				id="{id}-address-line"
-				bind:value={person.address.line}
-				aria-describedby={describedby}
-				aria-invalid={invalid}
-				class="h-12"
-			/>
-		{/snippet}
-	</Field>
-	<Field
-		id="{id}-address-postalCode"
-		label={m.field_postal_code()}
-		error={errorAt(errors, 'address.postalCode')}
-	>
-		{#snippet children({ describedby, invalid })}
-			<Input
-				id="{id}-address-postalCode"
-				inputmode="numeric"
-				bind:value={person.address.postalCode}
-				aria-describedby={describedby}
-				aria-invalid={invalid}
-				class="h-12"
-			/>
-		{/snippet}
-	</Field>
-	<CitySelect
-		name="{id}-address-cityId"
-		label={m.field_city()}
-		bind:value={person.address.cityId}
+	<AddressFields
+		bind:address={person.address}
+		id="{id}-address"
+		errors={errorsUnder(errors, 'address')}
 		{names}
-		error={errorAt(errors, 'address.cityId')}
 	/>
 
 	{@render choice('occupation', m.field_occupation(), OCCUPATIONS, 'occupation')}
