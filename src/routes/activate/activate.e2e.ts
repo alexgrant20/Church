@@ -8,6 +8,7 @@ test('an invited member activates the account and signs in with the new password
 	const before = latestCode(identifier);
 	await page.goto('/login');
 	await page.getByRole('link', { name: 'Activate your account' }).click();
+	await page.waitForURL('**/activate');
 	await page.getByLabel('Email or phone').fill(identifier);
 	await page.getByRole('button', { name: 'Send code' }).click();
 	await page.waitForURL('**/activate/verify');
