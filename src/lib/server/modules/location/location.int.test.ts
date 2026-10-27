@@ -24,6 +24,12 @@ describe('searchCities', () => {
 		expect(nextCursor).toBeNull();
 	});
 
+	it('rejects a query over 100 characters', async () => {
+		await expect(searchCities({ q: 'a'.repeat(101), cursor: null, limit: 5 })).rejects.toThrow(
+			'error_query_too_long'
+		);
+	});
+
 	it('pages with a cursor', async () => {
 		const first = await searchCities({ q: 'jakarta', cursor: null, limit: 2 });
 		expect(first.items.map((c) => c.name)).toEqual(['Jakarta Barat', 'Jakarta Selatan']);

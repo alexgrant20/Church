@@ -8,10 +8,26 @@ export type Cursor = { key: string; id: string };
 export const encodeCursor = (key: string, id: string) =>
 	Buffer.from(JSON.stringify({ key, id })).toString('base64url');
 
-function decodeCursor(raw: string): Cursor {
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Accepts Postgres text ("2026-01-01 10:00:00.123456+00") and ISO forms.
+export function isTimestampKey(key: string): boolean {
+	if (!/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}(:?\d{2})?)$/.test(key)) {
+		return false;
+	}
+	const iso = key.replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00');
+	return !Number.isNaN(Date.parse(iso));
+}
+
+function decodeCursor(raw: string, validKey: (key: string) => boolean): Cursor {
 	try {
 		const parsed = JSON.parse(Buffer.from(raw, 'base64url').toString());
-		if (typeof parsed?.key === 'string' && typeof parsed?.id === 'string') {
+		if (
+			typeof parsed?.key === 'string' &&
+			typeof parsed?.id === 'string' &&
+			UUID.test(parsed.id) &&
+			validKey(parsed.key)
+		) {
 			return { key: parsed.key, id: parsed.id };
 		}
 	} catch {
@@ -20,11 +36,14 @@ function decodeCursor(raw: string): Cursor {
 	throw new ValidationError('error_bad_cursor');
 }
 
-export function parsePage(url: URL): { cursor: Cursor | null; limit: number } {
+export function parsePage(
+	url: URL,
+	validKey: (key: string) => boolean = () => true
+): { cursor: Cursor | null; limit: number } {
 	const raw = Number.parseInt(url.searchParams.get('limit') ?? '', 10);
 	const limit = Number.isNaN(raw) ? DEFAULT_LIMIT : Math.min(Math.max(raw, 1), MAX_LIMIT);
 	const cursor = url.searchParams.get('cursor');
-	return { cursor: cursor ? decodeCursor(cursor) : null, limit };
+	return { cursor: cursor ? decodeCursor(cursor, validKey) : null, limit };
 }
 
 // Repositories fetch limit + 1 rows; the extra row only proves another page exists.

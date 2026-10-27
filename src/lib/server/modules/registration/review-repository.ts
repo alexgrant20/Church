@@ -82,8 +82,14 @@ export async function findSameNameAndBirth(candidates: Candidate[]) {
 		),
 		sql`, `
 	);
-	return db.execute<{ idx: number; id: string; memberCode: string; fullName: string }>(sql`
-		select v.idx, p.id, p.member_code as "memberCode", p.full_name as "fullName"
+	return db.execute<{
+		idx: number;
+		id: string;
+		memberCode: string;
+		fullName: string;
+		homeBranchId: string;
+	}>(sql`
+		select v.idx, p.id, p.member_code as "memberCode", p.full_name as "fullName", p.home_branch_id as "homeBranchId"
 		from (values ${values}) as v(idx, name, birth)
 		join people p on lower(trim(p.full_name)) = v.name and p.birth_date = v.birth
 		where p.deleted_at is null and p.is_member

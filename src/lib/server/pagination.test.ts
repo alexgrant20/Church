@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ValidationError } from './errors';
-import { encodeCursor, parsePage } from './pagination';
+import { encodeCursor, isTimestampKey, parsePage } from './pagination';
 
 const page = (qs: string) => parsePage(new URL(`http://x/api?${qs}`));
 
@@ -23,8 +23,22 @@ describe('pagination', () => {
 		expect(() => page(`cursor=${wrongShape}`)).toThrow('error_bad_cursor');
 	});
 
+	it('rejects a non-UUID id and a non-date key where a date is required', () => {
+		const badId = encodeCursor('Jakarta', 'not-a-uuid');
+		expect(() => page(`cursor=${badId}`)).toThrow('error_bad_cursor');
+		const id = '01a17c81-313c-7a1a-bf9a-2c1353206e19';
+		const badKey = encodeCursor('yesterday', id);
+		const parse = () => parsePage(new URL(`http://x/api?cursor=${badKey}`), isTimestampKey);
+		expect(parse).toThrow('error_bad_cursor');
+		const good = encodeCursor('2026-01-01 10:00:00.123456+00', id);
+		expect(parsePage(new URL(`http://x/api?cursor=${good}`), isTimestampKey).cursor?.id).toBe(id);
+	});
+
 	it('round-trips a cursor', () => {
-		const c = encodeCursor('Jakarta Selatan', 'abc');
-		expect(page(`cursor=${c}`).cursor).toEqual({ key: 'Jakarta Selatan', id: 'abc' });
+		const c = encodeCursor('Jakarta Selatan', '01a17c81-313c-7a1a-bf9a-2c1353206e19');
+		expect(page(`cursor=${c}`).cursor).toEqual({
+			key: 'Jakarta Selatan',
+			id: '01a17c81-313c-7a1a-bf9a-2c1353206e19'
+		});
 	});
 });

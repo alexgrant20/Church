@@ -11,7 +11,7 @@ import {
 } from '$lib/server/db/test/factories';
 import { runWithContext, type RoleAssignment } from '$lib/server/context';
 import { encryptNik } from '$lib/server/crypto';
-import { ForbiddenError } from '$lib/server/errors';
+import { ForbiddenError, NotFoundError } from '$lib/server/errors';
 import { countPendingRegistrations, getRegistration, listRegistrations } from './review-service';
 
 const as = <T>(role: RoleAssignment['role'], branchId: string | null, fn: () => T) =>
@@ -106,6 +106,35 @@ describe('review queue', () => {
 		const { people } = await detail(branchId, r.id);
 		expect(people[0].warnings.map((w) => w.fullName)).toEqual(['Budi Santoso']);
 		expect(people[1].warnings).toEqual([]);
+	});
+
+	it('hides members of other branches behind a flag', async () => {
+		const other = await makeBranch();
+		await makePerson({ homeBranchId: branchId, fullName: 'Same Name', birthDate: '1990-05-01' });
+		const secret = await makePerson({
+			homeBranchId: other.id,
+			fullName: 'Hidden Person',
+			birthDate: '1990-05-01'
+		});
+		const r = await reg({ payload: payload('Same Name', 'Hidden Person') });
+		const d = await detail(branchId, r.id);
+		expect(d.people[0].warnings).toHaveLength(1);
+		expect(d.people[0].warnings[0].memberCode).toMatch(/^T-/);
+		expect(d.people[0].otherBranchMatch).toBe(false);
+		expect(d.people[1].warnings).toEqual([]);
+		expect(d.people[1].otherBranchMatch).toBe(true);
+		const json = JSON.stringify(d);
+		expect(json).not.toContain(secret.memberCode!);
+		expect(json).not.toContain(secret.id);
+		const all = await as('superadmin', null, () => getRegistration(r.id));
+		expect(all.people[1].warnings).toHaveLength(1);
+		expect(all.people[1].otherBranchMatch).toBe(false);
+	});
+
+	it("does not show another branch's registration", async () => {
+		const other = await makeBranch();
+		const r = await makeRegistration({ branchId: other.id, payload: payload('Elsewhere') });
+		await expect(detail(branchId, r.id)).rejects.toBeInstanceOf(NotFoundError);
 	});
 
 	it('masks NIK', async () => {

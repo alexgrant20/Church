@@ -67,12 +67,20 @@ export async function getRegistration(id: string) {
 		repo.consentsOf(id),
 		repo.findSameNameAndBirth(stored)
 	]);
-	const people = stored.map((p, i) => ({
-		...present(p),
-		consent: toConsent(consents.find((c) => c.personIndex === i)) as Consent | undefined,
-		warnings: matches
-			.filter((m) => m.idx === i)
-			.map((m): Warning => ({ personId: m.id, memberCode: m.memberCode, fullName: m.fullName }))
-	}));
+	const scope = reviewScope();
+	const visible = (m: { homeBranchId: string }) =>
+		scope === 'all' || scope.includes(m.homeBranchId);
+	const people = stored.map((p, i) => {
+		const mine = matches.filter((m) => m.idx === i);
+		return {
+			...present(p),
+			consent: toConsent(consents.find((c) => c.personIndex === i)) as Consent | undefined,
+			warnings: mine
+				.filter(visible)
+				.map((m): Warning => ({ personId: m.id, memberCode: m.memberCode, fullName: m.fullName })),
+			// Out-of-scope members are reduced to this flag so no identity leaves the branch.
+			otherBranchMatch: mine.some((m) => !visible(m))
+		};
+	});
 	return { id, status: row.status, branchName: row.branchName, fixReason: row.fixReason, people };
 }
