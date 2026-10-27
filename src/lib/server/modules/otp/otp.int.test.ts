@@ -6,11 +6,8 @@ import { issueOtp, verifyOtp, type OtpPurpose } from './service';
 
 const issue = (personId: string, purpose: OtpPurpose = 'login') =>
 	db.transaction((tx) => issueOtp(tx, { personId, purpose, channel: 'email' }));
-// A failed verify must commit its attempt count, so the error is returned instead of thrown out of the transaction.
 const verify = (challengeToken: string, code: string, purpose: OtpPurpose = 'login') =>
-	db.transaction((tx) =>
-		verifyOtp(tx, { challengeToken, purpose, code }).catch((e: unknown) => e as Error)
-	);
+	verifyOtp({ challengeToken, purpose, code }).catch((e: unknown) => e as Error);
 const wrongOf = (code: string) => (code === '000000' ? '111111' : '000000');
 const invalid = { message: 'error_invalid_code' };
 
@@ -38,6 +35,28 @@ describe('otp', () => {
 		const { code, challengeToken } = await issue(p.id);
 		for (let i = 0; i < 5; i++) await verify(challengeToken, wrongOf(code));
 		expect(await verify(challengeToken, code)).toMatchObject(invalid);
+	});
+	it('counts wrong tries even when the caller transaction fails', async () => {
+		const p = await makePerson();
+		const { code, challengeToken } = await issue(p.id);
+		for (let i = 0; i < 5; i++) {
+			await db
+				.transaction(async () => {
+					await verify(challengeToken, wrongOf(code));
+					throw new Error('caller failed');
+				})
+				.catch(() => {});
+		}
+		expect(await verify(challengeToken, code)).toMatchObject(invalid);
+	});
+	it('lets only one of two parallel right codes succeed', async () => {
+		const p = await makePerson();
+		const { code, challengeToken } = await issue(p.id);
+		const results = await Promise.all([verify(challengeToken, code), verify(challengeToken, code)]);
+		expect(results.filter((r) => r === p.id)).toHaveLength(1);
+		expect(
+			results.filter((r) => r instanceof Error && r.message === 'error_invalid_code')
+		).toHaveLength(1);
 	});
 	it('a new code kills the previous one', async () => {
 		const p = await makePerson();

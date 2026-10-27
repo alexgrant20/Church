@@ -1,5 +1,5 @@
 import { timingSafeEqual } from 'node:crypto';
-import type { Transaction } from '$lib/server/db/client';
+import { db, type Transaction } from '$lib/server/db/client';
 import { keyedHash } from '$lib/server/crypto';
 import { ValidationError } from '$lib/server/errors';
 import { generateSessionToken, hashSessionToken } from '$lib/server/modules/auth/token';
@@ -42,21 +42,21 @@ export async function issueOtp(
 	return { code, challengeToken };
 }
 
-// Throws after counting a wrong attempt, so the caller must not roll that count back.
-export async function verifyOtp(
-	tx: Transaction,
-	input: { challengeToken: string; purpose: OtpPurpose; code: string }
-): Promise<string> {
+// Runs outside any caller transaction so a wrong attempt stays counted when the caller fails.
+export async function verifyOtp(input: {
+	challengeToken: string;
+	purpose: OtpPurpose;
+	code: string;
+}): Promise<string> {
 	const now = new Date();
-	const row = await repo.countAttempt(
-		tx,
-		hashSessionToken(input.challengeToken),
-		input.purpose,
-		now
+	const row = await db.transaction((tx) =>
+		repo.countAttempt(tx, hashSessionToken(input.challengeToken), input.purpose, now)
 	);
 	if (!row) throw new ValidationError('error_invalid_code');
 	if (!timingSafeEqual(Buffer.from(keyedHash(input.code)), Buffer.from(row.codeHash)))
 		throw new ValidationError('error_invalid_code');
-	await repo.markConsumed(tx, row.id, now);
+	// Conditional update so two parallel right codes cannot both succeed.
+	const won = await db.transaction((tx) => repo.markConsumed(tx, row.id, now));
+	if (!won) throw new ValidationError('error_invalid_code');
 	return row.personId;
 }

@@ -70,6 +70,11 @@ export async function countAttempt(
 	return row;
 }
 
-export async function markConsumed(tx: Transaction, id: string, now: Date): Promise<void> {
-	await tx.update(otpCodes).set({ consumedAt: now }).where(eq(otpCodes.id, id));
+export async function markConsumed(tx: Transaction, id: string, now: Date): Promise<boolean> {
+	const rows = await tx
+		.update(otpCodes)
+		.set({ consumedAt: now })
+		.where(and(eq(otpCodes.id, id), isNull(otpCodes.consumedAt)))
+		.returning({ id: otpCodes.id });
+	return rows.length === 1;
 }
