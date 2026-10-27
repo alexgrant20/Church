@@ -49,3 +49,11 @@ for (const width of [1440, 390]) {
 		await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 	});
 }
+test('sign out from the account dialog ends the session', async ({ page }) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await page.getByRole('button', { name: 'Account' }).click();
+	await page.getByRole('dialog').getByRole('button', { name: 'Sign out' }).click();
+	await page.waitForURL('**/login');
+	await page.goto('/dashboard');
+	await expect(page).toHaveURL(/\/login$/);
+});

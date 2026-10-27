@@ -19,5 +19,6 @@
 	"branches_col_code": "Code",
 	"branches_col_name": "Name",
 	"branches_count": "Branches: {count}",
-	"nav_me": "Me"
+	"nav_me": "Me",
+	"sign_out": "Sign out"
 }

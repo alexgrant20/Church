@@ -19,5 +19,6 @@
 	"branches_col_code": "Kode",
 	"branches_col_name": "Nama",
 	"branches_count": "Cabang: {count}",
-	"nav_me": "Saya"
+	"nav_me": "Saya",
+	"sign_out": "Keluar"
 }

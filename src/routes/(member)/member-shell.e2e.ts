@@ -31,3 +31,12 @@ test('top bar holds the theme switch with 48px targets', async ({ page }) => {
 	const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
 	expect(overflow).toBe(false);
 });
+test('sign out from the profile ends the session', async ({ page }) => {
+	await page.setViewportSize({ width: 390, height: 844 });
+	const signOut = page.getByRole('button', { name: 'Sign out' });
+	expect((await signOut.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+	await signOut.click();
+	await page.waitForURL('**/login');
+	await page.goto('/profile');
+	await expect(page).toHaveURL(/\/login$/);
+});

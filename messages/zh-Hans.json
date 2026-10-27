@@ -19,5 +19,6 @@
 	"branches_col_code": "代码",
 	"branches_col_name": "名称",
 	"branches_count": "分支：{count}",
-	"nav_me": "我"
+	"nav_me": "我",
+	"sign_out": "退出登录"
 }
