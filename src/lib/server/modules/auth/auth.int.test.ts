@@ -149,6 +149,36 @@ describe('login', () => {
 		await expect(resendLoginCode('unknown-token')).rejects.toThrow('error_invalid_code');
 		vi.useRealTimers();
 	});
+	it('refuses to resend a consumed challenge', async () => {
+		vi.useFakeTimers({ toFake: ['Date'] });
+		const p = await makePerson();
+		await makeAccount(p.id, { email: 'g@mail.com' });
+		const first = await login({ identifier: 'g@mail.com', password: 'correct-horse' }, ip);
+		await verifyLogin({ challengeToken: first.challengeToken, code: sent[0].params.code }, ip);
+		vi.advanceTimersByTime(61_000);
+		await expect(resendLoginCode(first.challengeToken)).rejects.toThrow('error_invalid_code');
+		vi.useRealTimers();
+	});
+	it('refuses to resend a challenge older than 10 minutes', async () => {
+		vi.useFakeTimers({ toFake: ['Date'] });
+		const p = await makePerson();
+		await makeAccount(p.id, { email: 'h@mail.com' });
+		const first = await login({ identifier: 'h@mail.com', password: 'correct-horse' }, ip);
+		vi.advanceTimersByTime(11 * 60_000);
+		await expect(resendLoginCode(first.challengeToken)).rejects.toThrow('error_invalid_code');
+		vi.useRealTimers();
+	});
+	it('counts a too-short password as a failure instead of crashing', async () => {
+		const p = await makePerson();
+		await makeAccount(p.id, { email: 'i@mail.com' });
+		for (let i = 0; i < 5; i++)
+			await expect(login({ identifier: 'i@mail.com', password: 'abc' }, ip)).rejects.toThrow(
+				'error_invalid_credentials'
+			);
+		await expect(
+			login({ identifier: 'i@mail.com', password: 'correct-horse' }, ip)
+		).rejects.toThrow('error_try_again_later');
+	});
 	it('rejects an account with neither email nor phone', async () => {
 		const p = await makePerson();
 		await expectDbError(makeAccount(p.id, { email: null, phone: null }), /check/);

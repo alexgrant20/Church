@@ -11,16 +11,18 @@ import { recordAudit } from '$lib/server/modules/audit/service';
 
 // Every input gets a token and the same reply, so the screen never shows whether an account exists.
 export async function startActivation(input: unknown): Promise<{ challengeToken: string }> {
-	const { identifier } = startActivationSchema.parse(input);
+	const parsed = startActivationSchema.safeParse(input);
+	if (!parsed.success) return { challengeToken: generateSessionToken() };
 	let normalized;
 	try {
-		normalized = normalizeIdentifier(identifier);
+		normalized = normalizeIdentifier(parsed.data.identifier);
 	} catch (err) {
 		if (err instanceof ValidationError) return { challengeToken: generateSessionToken() };
 		throw err;
 	}
 	const account = await repo.findActivatableByIdentifier(normalized);
 	if (!account) return { challengeToken: generateSessionToken() };
+	// shortcut: the eligible path does one extra insert before replying, a millisecond timing difference; equalize it if activation abuse shows up.
 	try {
 		return { challengeToken: await sendCode(account) };
 	} catch (err) {
@@ -70,7 +72,8 @@ export async function completeActivation(input: unknown): Promise<void> {
 		throw new ValidationError('error_invalid_code');
 	const passwordHash = await hashPassword(password);
 	await db.transaction(async (tx) => {
-		await repo.setPassword(tx, personId, passwordHash);
+		if (!(await repo.setPassword(tx, personId, passwordHash)))
+			throw new ValidationError('error_invalid_code');
 		await repo.deleteSessionsByPersonId(tx, personId);
 		await recordAudit(tx, {
 			action: 'account.activated',

@@ -91,12 +91,20 @@ export async function markConsumed(tx: Transaction, id: string, now: Date): Prom
 export async function findPersonByChallenge(
 	tx: Transaction,
 	challengeHash: string,
-	purpose: NewCode['purpose']
+	purpose: NewCode['purpose'],
+	createdAfter: Date
 ): Promise<string | null> {
 	const [row] = await tx
 		.select({ personId: otpCodes.personId })
 		.from(otpCodes)
-		.where(and(eq(otpCodes.challengeHash, challengeHash), eq(otpCodes.purpose, purpose)))
+		.where(
+			and(
+				eq(otpCodes.challengeHash, challengeHash),
+				eq(otpCodes.purpose, purpose),
+				isNull(otpCodes.consumedAt),
+				gt(otpCodes.createdAt, createdAfter)
+			)
+		)
 		.limit(1);
 	return row?.personId ?? null;
 }

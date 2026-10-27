@@ -13,6 +13,10 @@ export const OTP_TTL_MS = 5 * 60_000;
 export const OTP_RESEND_AFTER_MS = 60_000;
 const WINDOW_MS = 15 * 60_000;
 const MAX_CODES_PER_WINDOW = 3;
+const DAY_MS = 24 * 60 * 60_000;
+const MAX_CODES_PER_DAY = 10;
+// Matches the challenge cookie lifetime.
+const CHALLENGE_RESEND_MS = 10 * 60_000;
 
 export async function issueOtp(
 	tx: Transaction,
@@ -24,11 +28,15 @@ export async function issueOtp(
 		tx,
 		input.personId,
 		input.purpose,
-		new Date(now.getTime() - WINDOW_MS)
+		new Date(now.getTime() - DAY_MS)
 	);
 	if (recent[0] && now.getTime() - recent[0].getTime() < OTP_RESEND_AFTER_MS)
 		throw new ValidationError('error_resend_wait');
-	if (recent.length >= MAX_CODES_PER_WINDOW) throw new ValidationError('error_too_many_codes');
+	const windowStart = now.getTime() - WINDOW_MS;
+	if (recent.filter((d) => d.getTime() > windowStart).length >= MAX_CODES_PER_WINDOW)
+		throw new ValidationError('error_too_many_codes');
+	// Bounds code guessing on an unattended account, such as activation, which has no password step.
+	if (recent.length >= MAX_CODES_PER_DAY) throw new ValidationError('error_too_many_codes');
 
 	const code = generateOtpCode();
 	const challengeToken = generateSessionToken();
@@ -64,6 +72,11 @@ export async function verifyOtp(input: {
 
 export function findChallengePerson(challengeToken: string, purpose: OtpPurpose) {
 	return db.transaction((tx) =>
-		repo.findPersonByChallenge(tx, hashSessionToken(challengeToken), purpose)
+		repo.findPersonByChallenge(
+			tx,
+			hashSessionToken(challengeToken),
+			purpose,
+			new Date(Date.now() - CHALLENGE_RESEND_MS)
+		)
 	);
 }

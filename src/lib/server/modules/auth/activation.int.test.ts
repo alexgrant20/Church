@@ -57,6 +57,31 @@ describe('account activation', () => {
 		expect(await db.select().from(otpCodes)).toHaveLength(0);
 	});
 
+	it('answers an empty identifier like any other and stores nothing', async () => {
+		expect(await startActivation({ identifier: '' })).toEqual({
+			challengeToken: expect.any(String)
+		});
+		expect(await startActivation({})).toEqual({ challengeToken: expect.any(String) });
+		expect(sent).toHaveLength(0);
+		expect(await db.select().from(otpCodes)).toHaveLength(0);
+	});
+
+	it('writes no audit row when the account was activated between recheck and update', async () => {
+		const p = await unactivated();
+		const { challengeToken } = await startActivation({ identifier: 'sari@mail.com' });
+		const repo = await import('./repository');
+		const real = repo.findActivatableByPersonId;
+		vi.spyOn(repo, 'findActivatableByPersonId').mockImplementation(async (id) => {
+			const found = await real(id);
+			await db.update(accounts).set({ activatedAt: new Date() }).where(eq(accounts.personId, p.id));
+			return found;
+		});
+		await expect(
+			completeActivation({ challengeToken, code: sent[0].params.code, password: 'new-password-1' })
+		).rejects.toThrow('error_invalid_code');
+		expect(await db.select().from(auditLogs)).toHaveLength(0);
+	});
+
 	it('cannot complete with a token that was never backed by a code', async () => {
 		const { challengeToken } = await startActivation({ identifier: 'nobody@mail.com' });
 		await expect(

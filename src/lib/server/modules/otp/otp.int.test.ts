@@ -91,6 +91,14 @@ describe('otp', () => {
 		}
 		await expect(issue(p.id)).rejects.toThrow('error_too_many_codes');
 	});
+	it('caps at 10 codes per person and purpose per 24 hours', async () => {
+		const p = await makePerson();
+		for (let i = 0; i < 10; i++) {
+			await issue(p.id);
+			vi.advanceTimersByTime(6 * 60_000);
+		}
+		await expect(issue(p.id)).rejects.toThrow('error_too_many_codes');
+	});
 	it('rejects a token for another purpose', async () => {
 		const p = await makePerson();
 		const { code, challengeToken } = await issue(p.id, 'activation');

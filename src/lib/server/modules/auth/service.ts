@@ -19,7 +19,9 @@ const dummyHash = () => (dummyHashPromise ??= hashPassword('not-a-real-password'
 // The audit row is written at code verification, so the ip is recorded there; meta stays for the caller contract.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function login(input: unknown, _meta: { ip: string }) {
-	const { identifier, password } = loginSchema.parse(input);
+	const parsed = loginSchema.safeParse(input);
+	if (!parsed.success) return rejectMalformed(input);
+	const { identifier, password } = parsed.data;
 	const normalized = normalizeIdentifier(identifier);
 	// Keyed on what was typed, whether or not an account has it, so lockout reveals nothing.
 	const throttleKey = keyedHash(normalized.value);
@@ -35,6 +37,22 @@ export async function login(input: unknown, _meta: { ip: string }) {
 	}
 	await clearFailures(throttleKey);
 	return { challengeToken: await sendLoginCode(account) };
+}
+
+// Bad input counts as a failed attempt so it cannot be used to probe without limit.
+async function rejectMalformed(input: unknown): Promise<never> {
+	const identifier = (input as { identifier?: unknown } | null)?.identifier;
+	if (typeof identifier === 'string') {
+		try {
+			const throttleKey = keyedHash(normalizeIdentifier(identifier).value);
+			await assertNotLocked(throttleKey);
+			await recordFailure(throttleKey);
+		} catch (err) {
+			if (!(err instanceof ValidationError)) throw err;
+			if (err.message === 'error_try_again_later') throw err;
+		}
+	}
+	throw new ValidationError('error_invalid_credentials');
 }
 
 async function sendLoginCode(account: repo.LoginAccount): Promise<string> {

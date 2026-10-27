@@ -55,10 +55,12 @@ export async function findActivatableByPersonId(personId: string) {
 }
 
 export async function setPassword(tx: Transaction, personId: string, passwordHash: string) {
-	await tx
+	const rows = await tx
 		.update(accounts)
 		.set({ passwordHash, activatedAt: new Date() })
-		.where(and(eq(accounts.personId, personId), activatable));
+		.where(and(eq(accounts.personId, personId), activatable))
+		.returning({ personId: accounts.personId });
+	return rows.length === 1;
 }
 
 export async function deleteSessionsByPersonId(tx: Transaction, personId: string) {
