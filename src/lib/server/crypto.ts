@@ -13,14 +13,14 @@ export function normalizeNik(input: string): string {
 	return digits;
 }
 
-export function encryptNik(nik: string): Buffer {
+export function encryptSecret(value: string): Buffer {
 	const iv = randomBytes(IV_LENGTH);
 	const cipher = createCipheriv('aes-256-gcm', encryptionKey(), iv);
-	const ciphertext = Buffer.concat([cipher.update(nik, 'utf8'), cipher.final()]);
+	const ciphertext = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]);
 	return Buffer.concat([iv, cipher.getAuthTag(), ciphertext]);
 }
 
-export function decryptNik(data: Buffer): string {
+export function decryptSecret(data: Buffer): string {
 	const iv = data.subarray(0, IV_LENGTH);
 	const tag = data.subarray(IV_LENGTH, IV_LENGTH + TAG_LENGTH);
 	const decipher = createDecipheriv('aes-256-gcm', encryptionKey(), iv);
@@ -30,6 +30,9 @@ export function decryptNik(data: Buffer): string {
 		decipher.final()
 	]).toString('utf8');
 }
+
+export const encryptNik = encryptSecret;
+export const decryptNik = decryptSecret;
 
 export function maskNik(nik: string): string {
 	return `${nik.slice(0, 4)}${'•'.repeat(8)}${nik.slice(-4)}`;

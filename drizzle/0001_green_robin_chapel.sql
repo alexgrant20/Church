@@ -1,0 +1,1 @@
+ALTER TABLE "registration_links" ADD COLUMN "token_encrypted" "bytea";

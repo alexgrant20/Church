@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { timestamp, uuid } from 'drizzle-orm/pg-core';
+import { customType, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 export const id = () =>
 	uuid()
@@ -12,3 +12,4 @@ export const updatedAt = () =>
 		.defaultNow()
 		.$onUpdate(() => new Date());
 export const deletedAt = () => timestamp({ withTimezone: true });
+export const bytea = customType<{ data: Buffer }>({ dataType: () => 'bytea' });

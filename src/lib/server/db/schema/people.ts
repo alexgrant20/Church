@@ -6,7 +6,6 @@ import {
 	char,
 	date,
 	boolean,
-	customType,
 	smallint,
 	integer,
 	primaryKey,
@@ -16,11 +15,9 @@ import {
 	type AnyPgColumn
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { id, createdAt, updatedAt, deletedAt } from './columns';
+import { id, bytea, createdAt, updatedAt, deletedAt } from './columns';
 import { branches } from './branch';
 import { cities } from './location';
-
-const bytea = customType<{ data: Buffer }>({ dataType: () => 'bytea' });
 
 export const sexEnum = pgEnum('sex', ['male', 'female']);
 export const relationshipKindEnum = pgEnum('relationship_kind', ['parent', 'spouse']);

@@ -13,7 +13,7 @@ import {
 	check
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { id, createdAt, updatedAt, deletedAt } from './columns';
+import { id, bytea, createdAt, updatedAt, deletedAt } from './columns';
 import { otpChannelEnum } from './auth';
 import { branches } from './branch';
 import { households, people } from './people';
@@ -32,6 +32,8 @@ export const registrationLinks = pgTable(
 	{
 		id: id(),
 		tokenHash: char({ length: 64 }).notNull().unique(),
+		// Null for links seeded with only a hash; the token cannot be shown again.
+		tokenEncrypted: bytea(),
 		branchId: uuid()
 			.notNull()
 			.references(() => branches.id, { onDelete: 'restrict' }),
