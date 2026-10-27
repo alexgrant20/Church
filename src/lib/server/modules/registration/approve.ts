@@ -2,10 +2,10 @@ import { db, type Transaction } from '$lib/server/db/client';
 import { config } from '$lib/server/config';
 import { ValidationError } from '$lib/server/errors';
 import type { RegistrationInput } from '$lib/registration/schema';
-import { recordAudit } from '$lib/server/modules/audit/service';
 import { enqueueMessage } from '$lib/server/modules/messaging/outbox';
 import { nextMemberCode } from '$lib/server/modules/people/member-code';
 import * as repo from './approve-repository';
+import { auditApproval } from './approve-audit';
 import { claim, decided, deliverAfterCommit, noticeTo, registrantName } from './decide';
 import { lockConsents } from './decide-repository';
 import { deriveRelationships } from './relationships';
@@ -67,6 +67,19 @@ function relationshipRows(stored: Stored, idAt: Map<number, string>) {
 	});
 }
 
+const indexesOf = (stored: Stored, skip: Set<number>) =>
+	stored.people.flatMap((_, i) => (skip.has(i) ? [] : [i]));
+
+// Checked up front so the caller gets a message key, not a raw unique violation.
+async function assertContactsFree(tx: Transaction, people: StoredPerson[]) {
+	const taken = await repo.contactTaken(
+		tx,
+		people.flatMap((p) => (p.email ? [p.email] : [])),
+		people.flatMap((p) => (p.phone ? [p.phone] : []))
+	);
+	if (taken) throw new ValidationError('error_contact_taken');
+}
+
 async function createPeople(
 	tx: Transaction,
 	reg: Registration,
@@ -74,9 +87,13 @@ async function createPeople(
 	skip: Set<number>,
 	householdId: string
 ) {
+	await assertContactsFree(
+		tx,
+		indexesOf(stored, skip).map((i) => stored.people[i])
+	);
 	const branch = (await repo.findBranch(tx, reg.branchId))!;
 	const year = new Date().getFullYear();
-	const indexes = stored.people.flatMap((_, i) => (skip.has(i) ? [] : [i]));
+	const indexes = indexesOf(stored, skip);
 	const codes: string[] = [];
 	// The one accepted per-person call: an atomic counter, kept sequential so codes follow order.
 	for (let n = 0; n < indexes.length; n++) codes.push(await nextMemberCode(tx, branch, year));
@@ -103,64 +120,40 @@ async function applyConsents(tx: Transaction, consents: Consent[], householdId: 
 		throw new ValidationError('error_waiting_for_consent');
 	}
 	const given = consents.filter((c) => c.decision === 'given');
-	await repo.movePeople(
+	const moves = await repo.movePeople(
 		tx,
 		given.map((c) => c.matchedPersonId),
 		householdId
 	);
 	return {
+		moves,
 		skip: new Set(consents.map((c) => c.personIndex)),
 		linked: new Map(given.map((c) => [c.personIndex, c.matchedPersonId])),
 		declined: consents.some((c) => c.decision === 'declined')
 	};
 }
 
-async function auditApproval(
-	tx: Transaction,
-	reg: Registration,
-	householdId: string,
-	stored: Stored,
-	created: Awaited<ReturnType<typeof createPeople>>
-) {
-	await recordAudit(tx, {
-		action: 'registration.approved',
-		entityType: 'registration',
-		entityId: reg.id,
-		branchId: reg.branchId,
-		diff: { status: { before: 'pending', after: 'approved' }, householdId: { after: householdId } }
-	});
-	// recordAudit takes one row; a registration holds at most 15 people.
-	for (const [n, i] of created.indexes.entries()) {
-		const p = stored.people[i];
-		await recordAudit(tx, {
-			action: 'person.created',
-			entityType: 'person',
-			entityId: created.ids[n],
-			branchId: reg.branchId,
-			diff: {
-				fullName: { after: p.fullName },
-				memberCode: { after: created.codes[n] },
-				householdId: { after: householdId },
-				...(p.nikHash ? { nik: { changed: true } } : {})
-			}
-		});
-	}
-}
-
 async function approveIn(tx: Transaction, id: string) {
 	const reg = await claim(tx, id, { status: 'approved', ...decided() });
 	const consents = await lockConsents(tx, id);
 	const householdId = await repo.insertHousehold(tx);
-	const { skip, linked, declined } = await applyConsents(tx, consents, householdId);
+	const { skip, linked, declined, moves } = await applyConsents(tx, consents, householdId);
 	const stored = reg.payload as Stored;
 	const created = await createPeople(tx, reg, stored, skip, householdId);
 
 	const idAt = new Map(linked);
 	created.indexes.forEach((i, n) => idAt.set(i, created.ids[n]));
 	const registrant = idAt.get(0);
-	if (registrant) await repo.setRegisteredBy(tx, created.ids, registrant);
+	// The registrant has no registrar; the others point at them.
+	if (registrant) {
+		await repo.setRegisteredBy(
+			tx,
+			created.ids.filter((x) => x !== registrant),
+			registrant
+		);
+	}
 	await repo.insertRelationships(tx, relationshipRows(stored, idAt));
-	await auditApproval(tx, reg, householdId, stored, created);
+	await auditApproval(tx, reg, householdId, stored.people, created, moves);
 
 	const messageId = await enqueueMessage(tx, {
 		...noticeTo(reg, 'registration_approved'),

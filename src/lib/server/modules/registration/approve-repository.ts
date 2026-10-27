@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, notExists, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, notExists, or, sql } from 'drizzle-orm';
 import type { Transaction } from '$lib/server/db/client';
 import {
 	accounts,
@@ -56,20 +56,36 @@ export async function setRegisteredBy(tx: Transaction, ids: string[], registrant
 		.where(inArray(people.id, ids));
 }
 
+// One query for every contact in the registration.
+export async function contactTaken(tx: Transaction, emails: string[], phones: string[]) {
+	const any = [
+		emails.length ? inArray(sql`lower(${accounts.email})`, emails) : undefined,
+		phones.length ? inArray(accounts.phone, phones) : undefined
+	].filter((c) => c !== undefined);
+	if (!any.length) return false;
+	const rows = await tx
+		.select({ id: accounts.personId })
+		.from(accounts)
+		.where(or(...any))
+		.limit(1);
+	return rows.length > 0;
+}
+
 export async function movePeople(tx: Transaction, ids: string[], householdId: string) {
-	if (!ids.length) return;
-	const old = await tx
-		.select({ id: people.householdId })
+	if (!ids.length) return { moved: [], deleted: [] };
+	const moved = await tx
+		.select({ id: people.id, before: people.householdId })
 		.from(people)
 		.where(inArray(people.id, ids));
 	await tx.update(people).set({ householdId }).where(inArray(people.id, ids));
+
 	// NOT EXISTS: a join cannot express "households left with no live people".
-	await tx
+	const deleted = await tx
 		.update(households)
 		.set({ deletedAt: new Date() })
 		.where(
 			and(
-				inArray(households.id, [...new Set(old.map((o) => o.id))]),
+				inArray(households.id, [...new Set(moved.map((o) => o.before))]),
 				isNull(households.deletedAt),
 				notExists(
 					tx
@@ -78,5 +94,7 @@ export async function movePeople(tx: Transaction, ids: string[], householdId: st
 						.where(and(eq(people.householdId, households.id), isNull(people.deletedAt)))
 				)
 			)
-		);
+		)
+		.returning({ id: households.id });
+	return { moved, deleted: deleted.map((d) => d.id) };
 }

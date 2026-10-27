@@ -12,18 +12,24 @@ type RecordAuditInput = {
 	actorPersonId?: string | null;
 };
 
-export async function recordAudit(tx: Transaction, input: RecordAuditInput) {
+const toRow = (input: RecordAuditInput, ctx: ReturnType<typeof safeGetContext>) => ({
+	actorPersonId: input.actorPersonId ?? ctx?.personId ?? null,
+	onBehalfOfPersonId: ctx?.actingAsPersonId ?? null,
+	action: input.action,
+	entityType: input.entityType,
+	entityId: input.entityId,
+	branchId: input.branchId,
+	diff: input.diff ?? null,
+	metadata: { ip: ctx?.ip ?? null, ...((input.metadata as object) ?? {}) }
+});
+
+export const recordAudit = (tx: Transaction, input: RecordAuditInput) => recordAudits(tx, [input]);
+
+// One insert for a whole batch, so a bulk mutation never audits row by row.
+export async function recordAudits(tx: Transaction, inputs: RecordAuditInput[]) {
+	if (!inputs.length) return;
 	const ctx = safeGetContext();
-	await tx.insert(auditLogs).values({
-		actorPersonId: input.actorPersonId ?? ctx?.personId ?? null,
-		onBehalfOfPersonId: ctx?.actingAsPersonId ?? null,
-		action: input.action,
-		entityType: input.entityType,
-		entityId: input.entityId,
-		branchId: input.branchId,
-		diff: input.diff ?? null,
-		metadata: { ip: ctx?.ip ?? null, ...((input.metadata as object) ?? {}) }
-	});
+	await tx.insert(auditLogs).values(inputs.map((i) => toRow(i, ctx)));
 }
 
 export async function withAudit<T>(

@@ -53,6 +53,13 @@ describe('decisions', () => {
 		await expect(admin(() => markSpam(r.id))).rejects.toThrow('error_already_decided');
 	});
 
+	it('rejects an empty or oversized reason', async () => {
+		const r = await s.reg(['self']);
+		await expect(admin(() => requestFix(r.id, '   '))).rejects.toThrow('error_required');
+		await expect(admin(() => requestFix(r.id, 'x'.repeat(1001)))).rejects.toThrow('error_too_long');
+		expect((await get(r.id)).status).toBe('pending');
+	});
+
 	it('refuses roles that do not review', async () => {
 		const r = await s.reg(['self']);
 		await expect(asStaff('pastor', s.branch.id, () => markSpam(r.id))).rejects.toThrow('Forbidden');

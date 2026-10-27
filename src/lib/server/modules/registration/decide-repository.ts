@@ -20,10 +20,13 @@ export async function findInScope(tx: Transaction, id: string, scope: BranchScop
 		.select({
 			id: registrations.id,
 			branchId: registrations.branchId,
+			status: registrations.status,
 			payload: registrations.payload
 		})
 		.from(registrations)
-		.where(and(eq(registrations.id, id), inScope(scope)));
+		.where(and(eq(registrations.id, id), inScope(scope)))
+		// Approval claims this row with an UPDATE, so both serialize on the same lock.
+		.for('update');
 	return row;
 }
 

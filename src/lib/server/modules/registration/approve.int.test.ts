@@ -41,6 +41,7 @@ describe('approveRegistration', () => {
 		expect(p1.memberCode).toMatch(new RegExp(`^${s.branch.code}-\\d{4}-\\d{5}$`));
 		expect(new Set([p1, p2, p3, p4].map((p) => p.memberCode)).size).toBe(4);
 		expect(p1).toMatchObject({ isMember: true, homeBranchId: s.branch.id, preferredLocale: 'id' });
+		expect(p1.registeredByPersonId).toBeNull();
 		expect(p2.registeredByPersonId).toBe(p1.id);
 		expect(p1.nikEncrypted).toBeInstanceOf(Buffer);
 		expect(await db.select().from(memberProfiles)).toHaveLength(4);
@@ -131,6 +132,12 @@ describe('approveRegistration', () => {
 		);
 		const [oldRow] = await db.select().from(households).where(eq(households.id, old.id));
 		expect(oldRow.deletedAt).not.toBeNull();
+		const audits = await db.select().from(auditLogs);
+		expect(audits.find((a) => a.action === 'person.household_changed')).toMatchObject({
+			entityId: member.id,
+			diff: { householdId: { before: old.id, after: householdId } }
+		});
+		expect(audits.find((a) => a.action === 'household.deleted')?.entityId).toBe(old.id);
 	});
 
 	it('skips a declined person and says so in the notice', async () => {
@@ -172,7 +179,7 @@ describe('approveRegistration', () => {
 		await makeAccount(owner.id, { email: 'taken@mail.test' });
 		const r = await s.reg(['self', 'child'], {}, [{ email: 'taken@mail.test' }]);
 		const before = await db.select().from(households);
-		await expect(approve(s.branch.id, r.id)).rejects.toThrow();
+		await expect(approve(s.branch.id, r.id)).rejects.toThrow('error_contact_taken');
 		expect(await db.select().from(households)).toHaveLength(before.length);
 		expect(await db.select().from(outboxMessages)).toHaveLength(0);
 		expect(await db.select().from(people)).toHaveLength(1 + CREATOR);

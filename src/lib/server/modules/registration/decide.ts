@@ -2,6 +2,7 @@ import { db, type Transaction } from '$lib/server/db/client';
 import { config } from '$lib/server/config';
 import { getContext } from '$lib/server/context';
 import { NotFoundError, ValidationError } from '$lib/server/errors';
+import { z } from 'zod';
 import type { Locale } from '$lib/paraglide/runtime';
 import type { RegistrationInput } from '$lib/registration/schema';
 import { recordAudit } from '$lib/server/modules/audit/service';
@@ -53,7 +54,17 @@ export async function claim(
 
 export const decided = () => ({ decidedByPersonId: getContext().personId, decidedAt: new Date() });
 
-export async function requestFix(id: string, reason: string): Promise<void> {
+const reasonSchema = z
+	.string('error_required')
+	.trim()
+	.min(1, 'error_required')
+	.max(1000, 'error_too_long');
+
+export async function requestFix(id: string, input: string): Promise<void> {
+	const parsed = reasonSchema.safeParse(input);
+	if (!parsed.success)
+		throw new ValidationError(parsed.error.issues[0].message, parsed.error.issues);
+	const reason = parsed.data;
 	const token = generateSessionToken();
 	const messageId = await db.transaction(async (tx) => {
 		const reg = await claim(tx, id, {
@@ -96,11 +107,16 @@ export async function markSpam(id: string): Promise<void> {
 	});
 }
 
+function assertOpen(reg: { status: string } | undefined, id: string): asserts reg {
+	if (!reg) throw new NotFoundError('Registration', id);
+	if (reg.status !== 'pending') throw new ValidationError('error_already_decided');
+}
+
 export async function recordInPersonConsent(registrationId: string, personIndex: number) {
 	const scope = reviewScope();
 	await db.transaction(async (tx) => {
 		const reg = await repo.findInScope(tx, registrationId, scope);
-		if (!reg) throw new NotFoundError('Registration', registrationId);
+		assertOpen(reg, registrationId);
 		const by = getContext().personId;
 		if (!(await repo.markConsentGiven(tx, registrationId, personIndex, by))) {
 			throw new NotFoundError('Consent', `${registrationId}/${personIndex}`);
@@ -125,7 +141,8 @@ export async function sendConsentRequest(
 		const reg = await repo.findInScope(tx, registrationId, scope);
 		const people = (reg?.payload as RegistrationInput | undefined)?.people;
 		const candidate = people?.[personIndex];
-		if (!reg || !candidate) throw new NotFoundError('Registration', registrationId);
+		assertOpen(reg, registrationId);
+		if (!candidate) throw new NotFoundError('Registration', registrationId);
 		// Only a member shown as the name-and-birth-date warning may be asked.
 		const matches = await findSameNameAndBirth([candidate]);
 		const member = await repo.findMemberWithAccount(tx, memberPersonId);
