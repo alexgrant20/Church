@@ -34,7 +34,7 @@ const person = (relation: string, extra: Record<string, unknown> = {}) => ({
 	sex: 'male',
 	birthDate: '1990-05-01',
 	birthCityId: cityId,
-	address: { line: 'Jl. Mawar 1', cityId },
+	address: { line: 'Jl. Mawar 1', postalCode: '12345', cityId },
 	occupation: 'employee',
 	education: 'bachelor',
 	previousChurch: null,

@@ -13,6 +13,18 @@ export async function insertMessage(
 	return id;
 }
 
+export async function insertMessages(
+	tx: Transaction,
+	rows: (typeof outboxMessages.$inferInsert)[]
+): Promise<string[]> {
+	if (!rows.length) return [];
+	const inserted = await tx
+		.insert(outboxMessages)
+		.values(rows)
+		.returning({ id: outboxMessages.id });
+	return inserted.map((r) => r.id);
+}
+
 // One conditional UPDATE is the claim: a concurrent run re-checks the WHERE after the row lock,
 // sees the pushed-out nextAttemptAt and skips the row. The lease also covers a crash mid-send.
 export function claimDue(now: Date, leaseUntil: Date, ids?: string[]) {

@@ -12,7 +12,7 @@ const person = (
 	sex: 'male',
 	birthDate: '1990-05-01',
 	birthCityId: uuid,
-	address: { line: 'Jl. Mawar 1', cityId: uuid },
+	address: { line: 'Jl. Mawar 1', postalCode: '12345', cityId: uuid },
 	occupation: 'employee',
 	education: 'bachelor',
 	previousChurch: null,
@@ -85,5 +85,34 @@ describe('registrationSchema', () => {
 		expect(paths).toContain('people.3.nik');
 		const many = [family()[0], ...Array.from({ length: 15 }, () => make('child'))];
 		expect(issuesOf(many).map((i) => i.path)).toContain('people');
+	});
+
+	it('requires a postal code', () => {
+		const people = family();
+		delete (people[1].address as { postalCode?: string }).postalCode;
+		expect(issuesOf(people)).toContainEqual({
+			path: 'people.1.address.postalCode',
+			message: 'error_required'
+		});
+	});
+
+	it('treats blank optional fields as absent', () => {
+		const people = family();
+		Object.assign(people[1], { nik: '', email: ' ', phone: '', chineseName: '' });
+		Object.assign(people[0], { phone: '' });
+		const r = registrationSchema.parse({ people });
+		expect(r.people[1]).toMatchObject({
+			nik: undefined,
+			email: undefined,
+			phone: undefined,
+			chineseName: undefined
+		});
+		expect(r.people[0].phone).toBeUndefined();
+	});
+
+	it('still requires registrant contact when email and phone are blank', () => {
+		const people = family();
+		Object.assign(people[0], { email: '', phone: '' });
+		expect(issuesOf(people).map((i) => i.message)).toContain('error_contact_required');
 	});
 });

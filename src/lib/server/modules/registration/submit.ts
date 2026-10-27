@@ -6,7 +6,7 @@ import { registrationSchema, type RegistrationInput } from '$lib/registration/sc
 import type { Locale } from '$lib/paraglide/runtime';
 import { recordAudit } from '$lib/server/modules/audit/service';
 import { generateSessionToken, hashSessionToken } from '$lib/server/modules/auth/token';
-import { deliverOutbox, enqueueMessage } from '$lib/server/modules/messaging/outbox';
+import { deliverOutbox, enqueueMessages } from '$lib/server/modules/messaging/outbox';
 import { resolveLink } from './link-service';
 import * as repo from './repository';
 
@@ -59,22 +59,15 @@ function consentMessage(member: Member, registrantName: string, token: string) {
 	};
 }
 
-export async function submitRegistration(token: string, input: unknown, meta: Meta): Promise<void> {
-	const link = await resolveLink(token);
-	if (!link) throw new NotFoundError('RegistrationLink', 'unknown');
-	// Before parsing, so malformed spam is counted too.
-	await enforceThrottle(meta);
-	const parsed = registrationSchema.safeParse(input);
-	if (!parsed.success) throw new ValidationError('error_invalid_registration', parsed.error.issues);
-	const data = parsed.data;
+type Link = NonNullable<Awaited<ReturnType<typeof resolveLink>>>;
 
-	const members = await repo.findMatchingMembers({
-		nikHashes: data.people.flatMap((p) => (p.nik ? [keyedHash(p.nik)] : [])),
-		emails: data.people.flatMap((p) => (p.email ? [p.email] : [])),
-		phones: data.people.flatMap((p) => (p.phone ? [p.phone] : []))
-	});
-
-	const messageIds = await db.transaction(async (tx) => {
+async function storeRegistration(
+	link: Link,
+	data: RegistrationInput,
+	meta: Meta,
+	members: Member[]
+): Promise<string[]> {
+	return db.transaction(async (tx) => {
 		const registrationId = await repo.insertRegistration(tx, {
 			registrationLinkId: link.linkId,
 			branchId: link.branchId,
@@ -99,13 +92,11 @@ export async function submitRegistration(token: string, input: unknown, meta: Me
 				tokenHash: c.token ? hashSessionToken(c.token) : null
 			}))
 		);
-		const ids: string[] = [];
-		for (const c of consents) {
-			if (!c.token) continue;
-			ids.push(
-				await enqueueMessage(tx, consentMessage(c.member, data.people[0].fullName, c.token))
-			);
-		}
+		const name = data.people[0].fullName;
+		const ids = await enqueueMessages(
+			tx,
+			consents.flatMap((c) => (c.token ? [consentMessage(c.member, name, c.token)] : []))
+		);
 
 		await recordAudit(tx, {
 			action: 'registration.submitted',
@@ -116,6 +107,24 @@ export async function submitRegistration(token: string, input: unknown, meta: Me
 		});
 		return ids;
 	});
+}
+
+export async function submitRegistration(token: string, input: unknown, meta: Meta): Promise<void> {
+	const link = await resolveLink(token);
+	if (!link) throw new NotFoundError('RegistrationLink', 'unknown');
+	// Before parsing, so malformed spam is counted too.
+	await enforceThrottle(meta);
+	const parsed = registrationSchema.safeParse(input);
+	if (!parsed.success) throw new ValidationError('error_invalid_registration', parsed.error.issues);
+	const data = parsed.data;
+
+	const members = await repo.findMatchingMembers({
+		nikHashes: data.people.flatMap((p) => (p.nik ? [keyedHash(p.nik)] : [])),
+		emails: data.people.flatMap((p) => (p.email ? [p.email] : [])),
+		phones: data.people.flatMap((p) => (p.phone ? [p.phone] : []))
+	});
+
+	const messageIds = await storeRegistration(link, data, meta, members);
 
 	// Not awaited: reply timing must not reveal whether anyone matched.
 	if (messageIds.length) {

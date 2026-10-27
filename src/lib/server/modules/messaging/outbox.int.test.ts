@@ -7,7 +7,7 @@ import { resetDb } from '$lib/server/db/test/reset';
 vi.mock('./sender', async (orig) => ({ ...(await orig<object>()), sendMessage: vi.fn() }));
 
 import { DeliveryError, sendMessage, type OutgoingMessage } from './sender';
-import { deliverOutbox, enqueueMessage } from './outbox';
+import { deliverOutbox, enqueueMessage, enqueueMessages } from './outbox';
 
 const msg: OutgoingMessage = {
 	channel: 'email',
@@ -35,6 +35,13 @@ describe('outbox', () => {
 			})
 		).rejects.toThrow('boom');
 		expect(await rows()).toHaveLength(0);
+	});
+
+	it('enqueueMessages inserts all rows in one call and none for an empty list', async () => {
+		const ids = await db.transaction((tx) => enqueueMessages(tx, [msg, msg, msg]));
+		expect(ids).toHaveLength(3);
+		expect(await rows()).toHaveLength(3);
+		expect(await db.transaction((tx) => enqueueMessages(tx, []))).toEqual([]);
 	});
 
 	it('delivers and marks sent', async () => {

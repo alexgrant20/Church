@@ -13,15 +13,20 @@ const MAX_ATTEMPTS = 5;
 const BACKOFF_MS = 5 * 60_000;
 const LEASE_MS = 2 * 60_000;
 
+const toRow = (msg: OutgoingMessage) => ({
+	channel: msg.channel,
+	recipient: msg.to,
+	template: msg.template,
+	locale: msg.locale,
+	params: msg.params,
+	nextAttemptAt: new Date()
+});
+
 export const enqueueMessage = (tx: Transaction, msg: OutgoingMessage) =>
-	repo.insertMessage(tx, {
-		channel: msg.channel,
-		recipient: msg.to,
-		template: msg.template,
-		locale: msg.locale,
-		params: msg.params,
-		nextAttemptAt: new Date()
-	});
+	repo.insertMessage(tx, toRow(msg));
+
+export const enqueueMessages = (tx: Transaction, msgs: OutgoingMessage[]) =>
+	repo.insertMessages(tx, msgs.map(toRow));
 
 export async function deliverOutbox(ids?: string[]): Promise<void> {
 	const now = new Date();
