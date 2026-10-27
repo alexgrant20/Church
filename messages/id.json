@@ -22,5 +22,16 @@
 	"nav_me": "Saya",
 	"sign_out": "Keluar",
 	"otp_email_subject": "Kode masuk GRII Anda",
-	"otp_email_body": "Kode Anda adalah {code}. Berlaku 5 menit. Jangan bagikan kepada siapa pun."
+	"otp_email_body": "Kode Anda adalah {code}. Berlaku 5 menit. Jangan bagikan kepada siapa pun.",
+	"login_code_title": "Masukkan kode Anda",
+	"login_code_label": "Kode 6 digit",
+	"login_code_submit": "Verifikasi",
+	"login_code_resend": "Kirim kode baru",
+	"login_code_resend_in": "Kirim kode baru dalam {seconds} dtk",
+	"error_invalid_code": "Kode tidak valid. Periksa lalu coba lagi.",
+	"error_try_again_later": "Terlalu banyak percobaan. Coba lagi dalam 2 menit.",
+	"error_resend_wait": "Tunggu semenit sebelum meminta kode baru.",
+	"error_too_many_codes": "Terlalu banyak permintaan kode. Coba lagi nanti.",
+	"error_code_not_sent": "Kode tidak dapat dikirim. Coba lagi nanti.",
+	"error_identifier_invalid": "Masukkan email atau nomor telepon yang valid."
 }

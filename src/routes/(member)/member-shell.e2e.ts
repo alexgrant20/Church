@@ -1,13 +1,8 @@
 // Needs the dev database migrated and seeded (`bun run db:migrate && bun run db:seed`).
 import { test, expect } from '@playwright/test';
+import { forgetSession, signIn } from '../login/sign-in';
 
-test.beforeEach(async ({ page }) => {
-	await page.goto('/login');
-	await page.getByLabel('Email or phone').fill('budi@grii.test');
-	await page.getByLabel('Password').fill('devpassword123');
-	await page.getByRole('button', { name: 'Sign in' }).click();
-	await page.waitForURL('**/profile');
-});
+test.beforeEach(({ page }) => signIn(page, 'budi@grii.test'));
 
 test('member profile uses 18px body text and 48px tap targets', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
@@ -37,6 +32,7 @@ test('sign out from the profile ends the session', async ({ page }) => {
 	expect((await signOut.boundingBox())!.height).toBeGreaterThanOrEqual(48);
 	await signOut.click();
 	await page.waitForURL('**/login');
+	forgetSession('budi@grii.test');
 	await page.goto('/profile');
 	await expect(page).toHaveURL(/\/login$/);
 });

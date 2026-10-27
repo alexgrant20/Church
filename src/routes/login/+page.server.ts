@@ -1,8 +1,8 @@
 import type { Actions, PageServerLoad } from './$types';
-import { fail, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import { login } from '$lib/server/modules/auth/service';
-import { config } from '$lib/server/config';
-import { ValidationError } from '$lib/server/errors';
+import { loginFailure } from './errors';
+import { setChallengeCookie } from './challenge-cookie';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (locals.person) throw redirect(303, '/');
@@ -11,29 +11,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
 	default: async ({ request, cookies, getClientAddress }) => {
 		const formData = await request.formData();
-		const identifier = formData.get('identifier');
-		const password = formData.get('password');
-
 		try {
-			const { token, expiresAt } = await login(
-				{ identifier, password },
+			const { challengeToken } = await login(
+				{ identifier: formData.get('identifier'), password: formData.get('password') },
 				{ ip: getClientAddress() }
 			);
-
-			cookies.set(config.SESSION_COOKIE_NAME, token, {
-				path: '/',
-				httpOnly: true,
-				secure: config.NODE_ENV === 'production',
-				sameSite: 'lax',
-				expires: expiresAt
-			});
+			setChallengeCookie(cookies, challengeToken);
 		} catch (err) {
-			if (err instanceof ValidationError) {
-				return fail(400, { error: 'error_invalid_credentials' as const });
-			}
-			throw err;
+			return loginFailure(err);
 		}
-
-		throw redirect(303, '/');
+		throw redirect(303, '/login/verify');
 	}
 };

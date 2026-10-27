@@ -87,3 +87,16 @@ export async function markConsumed(tx: Transaction, id: string, now: Date): Prom
 		.returning({ id: otpCodes.id });
 	return rows.length === 1;
 }
+
+export async function findPersonByChallenge(
+	tx: Transaction,
+	challengeHash: string,
+	purpose: NewCode['purpose']
+): Promise<string | null> {
+	const [row] = await tx
+		.select({ personId: otpCodes.personId })
+		.from(otpCodes)
+		.where(and(eq(otpCodes.challengeHash, challengeHash), eq(otpCodes.purpose, purpose)))
+		.limit(1);
+	return row?.personId ?? null;
+}

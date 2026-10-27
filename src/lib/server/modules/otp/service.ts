@@ -61,3 +61,9 @@ export async function verifyOtp(input: {
 	if (!won) throw new ValidationError('error_invalid_code');
 	return row.personId;
 }
+
+export function findChallengePerson(challengeToken: string, purpose: OtpPurpose) {
+	return db.transaction((tx) =>
+		repo.findPersonByChallenge(tx, hashSessionToken(challengeToken), purpose)
+	);
+}

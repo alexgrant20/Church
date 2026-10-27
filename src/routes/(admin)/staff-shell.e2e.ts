@@ -1,14 +1,9 @@
 // Needs the dev database migrated and seeded (`bun run db:migrate && bun run db:seed`):
 // the e2e server signs in as the seeded staff account.
 import { test, expect } from '@playwright/test';
+import { forgetSession, signIn } from '../login/sign-in';
 
-test.beforeEach(async ({ page }) => {
-	await page.goto('/login');
-	await page.getByLabel('Email or phone').fill('admin@grii.test');
-	await page.getByLabel('Password').fill('devpassword123');
-	await page.getByRole('button', { name: 'Sign in' }).click();
-	await page.waitForURL('**/dashboard');
-});
+test.beforeEach(({ page }) => signIn(page, 'admin@grii.test'));
 
 test('desktop shows the 228px sidebar with the logo tile and nav', async ({ page }) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
@@ -54,6 +49,7 @@ test('sign out from the account dialog ends the session', async ({ page }) => {
 	await page.getByRole('button', { name: 'Account' }).click();
 	await page.getByRole('dialog').getByRole('button', { name: 'Sign out' }).click();
 	await page.waitForURL('**/login');
+	forgetSession('admin@grii.test');
 	await page.goto('/dashboard');
 	await expect(page).toHaveURL(/\/login$/);
 });

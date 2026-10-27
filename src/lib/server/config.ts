@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { env } from '$env/dynamic/private';
+import { building } from '$app/environment';
 
 const key32 = z
 	.string()
@@ -34,8 +35,9 @@ const liveRequired = [
 ] as const;
 
 const checkedSchema = configSchema.superRefine((c, ctx) => {
-	// The log transport prints OTP codes, so it must never run in production.
-	if (c.NODE_ENV === 'production' && c.MESSAGE_TRANSPORT !== 'live')
+	// The log transport prints OTP codes, so it must never run in production. The build only
+	// analyses the server code and sends nothing, so it is exempt (e2e builds with the log transport).
+	if (!building && c.NODE_ENV === 'production' && c.MESSAGE_TRANSPORT !== 'live')
 		ctx.addIssue({
 			code: 'custom',
 			path: ['MESSAGE_TRANSPORT'],

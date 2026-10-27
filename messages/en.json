@@ -22,5 +22,16 @@
 	"nav_me": "Me",
 	"sign_out": "Sign out",
 	"otp_email_subject": "Your GRII sign-in code",
-	"otp_email_body": "Your code is {code}. It expires in 5 minutes. Never share it."
+	"otp_email_body": "Your code is {code}. It expires in 5 minutes. Never share it.",
+	"login_code_title": "Enter your code",
+	"login_code_label": "6-digit code",
+	"login_code_submit": "Verify",
+	"login_code_resend": "Send a new code",
+	"login_code_resend_in": "Send a new code in {seconds}s",
+	"error_invalid_code": "That code is not valid. Check it and try again.",
+	"error_try_again_later": "Too many attempts. Try again in 2 minutes.",
+	"error_resend_wait": "Please wait a minute before asking for a new code.",
+	"error_too_many_codes": "Too many codes requested. Try again later.",
+	"error_code_not_sent": "We could not send your code. Try again later.",
+	"error_identifier_invalid": "Enter a valid email or phone number."
 }

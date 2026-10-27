@@ -1,33 +1,46 @@
 import { db } from '$lib/server/db/client';
 import { accounts, people, sessions, loginThrottles } from '$lib/server/db/schema';
 import { roleAssignments } from '$lib/server/db/schema/roles';
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql, type SQL } from 'drizzle-orm';
 import type { Transaction } from '$lib/server/db/client';
 import { config } from '$lib/server/config';
 import type { Identifier } from './identifier';
 
 const LOCK_MS = 2 * 60_000;
 
-export async function findAccountByIdentifier(identifier: Identifier) {
-	const match =
-		identifier.kind === 'email'
-			? sql`lower(${accounts.email}) = ${identifier.value}`
-			: eq(accounts.phone, identifier.value);
+const accountColumns = {
+	personId: accounts.personId,
+	passwordHash: accounts.passwordHash,
+	status: accounts.status,
+	email: accounts.email,
+	phone: accounts.phone,
+	activatedAt: accounts.activatedAt,
+	preferredLocale: people.preferredLocale
+};
+export type LoginAccount = NonNullable<Awaited<ReturnType<typeof findAccountByIdentifier>>>;
+
+async function findOneAccount(where: SQL) {
 	const [account] = await db
-		.select({
-			personId: accounts.personId,
-			passwordHash: accounts.passwordHash,
-			status: accounts.status,
-			email: accounts.email,
-			phone: accounts.phone,
-			activatedAt: accounts.activatedAt,
-			preferredLocale: people.preferredLocale
-		})
+		.select(accountColumns)
 		.from(accounts)
 		.innerJoin(people, eq(people.id, accounts.personId))
-		.where(and(match, isNull(people.deletedAt)))
+		.where(and(where, isNull(people.deletedAt)))
 		.limit(1);
 	return account ?? null;
+}
+
+export function findAccountByIdentifier(identifier: Identifier) {
+	return findOneAccount(
+		identifier.kind === 'email'
+			? sql`lower(${accounts.email}) = ${identifier.value}`
+			: eq(accounts.phone, identifier.value)
+	);
+}
+
+// Resend only reaches active accounts, same as a fresh login.
+export async function findContactByPersonId(personId: string) {
+	const account = await findOneAccount(eq(accounts.personId, personId));
+	return account?.status === 'active' ? account : null;
 }
 
 export async function findLockedUntil(identifierHash: string) {

@@ -5,40 +5,70 @@ import { generateSessionToken, hashSessionToken } from './token';
 import { ValidationError } from '$lib/server/errors';
 import { loginSchema } from './schema';
 import { normalizeIdentifier } from './identifier';
+import { keyedHash } from '$lib/server/crypto';
+import { issueOtp, verifyOtp, findChallengePerson } from '$lib/server/modules/otp/service';
+import { assertNotLocked, clearFailures, recordFailure } from './throttle';
+import { deliverOtp, otpChannel } from './deliver-otp';
 import { recordAudit } from '$lib/server/modules/audit/service';
 
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 30;
 
-export async function login(input: unknown, meta: { ip: string }) {
+// The audit row is written at code verification, so the ip is recorded there; meta stays for the caller contract.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function login(input: unknown, _meta: { ip: string }) {
 	const { identifier, password } = loginSchema.parse(input);
+	const normalized = normalizeIdentifier(identifier);
+	// Keyed on what was typed, whether or not an account has it, so lockout reveals nothing.
+	const throttleKey = keyedHash(normalized.value);
+	await assertNotLocked(throttleKey);
 
-	const account = await repo.findAccountByIdentifier(normalizeIdentifier(identifier));
+	const account = await repo.findAccountByIdentifier(normalized);
 	// Same error for unknown, unactivated, suspended and wrong password: never reveal which.
 	if (
 		!account?.passwordHash ||
 		account.status !== 'active' ||
 		!(await verifyPassword(password, account.passwordHash))
 	) {
-		throw new ValidationError('Invalid credentials');
+		await recordFailure(throttleKey);
+		throw new ValidationError('error_invalid_credentials');
 	}
+	await clearFailures(throttleKey);
+	return { challengeToken: await sendLoginCode(account) };
+}
 
+async function sendLoginCode(account: repo.LoginAccount): Promise<string> {
+	const { code, challengeToken } = await db.transaction((tx) =>
+		issueOtp(tx, { personId: account.personId, purpose: 'login', channel: otpChannel(account) })
+	);
+	await deliverOtp(account, code);
+	return challengeToken;
+}
+
+export async function resendLoginCode(challengeToken: string) {
+	const personId = await findChallengePerson(challengeToken, 'login');
+	const account = personId && (await repo.findContactByPersonId(personId));
+	if (!account) throw new ValidationError('error_invalid_code');
+	return { challengeToken: await sendLoginCode(account) };
+}
+
+export async function verifyLogin(
+	input: { challengeToken: string; code: string },
+	meta?: { ip: string }
+) {
+	const personId = await verifyOtp({ ...input, purpose: 'login' });
 	const token = generateSessionToken();
 	const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
 	await db.transaction(async (tx) => {
-		await repo.insertSession(tx, {
-			id: hashSessionToken(token),
-			personId: account.personId,
-			expiresAt
-		});
-		await repo.touchLastLogin(tx, account.personId);
+		await repo.insertSession(tx, { id: hashSessionToken(token), personId, expiresAt });
+		await repo.touchLastLogin(tx, personId);
 		await recordAudit(tx, {
 			action: 'auth.login',
 			entityType: 'person',
-			entityId: account.personId,
-			actorPersonId: account.personId,
+			entityId: personId,
+			actorPersonId: personId,
 			branchId: null,
-			metadata: { ip: meta.ip }
+			metadata: { ip: meta?.ip ?? null }
 		});
 	});
 
