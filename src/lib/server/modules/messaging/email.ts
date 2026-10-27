@@ -10,6 +10,9 @@ function getTransport() {
 		host: config.SMTP_HOST,
 		port: config.SMTP_PORT,
 		secure: config.SMTP_PORT === 465,
+		connectionTimeout: 10_000,
+		greetingTimeout: 10_000,
+		socketTimeout: 10_000,
 		auth: { user: config.SMTP_USER, pass: config.SMTP_PASSWORD }
 	});
 	return transport;

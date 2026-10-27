@@ -43,7 +43,9 @@ export async function sendWhatsApp(msg: OutgoingMessage): Promise<void> {
 					Authorization: `Bearer ${config.WHATSAPP_ACCESS_TOKEN}`,
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(buildWhatsAppTemplate(msg))
+				body: JSON.stringify(buildWhatsAppTemplate(msg)),
+				// A hung connection must throw so the caller can fall back to email.
+				signal: AbortSignal.timeout(10_000)
 			}
 		);
 	} catch (cause) {
