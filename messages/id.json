@@ -219,5 +219,6 @@
 	"consent_thanks_given": "Terima kasih. Gereja akan menghubungkan pendaftaran itu dengan Anda.",
 	"consent_thanks_declined": "Terima kasih. Anda tidak akan ditambahkan ke pendaftaran itu.",
 	"field_nik_saved": "Tersimpan sebagai {masked}. Kosongkan untuk tetap memakainya.",
-	"error_invalid_decision": "Pilih ya atau tidak."
+	"error_invalid_decision": "Pilih ya atau tidak.",
+	"registration_ask_consent_short": "Minta persetujuan"
 }

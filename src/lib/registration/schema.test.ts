@@ -124,4 +124,15 @@ describe('registrationSchema', () => {
 			message: 'error_required'
 		});
 	});
+
+	it('calls an empty birth date and an unanswered yes/no required', () => {
+		const people = family();
+		Object.assign(people[0], { birthDate: '', baptism: { baptized: null }, sidi: {} });
+		const issues = issuesOf(people);
+		expect(issues).toContainEqual({ path: 'people.0.birthDate', message: 'error_required' });
+		expect(issues.find((i) => i.path.startsWith('people.0.baptism'))?.message).toBe(
+			'error_required'
+		);
+		expect(issues.find((i) => i.path.startsWith('people.0.sidi'))?.message).toBe('error_required');
+	});
 });

@@ -87,8 +87,9 @@
 						class="block truncate font-medium hover:underline">{r.registrantName}</a
 					>
 					<p class="truncate text-xs text-muted min-[641px]:hidden">
-						{submitted}{#if r.waitingConsents}
-							· {m.consent_waiting()}{/if}
+						{[submitted, r.waitingConsents ? m.consent_waiting() : null]
+							.filter(Boolean)
+							.join(' · ')}
 					</p>
 				</div>
 				<span role="cell" class="tabular text-right">{formatCount(r.peopleCount, getLocale())}</span

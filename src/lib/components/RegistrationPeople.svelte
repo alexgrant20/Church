@@ -60,9 +60,13 @@
 						{relationLabel(person.relation)} ·
 						<span class="tabular">{birth(person.birthDate)}</span>
 					</p>
-					<p class="text-xs text-muted min-[641px]:hidden">
-						<span class="font-mono">{formatMissing(person.nikMasked)}</span> · {contact(person)}
-					</p>
+					{#if person.nikMasked || person.email || person.phone}
+						<p class="text-xs break-all text-muted min-[641px]:hidden">
+							{#if person.nikMasked}<span class="font-mono">{person.nikMasked}</span>{/if}
+							{#if person.nikMasked && (person.email || person.phone)}·{/if}
+							{person.email ?? person.phone ?? ''}
+						</p>
+					{/if}
 					<p class="text-xs break-all text-muted max-[640px]:hidden min-[1100px]:hidden">
 						{contact(person)}
 					</p>

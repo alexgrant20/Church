@@ -105,8 +105,13 @@
 				>
 					<input type="hidden" name="personIndex" value={i} />
 					<input type="hidden" name="memberId" value={w.personId} />
-					<Button type="submit" variant="outline" disabled={decider.busy}>
-						{m.registration_ask_consent({ code: w.memberCode })}
+					<Button
+						type="submit"
+						variant="outline"
+						disabled={decider.busy}
+						aria-label={m.registration_ask_consent({ code: w.memberCode })}
+					>
+						{m.registration_ask_consent_short()}
 					</Button>
 				</form>
 			{/each}

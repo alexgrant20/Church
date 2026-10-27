@@ -219,5 +219,6 @@
 	"consent_thanks_given": "謝謝。教會將把該登記與您連結。",
 	"consent_thanks_declined": "謝謝。您不會被加入該登記。",
 	"field_nik_saved": "已儲存為 {masked}。留空則保持不變。",
-	"error_invalid_decision": "請選擇是或否。"
+	"error_invalid_decision": "請選擇是或否。",
+	"registration_ask_consent_short": "請求同意"
 }

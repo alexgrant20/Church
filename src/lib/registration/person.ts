@@ -12,15 +12,24 @@ const blankTo = (empty: undefined | null) => (v: unknown) =>
 	typeof v === 'string' && v.trim() === '' ? empty : v;
 const optional = <T extends z.ZodType>(schema: T) =>
 	z.preprocess(blankTo(undefined), schema.optional());
-const date = z.iso.date('error_invalid_date');
+// An empty date is a missing answer, not a malformed one.
+const date = z.iso.date({
+	error: (issue) =>
+		issue.input === '' || issue.input == null ? 'error_required' : 'error_invalid_date'
+});
 
 function sacrament<K extends 'baptized' | 'sidi'>(flag: K) {
-	return z.discriminatedUnion(flag, [
-		z.object({ [flag]: z.literal(false) } as { [P in K]: z.ZodLiteral<false> }),
-		z.object({ [flag]: z.literal(true), date, church: text(255) } as {
-			[P in K]: z.ZodLiteral<true>;
-		} & { date: typeof date; church: ReturnType<typeof text> })
-	]);
+	return z.discriminatedUnion(
+		flag,
+		[
+			z.object({ [flag]: z.literal(false) } as { [P in K]: z.ZodLiteral<false> }),
+			z.object({ [flag]: z.literal(true), date, church: text(255) } as {
+				[P in K]: z.ZodLiteral<true>;
+			} & { date: typeof date; church: ReturnType<typeof text> })
+		],
+		// A missing yes/no answer matches no branch; report it as required.
+		'error_required'
+	);
 }
 
 const contact = (kind: 'email' | 'phone') =>

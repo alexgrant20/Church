@@ -219,5 +219,6 @@
 	"consent_thanks_given": "Thank you. The church will link the registration to you.",
 	"consent_thanks_declined": "Thank you. You will not be added to that registration.",
 	"field_nik_saved": "Saved as {masked}. Leave blank to keep it.",
-	"error_invalid_decision": "Choose yes or no."
+	"error_invalid_decision": "Choose yes or no.",
+	"registration_ask_consent_short": "Ask for consent"
 }
