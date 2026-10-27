@@ -102,7 +102,10 @@ export const registrationConsents = pgTable(
 		decidedAt: timestamp({ withTimezone: true }),
 		recordedByPersonId: uuid().references(() => people.id, { onDelete: 'restrict' })
 	},
-	(t) => [uniqueIndex('registration_consents_person_uniq').on(t.registrationId, t.personIndex)]
+	(t) => [
+		uniqueIndex('registration_consents_person_uniq').on(t.registrationId, t.personIndex),
+		index().on(t.matchedPersonId)
+	]
 );
 
 export const registrationThrottles = pgTable('registration_throttles', {

@@ -1,0 +1,1 @@
+CREATE INDEX "registration_consents_matched_person_id_index" ON "registration_consents" USING btree ("matched_person_id");

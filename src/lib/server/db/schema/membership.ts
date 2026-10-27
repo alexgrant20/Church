@@ -2,28 +2,10 @@ import { pgTable, pgEnum, uuid, varchar, boolean, date, check } from 'drizzle-or
 import { sql } from 'drizzle-orm';
 import { createdAt, updatedAt } from './columns';
 import { people } from './people';
+import { EDUCATIONS, OCCUPATIONS } from '$lib/registration/options';
 
-export const occupationEnum = pgEnum('occupation', [
-	'none',
-	'student',
-	'employee',
-	'civil_servant',
-	'entrepreneur',
-	'professional',
-	'homemaker',
-	'retired',
-	'other'
-]);
-export const educationEnum = pgEnum('education', [
-	'none',
-	'primary',
-	'junior_high',
-	'senior_high',
-	'diploma',
-	'bachelor',
-	'master',
-	'doctorate'
-]);
+export const occupationEnum = pgEnum('occupation', OCCUPATIONS);
+export const educationEnum = pgEnum('education', EDUCATIONS);
 
 export const memberProfiles = pgTable(
 	'member_profiles',
