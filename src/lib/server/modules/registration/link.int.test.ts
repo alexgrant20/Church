@@ -6,7 +6,7 @@ import { resetDb } from '$lib/server/db/test/reset';
 import { makeBranch, makePerson } from '$lib/server/db/test/factories';
 import { runWithContext, type RoleAssignment } from '$lib/server/context';
 import { ForbiddenError } from '$lib/server/errors';
-import { getBranchLink, resolveLink, rotateBranchLink } from './link-service';
+import { getBranchLink, getLinkPage, resolveLink, rotateBranchLink } from './link-service';
 
 const as = <T>(
 	personId: string,
@@ -114,5 +114,23 @@ describe('branch registration link', () => {
 			.where(isNull(registrationLinks.revokedAt));
 		expect(JSON.stringify(rows[0])).not.toContain(tokenOf(url));
 		expect(JSON.stringify(rows[0])).not.toContain(live.tokenHash);
+	});
+
+	it('opens a branch admin on their own branch', async () => {
+		const page = await admin(() => getLinkPage(null));
+		expect(page.branch?.id).toBe(branchId);
+		expect(page.link?.url).toContain('/register/');
+	});
+
+	it('waits for a superadmin to choose a branch before touching any link', async () => {
+		const page = await as(adminId, 'superadmin', null, () => getLinkPage(null));
+		expect(page).toEqual({ canChooseBranch: true, branch: null, link: null });
+		expect(await liveLinks(branchId)).toHaveLength(0);
+	});
+
+	it('rejects a branch id that is not a uuid', async () => {
+		await expect(as(adminId, 'superadmin', null, () => getLinkPage('nope'))).rejects.toThrow(
+			'error_bad_branch'
+		);
 	});
 });

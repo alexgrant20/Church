@@ -144,5 +144,19 @@
 	"common_back": "Back",
 	"common_done": "Done",
 	"common_edit": "Edit",
-	"relation_self": "You"
+	"relation_self": "You",
+	"link_title": "Registration link",
+	"link_intro": "Families open this link, or scan the QR code, to register themselves. Anyone with the link can register, so share it only with your congregation.",
+	"link_choose_branch": "Choose a branch to see its registration link.",
+	"link_qr_alt": "QR code for the registration link",
+	"link_copy": "Copy link",
+	"link_copied": "Link copied",
+	"link_download": "Download QR code",
+	"link_replace": "Replace link",
+	"link_replace_title": "Replace the registration link for {branch}?",
+	"link_replace_body": "The current link and every printed QR code stop working at once. You will need to print the new QR code.",
+	"link_replaced": "Link replaced",
+	"field_branch": "Branch",
+	"common_cancel": "Cancel",
+	"error_bad_branch": "That branch does not exist."
 }

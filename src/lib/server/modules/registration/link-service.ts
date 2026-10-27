@@ -1,9 +1,11 @@
 import QRCode from 'qrcode';
+import { z } from 'zod';
 import { db } from '$lib/server/db/client';
 import { config } from '$lib/server/config';
 import { getContext } from '$lib/server/context';
 import { decryptSecret, encryptSecret } from '$lib/server/crypto';
-import { ForbiddenError } from '$lib/server/errors';
+import { ForbiddenError, ValidationError } from '$lib/server/errors';
+import { getBranch } from '$lib/server/modules/branch/service';
 import { recordAudit } from '$lib/server/modules/audit/service';
 import { generateSessionToken, hashSessionToken } from '$lib/server/modules/auth/token';
 import * as repo from './link-repository';
@@ -11,6 +13,7 @@ import * as repo from './link-repository';
 type BranchLink = { url: string; qrSvg: string };
 
 function requireLinkManager(branchId: string) {
+	if (!z.uuid().safeParse(branchId).success) throw new ValidationError('error_bad_branch');
 	const { roleAssignments } = getContext();
 	const allowed = roleAssignments.some(
 		(r) => r.role === 'superadmin' || (r.role === 'branch_admin' && r.branchId === branchId)
@@ -70,4 +73,16 @@ export async function rotateBranchLink(branchId: string): Promise<BranchLink> {
 
 export async function resolveLink(token: string) {
 	return repo.findLinkByHash(hashSessionToken(token));
+}
+
+// Opening the page creates or replaces a link, so a superadmin must choose a branch first.
+export async function getLinkPage(branchId: string | null) {
+	const roles = getContext().roleAssignments;
+	const managed = roles.filter((r) => r.role === 'branch_admin');
+	const canChooseBranch = roles.some((r) => r.role === 'superadmin') || managed.length > 1;
+	const id = branchId ?? managed[0]?.branchId;
+	if (!id) return { canChooseBranch, branch: null, link: null };
+	const link = await getBranchLink(id);
+	const { code, name } = await getBranch(id);
+	return { canChooseBranch, branch: { id, code, name }, link };
 }

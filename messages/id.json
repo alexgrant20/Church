@@ -144,5 +144,19 @@
 	"common_back": "Kembali",
 	"common_done": "Selesai",
 	"common_edit": "Ubah",
-	"relation_self": "Anda"
+	"relation_self": "Anda",
+	"link_title": "Tautan pendaftaran",
+	"link_intro": "Keluarga membuka tautan ini, atau memindai kode QR, untuk mendaftar sendiri. Siapa pun yang memiliki tautan dapat mendaftar, jadi bagikan hanya kepada jemaat Anda.",
+	"link_choose_branch": "Pilih cabang untuk melihat tautan pendaftarannya.",
+	"link_qr_alt": "Kode QR untuk tautan pendaftaran",
+	"link_copy": "Salin tautan",
+	"link_copied": "Tautan disalin",
+	"link_download": "Unduh kode QR",
+	"link_replace": "Ganti tautan",
+	"link_replace_title": "Ganti tautan pendaftaran untuk {branch}?",
+	"link_replace_body": "Tautan saat ini dan semua kode QR yang sudah dicetak langsung tidak berlaku. Anda perlu mencetak kode QR yang baru.",
+	"link_replaced": "Tautan diganti",
+	"field_branch": "Cabang",
+	"common_cancel": "Batal",
+	"error_bad_branch": "Cabang itu tidak ada."
 }

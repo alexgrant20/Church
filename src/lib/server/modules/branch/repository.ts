@@ -1,6 +1,7 @@
 import { db } from '$lib/server/db/client';
 import { branches } from '$lib/server/db/schema/branch';
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, asc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
+import type { Cursor } from '$lib/server/pagination';
 import type { Transaction } from '$lib/server/db/client';
 import { getAccessibleBranchIds } from './access';
 import type { CreateBranchInput } from './schema';
@@ -28,4 +29,26 @@ export async function listAccessibleBranches() {
 		.from(branches)
 		.where(accessible === 'all' ? live : and(live, inArray(branches.id, accessible)))
 		.orderBy(branches.name, branches.id);
+}
+
+const escapeLike = (s: string) => s.replace(/[\\%_]/g, '\\$&');
+
+export function searchBranches(q: string, cursor: Cursor | null, limit: number) {
+	const accessible = getAccessibleBranchIds();
+	const pattern = `%${escapeLike(q.trim())}%`;
+	return db
+		.select({ id: branches.id, code: branches.code, name: branches.name })
+		.from(branches)
+		.where(
+			and(
+				isNull(branches.deletedAt),
+				accessible === 'all' ? undefined : inArray(branches.id, accessible),
+				or(ilike(branches.name, pattern), ilike(branches.code, pattern)),
+				cursor
+					? sql`(${branches.name}, ${branches.id}) > (${cursor.key}, ${cursor.id}::uuid)`
+					: undefined
+			)
+		)
+		.orderBy(asc(branches.name), asc(branches.id))
+		.limit(limit + 1);
 }

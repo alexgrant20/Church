@@ -144,5 +144,19 @@
 	"common_back": "返回",
 	"common_done": "完成",
 	"common_edit": "編輯",
-	"relation_self": "您本人"
+	"relation_self": "您本人",
+	"link_title": "登記連結",
+	"link_intro": "家庭可開啟此連結或掃描 QR 碼自行登記。任何持有連結的人都能登記，請只分享給您的會眾。",
+	"link_choose_branch": "請選擇分會以查看其登記連結。",
+	"link_qr_alt": "登記連結的 QR 碼",
+	"link_copy": "複製連結",
+	"link_copied": "連結已複製",
+	"link_download": "下載 QR 碼",
+	"link_replace": "更換連結",
+	"link_replace_title": "要更換 {branch} 的登記連結嗎？",
+	"link_replace_body": "目前的連結和所有已列印的 QR 碼將立即失效，您需要列印新的 QR 碼。",
+	"link_replaced": "連結已更換",
+	"field_branch": "分會",
+	"common_cancel": "取消",
+	"error_bad_branch": "該分會不存在。"
 }

@@ -144,5 +144,19 @@
 	"common_back": "返回",
 	"common_done": "完成",
 	"common_edit": "编辑",
-	"relation_self": "您本人"
+	"relation_self": "您本人",
+	"link_title": "登记链接",
+	"link_intro": "家庭可打开此链接或扫描二维码自行登记。任何持有链接的人都能登记，请只分享给您的会众。",
+	"link_choose_branch": "请选择分会以查看其登记链接。",
+	"link_qr_alt": "登记链接的二维码",
+	"link_copy": "复制链接",
+	"link_copied": "链接已复制",
+	"link_download": "下载二维码",
+	"link_replace": "更换链接",
+	"link_replace_title": "要更换 {branch} 的登记链接吗？",
+	"link_replace_body": "当前链接和所有已打印的二维码将立即失效，您需要打印新的二维码。",
+	"link_replaced": "链接已更换",
+	"field_branch": "分会",
+	"common_cancel": "取消",
+	"error_bad_branch": "该分会不存在。"
 }
