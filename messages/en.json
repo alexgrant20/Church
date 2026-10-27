@@ -33,5 +33,14 @@
 	"error_resend_wait": "Please wait a minute before asking for a new code.",
 	"error_too_many_codes": "Too many codes requested. Try again later.",
 	"error_code_not_sent": "We could not send your code. Try again later.",
-	"error_identifier_invalid": "Enter a valid email or phone number."
+	"error_identifier_invalid": "Enter a valid email or phone number.",
+	"activate_link": "Activate your account",
+	"activate_title": "Activate your account",
+	"activate_identifier_label": "Email or phone",
+	"activate_submit": "Send code",
+	"activate_sent": "If this can be activated, we've sent a code.",
+	"activate_password_label": "New password",
+	"activate_password_rule": "At least 8 characters",
+	"activate_done": "Your account is active. Sign in with your new password.",
+	"error_password_too_short": "Use at least 8 characters for the password."
 }

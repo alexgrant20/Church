@@ -33,5 +33,14 @@
 	"error_resend_wait": "請等待一分鐘後再取得新驗證碼。",
 	"error_too_many_codes": "取得驗證碼次數過多，請稍後再試。",
 	"error_code_not_sent": "無法發送驗證碼，請稍後再試。",
-	"error_identifier_invalid": "請輸入有效的電子郵件或手機號碼。"
+	"error_identifier_invalid": "請輸入有效的電子郵件或手機號碼。",
+	"activate_link": "啟用您的帳戶",
+	"activate_title": "啟用您的帳戶",
+	"activate_identifier_label": "電子郵件或手機號碼",
+	"activate_submit": "發送驗證碼",
+	"activate_sent": "如果該帳戶可以啟用，我們已發送驗證碼。",
+	"activate_password_label": "新密碼",
+	"activate_password_rule": "至少 8 個字元",
+	"activate_done": "您的帳戶已啟用。請使用新密碼登入。",
+	"error_password_too_short": "密碼至少需要 8 個字元。"
 }

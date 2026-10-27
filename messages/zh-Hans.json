@@ -33,5 +33,14 @@
 	"error_resend_wait": "请等待一分钟后再获取新验证码。",
 	"error_too_many_codes": "获取验证码次数过多，请稍后再试。",
 	"error_code_not_sent": "无法发送验证码，请稍后再试。",
-	"error_identifier_invalid": "请输入有效的邮箱或手机号码。"
+	"error_identifier_invalid": "请输入有效的邮箱或手机号码。",
+	"activate_link": "激活您的账户",
+	"activate_title": "激活您的账户",
+	"activate_identifier_label": "邮箱或手机号",
+	"activate_submit": "发送验证码",
+	"activate_sent": "如果该账户可以激活，我们已发送验证码。",
+	"activate_password_label": "新密码",
+	"activate_password_rule": "至少 8 个字符",
+	"activate_done": "您的账户已激活。请使用新密码登录。",
+	"error_password_too_short": "密码至少需要 8 个字符。"
 }

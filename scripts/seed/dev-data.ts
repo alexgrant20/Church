@@ -100,6 +100,7 @@ async function seedFamily(db: SeedDb, jkt: Branch, kg: Branch) {
 		birthDate: '2011-02-20',
 		branch: kg
 	});
+	await db.insert(accounts).values({ personId: sari.id, email: 'sari@grii.test' });
 	const [first, second] = budi.id < sari.id ? [budi, sari] : [sari, budi];
 	await db.insert(personRelationships).values([
 		{ kind: 'spouse', personId: first.id, relatedPersonId: second.id },

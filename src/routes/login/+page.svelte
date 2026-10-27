@@ -3,9 +3,17 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
+	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
+	import { toast } from 'svelte-sonner';
 	import type { ActionData } from './$types';
 
 	let { form }: { form: ActionData } = $props();
+
+	onMount(() => {
+		if (page.url.searchParams.has('activated')) toast.success(m.activate_done());
+	});
 </script>
 
 <div class="density-member min-h-dvh bg-surface text-text min-[1100px]:flex">
@@ -38,6 +46,9 @@
 			</div>
 
 			<Button type="submit" size="member" class="h-14 w-full">{m.login_submit()}</Button>
+			<a href={resolve('/activate')} class="py-3 text-center font-semibold underline"
+				>{m.activate_link()}</a
+			>
 		</form>
 	</main>
 </div>

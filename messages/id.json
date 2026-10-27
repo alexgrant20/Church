@@ -33,5 +33,14 @@
 	"error_resend_wait": "Tunggu semenit sebelum meminta kode baru.",
 	"error_too_many_codes": "Terlalu banyak permintaan kode. Coba lagi nanti.",
 	"error_code_not_sent": "Kode tidak dapat dikirim. Coba lagi nanti.",
-	"error_identifier_invalid": "Masukkan email atau nomor telepon yang valid."
+	"error_identifier_invalid": "Masukkan email atau nomor telepon yang valid.",
+	"activate_link": "Aktifkan akun Anda",
+	"activate_title": "Aktifkan akun Anda",
+	"activate_identifier_label": "Email atau telepon",
+	"activate_submit": "Kirim kode",
+	"activate_sent": "Jika akun ini dapat diaktifkan, kami sudah mengirim kode.",
+	"activate_password_label": "Kata sandi baru",
+	"activate_password_rule": "Minimal 8 karakter",
+	"activate_done": "Akun Anda sudah aktif. Masuk dengan kata sandi baru Anda.",
+	"error_password_too_short": "Gunakan kata sandi minimal 8 karakter."
 }

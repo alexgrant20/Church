@@ -8,7 +8,8 @@ export type LoginErrorKey =
 	| 'error_invalid_code'
 	| 'error_resend_wait'
 	| 'error_too_many_codes'
-	| 'error_code_not_sent';
+	| 'error_code_not_sent'
+	| 'error_password_too_short';
 
 // Service errors carry their message key; anything else is unexpected and rethrown.
 export function loginFailure(err: unknown) {

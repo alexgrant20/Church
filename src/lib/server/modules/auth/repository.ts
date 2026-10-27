@@ -43,6 +43,28 @@ export async function findContactByPersonId(personId: string) {
 	return account?.status === 'active' ? account : null;
 }
 
+const activatable = and(isNull(accounts.activatedAt), eq(accounts.status, 'active'));
+
+export async function findActivatableByIdentifier(identifier: Identifier) {
+	const account = await findAccountByIdentifier(identifier);
+	return account && !account.activatedAt && account.status === 'active' ? account : null;
+}
+
+export async function findActivatableByPersonId(personId: string) {
+	return findOneAccount(and(eq(accounts.personId, personId), activatable)!);
+}
+
+export async function setPassword(tx: Transaction, personId: string, passwordHash: string) {
+	await tx
+		.update(accounts)
+		.set({ passwordHash, activatedAt: new Date() })
+		.where(and(eq(accounts.personId, personId), activatable));
+}
+
+export async function deleteSessionsByPersonId(tx: Transaction, personId: string) {
+	await tx.delete(sessions).where(eq(sessions.personId, personId));
+}
+
 export async function findLockedUntil(identifierHash: string) {
 	const [row] = await db
 		.select({ lockedUntil: loginThrottles.lockedUntil })
