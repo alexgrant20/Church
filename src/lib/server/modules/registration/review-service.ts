@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { getContext } from '$lib/server/context';
 import { decryptNik, maskNik } from '$lib/server/crypto';
 import { ForbiddenError, NotFoundError } from '$lib/server/errors';
@@ -44,6 +45,16 @@ export async function countPendingRegistrations(): Promise<number> {
 	return repo.countPending(reviewScope());
 }
 
+// Null hides the nav item from staff who cannot review.
+export async function pendingBadge(): Promise<number | null> {
+	try {
+		return await countPendingRegistrations();
+	} catch (err) {
+		if (err instanceof ForbiddenError) return null;
+		throw err;
+	}
+}
+
 function toConsent(row?: { decision: 'waiting' | 'given' | 'declined'; inPersonOnly: boolean }) {
 	if (!row) return undefined;
 	return row.decision === 'waiting' && row.inPersonOnly ? 'in_person_needed' : row.decision;
@@ -60,6 +71,7 @@ function present(stored: StoredPerson) {
 }
 
 export async function getRegistration(id: string) {
+	if (!z.uuid().safeParse(id).success) throw new NotFoundError('Registration', id);
 	const row = await repo.findDetail(id, reviewScope());
 	if (!row) throw new NotFoundError('Registration', id);
 	const stored = (row.payload as { people: StoredPerson[] }).people;
@@ -82,5 +94,12 @@ export async function getRegistration(id: string) {
 			otherBranchMatch: mine.some((m) => !visible(m))
 		};
 	});
-	return { id, status: row.status, branchName: row.branchName, fixReason: row.fixReason, people };
+	return {
+		id,
+		status: row.status,
+		branchName: row.branchName,
+		fixReason: row.fixReason,
+		submittedAt: row.submittedAt,
+		people
+	};
 }

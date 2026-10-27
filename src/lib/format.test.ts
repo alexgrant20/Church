@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatRupiah, formatCount, formatTime, formatMissing } from './format';
+import { formatRupiah, formatCount, formatDay, formatTime, formatMissing } from './format';
 
 describe('formatters', () => {
 	it('prints rupiah with dots and no decimals', () => {
@@ -19,5 +19,25 @@ describe('formatters', () => {
 	it('prints a dash for a missing value but keeps zero', () => {
 		expect(formatMissing(null)).toBe('—');
 		expect(formatMissing(0)).toBe('0');
+	});
+});
+
+describe('formatDay', () => {
+	const labels = { today: 'Today', yesterday: 'Yesterday' };
+	const now = new Date('2026-11-03T02:00:00Z'); // 09:00 in Jakarta
+
+	it('says Today and Yesterday in the given time zone', () => {
+		expect(formatDay(new Date('2026-11-02T18:00:00Z'), 'en', 'Asia/Jakarta', labels, now)).toBe(
+			'Today'
+		);
+		expect(formatDay(new Date('2026-11-02T10:00:00Z'), 'en', 'Asia/Jakarta', labels, now)).toBe(
+			'Yesterday'
+		);
+	});
+
+	it('prints older days as weekday, day and month', () => {
+		expect(formatDay(new Date('2026-11-01T02:00:00Z'), 'en-GB', 'Asia/Jakarta', labels, now)).toBe(
+			'Sun 1 Nov'
+		);
 	});
 });

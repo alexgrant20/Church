@@ -16,7 +16,7 @@
 </script>
 
 <div class="density-staff flex min-h-dvh bg-ground text-text">
-	<StaffSidebar />
+	<StaffSidebar pendingCount={data.pendingCount} />
 
 	<div class="flex min-w-0 flex-1 flex-col">
 		<header
@@ -30,7 +30,7 @@
 				<ThemeSwitch current={data.theme} />
 			</div>
 			<div class="min-[1100px]:hidden">
-				<StaffMenuSheet fullName={data.person.fullName} />
+				<StaffMenuSheet fullName={data.person.fullName} pendingCount={data.pendingCount} />
 			</div>
 			<div class="hidden min-[1100px]:block">
 				<Dialog.Root>

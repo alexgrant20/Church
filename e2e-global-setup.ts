@@ -11,6 +11,9 @@ export default async function globalSetup() {
 	await sql`delete from otp_codes`;
 	await sql`delete from login_throttles`;
 	await sql`delete from registration_throttles`;
+	// Queue tests count rows, so close what earlier runs left open (dev data, nothing real).
+	await sql`update registrations set status = 'spam', decided_at = now()
+		where status in ('pending', 'needs_fix')`;
 	// The activation test consumes the seeded unactivated account, so put it back.
 	await sql`update accounts set password_hash = null, activated_at = null where email = 'sari@grii.test'`;
 	await sql.end();

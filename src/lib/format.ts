@@ -19,3 +19,25 @@ export const formatTime = (date: Date, locale: string, timeZone: string) =>
 
 export const formatMissing = (value: string | number | null | undefined) =>
 	value == null ? '—' : String(value);
+
+const dayKey = (date: Date, timeZone: string) =>
+	new Intl.DateTimeFormat('en-CA', { timeZone, dateStyle: 'short' }).format(date);
+
+// Lists say "Today" and "Yesterday", then "Sun 3 Nov" (DESIGN.md section 4).
+export function formatDay(
+	date: Date,
+	locale: string,
+	timeZone: string,
+	labels: { today: string; yesterday: string },
+	now = new Date()
+) {
+	const key = dayKey(date, timeZone);
+	if (key === dayKey(now, timeZone)) return labels.today;
+	if (key === dayKey(new Date(now.getTime() - 86_400_000), timeZone)) return labels.yesterday;
+	return new Intl.DateTimeFormat(locale, {
+		timeZone,
+		weekday: 'short',
+		day: 'numeric',
+		month: 'short'
+	}).format(date);
+}

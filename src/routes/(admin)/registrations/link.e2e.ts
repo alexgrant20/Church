@@ -1,9 +1,18 @@
 import { test, expect, type Page } from '@playwright/test';
 import { signIn } from '../../login/sign-in';
+import { ensureStaff } from '../../../../e2e-db';
+
+const ADMIN = 'e2e-link@grii.test';
+const SUPER = 'e2e-link-super@grii.test';
+
+test.beforeAll(async () => {
+	await ensureStaff(ADMIN, 'branch_admin');
+	await ensureStaff(SUPER, 'superadmin');
+});
 
 test('a branch admin sees, copies and replaces the branch link', async ({ page, context }) => {
 	await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-	await signIn(page, 'rina@grii.test');
+	await signIn(page, ADMIN);
 	await page.goto('/registrations/link');
 	await expect(page.getByRole('heading', { level: 1, name: 'Registration link' })).toBeVisible();
 	const url = page.getByTestId('registration-url');
@@ -35,7 +44,7 @@ async function chooseBranch(page: Page, text: string) {
 }
 
 test('a superadmin chooses a branch, then switches branch', async ({ page }) => {
-	await signIn(page, 'admin@grii.test');
+	await signIn(page, SUPER);
 	await page.goto('/registrations/link');
 	await expect(page.getByText('Choose a branch to see its registration link.')).toBeVisible();
 	const url = page.getByTestId('registration-url');

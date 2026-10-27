@@ -12,7 +12,12 @@ import {
 import { runWithContext, type RoleAssignment } from '$lib/server/context';
 import { encryptNik } from '$lib/server/crypto';
 import { ForbiddenError, NotFoundError } from '$lib/server/errors';
-import { countPendingRegistrations, getRegistration, listRegistrations } from './review-service';
+import {
+	countPendingRegistrations,
+	getRegistration,
+	listRegistrations,
+	pendingBadge
+} from './review-service';
 
 const as = <T>(role: RoleAssignment['role'], branchId: string | null, fn: () => T) =>
 	runWithContext(
@@ -180,5 +185,21 @@ describe('review queue', () => {
 		).rejects.toBeInstanceOf(ForbiddenError);
 		await expect(pastor(() => getRegistration(r.id))).rejects.toBeInstanceOf(ForbiddenError);
 		await expect(pastor(() => countPendingRegistrations())).rejects.toBeInstanceOf(ForbiddenError);
+	});
+
+	it('gives the nav badge to reviewers only', async () => {
+		await reg({ payload: payload('A') });
+		expect(await as('branch_admin', branchId, () => pendingBadge())).toBe(1);
+		expect(await as('pastor', branchId, () => pendingBadge())).toBeNull();
+	});
+
+	it('tells when a registration was submitted', async () => {
+		const submittedAt = new Date('2026-03-04T05:06:07Z');
+		const r = await reg({ payload: payload('A'), submittedAt });
+		expect((await detail(branchId, r.id)).submittedAt).toEqual(submittedAt);
+	});
+
+	it('treats a malformed id as not found', async () => {
+		await expect(detail(branchId, 'not-a-uuid')).rejects.toBeInstanceOf(NotFoundError);
 	});
 });

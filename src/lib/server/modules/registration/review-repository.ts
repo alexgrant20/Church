@@ -58,6 +58,7 @@ export async function findDetail(id: string, scope: BranchScope) {
 			status: registrations.status,
 			payload: registrations.payload,
 			fixReason: registrations.fixReason,
+			submittedAt: registrations.submittedAt,
 			branchName: branches.name
 		})
 		.from(registrations)

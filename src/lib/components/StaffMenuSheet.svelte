@@ -7,9 +7,10 @@
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import AccountPanel from './AccountPanel.svelte';
-	import { navItems } from './StaffSidebar.svelte';
+	import NavCount from './NavCount.svelte';
+	import { visibleNav } from './StaffSidebar.svelte';
 
-	let { fullName }: { fullName: string } = $props();
+	let { fullName, pendingCount }: { fullName: string; pendingCount: number | null } = $props();
 
 	let open = $state(false);
 	afterNavigate(() => (open = false));
@@ -29,7 +30,7 @@
 		</Sheet.Header>
 		<nav aria-label={m.nav_main()}>
 			<ul class="flex flex-col gap-1">
-				{#each navItems as item (item.href)}
+				{#each visibleNav(pendingCount) as item (item.href)}
 					{@const active = page.url.pathname.startsWith(item.href)}
 					<li>
 						<a
@@ -41,6 +42,7 @@
 						>
 							<item.icon class="size-4 text-muted" />
 							{item.label()}
+							{#if item.queue}<NavCount count={pendingCount} />{/if}
 						</a>
 					</li>
 				{/each}
