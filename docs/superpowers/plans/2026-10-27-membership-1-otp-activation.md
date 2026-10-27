@@ -60,8 +60,16 @@ Plans 2–4 (registration, staff screens, family self-service) follow this one.
 
 ```ts
 it('log transport appends one JSON line per message', async () => {
-	await sendMessage({ channel: 'email', to: 'a@mail.test', template: 'otp', locale: 'en', params: { code: '123456' } });
-	expect(readLoggedMessages(file)).toEqual([expect.objectContaining({ to: 'a@mail.test', params: { code: '123456' } })]);
+	await sendMessage({
+		channel: 'email',
+		to: 'a@mail.test',
+		template: 'otp',
+		locale: 'en',
+		params: { code: '123456' }
+	});
+	expect(readLoggedMessages(file)).toEqual([
+		expect.objectContaining({ to: 'a@mail.test', params: { code: '123456' } })
+	]);
 });
 ```
 
@@ -69,7 +77,13 @@ it('log transport appends one JSON line per message', async () => {
 
 ```ts
 it('builds the authentication template with the code in body and copy button', () => {
-	const body = buildWhatsAppTemplate({ channel: 'whatsapp', to: '+6281234567890', template: 'otp', locale: 'zh-Hant', params: { code: '123456' } });
+	const body = buildWhatsAppTemplate({
+		channel: 'whatsapp',
+		to: '+6281234567890',
+		template: 'otp',
+		locale: 'zh-Hant',
+		params: { code: '123456' }
+	});
 	expect(body).toMatchObject({
 		messaging_product: 'whatsapp',
 		to: '6281234567890',
@@ -191,7 +205,10 @@ it.each(['0812 3456 7890', '+62 812-3456-7890', '6281234567890'])('normalizes %s
 	expect(normalizeIdentifier(raw)).toEqual({ kind: 'phone', value: '+6281234567890' });
 });
 it('lowercases email', () => {
-	expect(normalizeIdentifier(' Budi@GRII.test ')).toEqual({ kind: 'email', value: 'budi@grii.test' });
+	expect(normalizeIdentifier(' Budi@GRII.test ')).toEqual({
+		kind: 'email',
+		value: 'budi@grii.test'
+	});
 });
 it('rejects text that is neither', () => {
 	expect(() => normalizeIdentifier('budi')).toThrow('error_identifier_invalid');
