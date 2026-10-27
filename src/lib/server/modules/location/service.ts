@@ -9,3 +9,10 @@ export async function searchCities(input: { q: string; cursor: Cursor | null; li
 	const rows = await repo.searchCities(input.q, input.cursor, input.limit);
 	return toPage(rows, input.limit, (r) => r.name);
 }
+
+export async function cityNames(ids: string[]): Promise<Record<string, string>> {
+	const unique = [...new Set(ids.filter(Boolean))];
+	if (!unique.length) return {};
+	const rows = await repo.findCityNames(unique);
+	return Object.fromEntries(rows.map((c) => [c.id, c.name]));
+}

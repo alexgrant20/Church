@@ -211,5 +211,13 @@
 	"error_already_decided": "This registration was already decided.",
 	"error_waiting_for_consent": "A listed member has not consented yet.",
 	"error_contact_taken": "An email or phone in this registration already belongs to an account.",
-	"error_consent_exists": "A consent request already exists for this person."
+	"error_consent_exists": "A consent request already exists for this person.",
+	"consent_title": "Were you listed in a registration?",
+	"consent_body": "{name} listed you in a family registration at {branch}. If this is you, the church will link the registration to your membership and move you into that household.",
+	"consent_yes": "Yes, that's me",
+	"consent_no": "No, that's not me",
+	"consent_thanks_given": "Thank you. The church will link the registration to you.",
+	"consent_thanks_declined": "Thank you. You will not be added to that registration.",
+	"field_nik_saved": "Saved as {masked}. Leave blank to keep it.",
+	"error_invalid_decision": "Choose yes or no."
 }

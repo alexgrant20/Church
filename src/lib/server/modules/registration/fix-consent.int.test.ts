@@ -88,6 +88,7 @@ describe('fix link', () => {
 		expect(fix.input.people[0]).not.toHaveProperty('nik');
 		expect(fix.input.people[0]).not.toHaveProperty('nikEncrypted');
 		expect(fix.nikMasked[0]).toMatch(/^\d{4}•{8}\d{4}$/);
+		expect(fix.cityNames).toEqual({ [s.city.id]: s.city.name });
 	});
 
 	it('resubmitting returns it to pending and kills the link', async () => {

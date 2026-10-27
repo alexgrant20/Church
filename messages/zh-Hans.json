@@ -211,5 +211,13 @@
 	"error_already_decided": "此登记已有处理结果。",
 	"error_waiting_for_consent": "有列出的会友尚未同意。",
 	"error_contact_taken": "此登记中的电子邮件或电话已属于某个账户。",
-	"error_consent_exists": "此人已有同意请求。"
+	"error_consent_exists": "此人已有同意请求。",
+	"consent_title": "您是否被列入一份登记？",
+	"consent_body": "{name} 在 {branch} 的家庭登记中列入了您。如果确实是您，教会将把该登记与您的会籍关联，并将您移入该家庭。",
+	"consent_yes": "是的，是我",
+	"consent_no": "不，不是我",
+	"consent_thanks_given": "谢谢。教会将把该登记与您关联。",
+	"consent_thanks_declined": "谢谢。您不会被加入该登记。",
+	"field_nik_saved": "已保存为 {masked}。留空则保持不变。",
+	"error_invalid_decision": "请选择是或否。"
 }

@@ -16,13 +16,15 @@
 		errors,
 		index,
 		isRegistrant,
-		names
+		names,
+		nikSaved
 	}: {
 		person: Person;
 		errors?: PersonErrors;
 		index: number;
 		isRegistrant: boolean;
 		names: Record<string, string>;
+		nikSaved?: string | null;
 	} = $props();
 
 	const id = $derived(`people-${index}`);
@@ -114,7 +116,12 @@
 		{names}
 		error={errorAt(errors, 'birthCityId')}
 	/>
-	{@render text('nik', m.field_nik(), 'text', m.field_nik_hint())}
+	{@render text(
+		'nik',
+		m.field_nik(),
+		'text',
+		nikSaved ? m.field_nik_saved({ masked: nikSaved }) : m.field_nik_hint()
+	)}
 	{@render text('email', m.field_email(), 'email', contactHint)}
 	{@render text('phone', m.field_phone(), 'tel', contactHint)}
 

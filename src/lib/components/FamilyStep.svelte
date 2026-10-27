@@ -14,7 +14,8 @@
 		errors,
 		names,
 		onDone,
-		onRemove
+		onRemove,
+		nikMasked = []
 	}: {
 		people: Person[];
 		editing: number | null;
@@ -22,6 +23,7 @@
 		names: Record<string, string>;
 		onDone: (index: number) => void;
 		onRemove: (index: number) => void;
+		nikMasked?: (string | null)[];
 	} = $props();
 
 	const relationLabel = (r: Relation | undefined) =>
@@ -44,6 +46,7 @@
 			errors={errors?.[editing]}
 			index={editing}
 			isRegistrant={false}
+			nikSaved={nikMasked[editing]}
 			{names}
 		/>
 		<div class="flex flex-col gap-2">

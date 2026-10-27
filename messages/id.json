@@ -211,5 +211,13 @@
 	"error_already_decided": "Pendaftaran ini sudah diputuskan.",
 	"error_waiting_for_consent": "Ada anggota tercantum yang belum memberi persetujuan.",
 	"error_contact_taken": "Email atau telepon dalam pendaftaran ini sudah dipakai akun lain.",
-	"error_consent_exists": "Permintaan persetujuan untuk orang ini sudah ada."
+	"error_consent_exists": "Permintaan persetujuan untuk orang ini sudah ada.",
+	"consent_title": "Apakah Anda tercantum dalam pendaftaran?",
+	"consent_body": "{name} mencantumkan Anda dalam pendaftaran keluarga di {branch}. Jika ini benar Anda, gereja akan menghubungkan pendaftaran itu dengan keanggotaan Anda dan memindahkan Anda ke rumah tangga tersebut.",
+	"consent_yes": "Ya, itu saya",
+	"consent_no": "Bukan, itu bukan saya",
+	"consent_thanks_given": "Terima kasih. Gereja akan menghubungkan pendaftaran itu dengan Anda.",
+	"consent_thanks_declined": "Terima kasih. Anda tidak akan ditambahkan ke pendaftaran itu.",
+	"field_nik_saved": "Tersimpan sebagai {masked}. Kosongkan untuk tetap memakainya.",
+	"error_invalid_decision": "Pilih ya atau tidak."
 }

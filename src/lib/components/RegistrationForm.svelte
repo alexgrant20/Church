@@ -20,12 +20,14 @@
 		form: initial,
 		branchName,
 		reason,
-		names: knownNames = {}
+		names: knownNames = {},
+		nikMasked = []
 	}: {
 		form: SuperValidated<RegistrationInput>;
 		branchName: string;
 		reason?: string;
 		names?: Record<string, string>;
+		nikMasked?: (string | null)[];
 	} = $props();
 
 	// svelte-ignore state_referenced_locally
@@ -138,6 +140,7 @@
 				errors={peopleErrors?.[0]}
 				index={0}
 				isRegistrant
+				nikSaved={nikMasked[0]}
 				{names}
 			/>
 		</section>
@@ -146,6 +149,7 @@
 		</Button>
 	{:else if step === 2}
 		<FamilyStep
+			{nikMasked}
 			bind:people={draft.people}
 			bind:editing
 			errors={peopleErrors}

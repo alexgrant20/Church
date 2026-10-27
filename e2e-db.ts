@@ -142,7 +142,7 @@ export async function memberOf(branchId: string) {
 // parallel must not share an identity. The password is the seeded one (copied from Rina).
 export async function ensureStaff(
 	email: string,
-	role: 'branch_admin' | 'superadmin',
+	role: 'branch_admin' | 'superadmin' | null,
 	branchCode = 'JKT'
 ): Promise<string> {
 	const [found] = await sql`select person_id from accounts where email = ${email}`;
@@ -160,8 +160,10 @@ export async function ensureStaff(
 			insert into accounts (person_id, email, password_hash, activated_at)
 			select ${person.id}, ${email}, password_hash, now() from accounts
 			where email = 'rina@grii.test'`;
-		await tx`insert into role_assignments (person_id, role, branch_id)
-			values (${person.id}, ${role}, ${role === 'superadmin' ? null : branch.id})`;
+		if (role) {
+			await tx`insert into role_assignments (person_id, role, branch_id)
+				values (${person.id}, ${role}, ${role === 'superadmin' ? null : branch.id})`;
+		}
 		return person.id as string;
 	});
 }

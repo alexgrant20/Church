@@ -1,4 +1,4 @@
-import { and, asc, eq, ilike, sql } from 'drizzle-orm';
+import { and, asc, eq, ilike, inArray, sql } from 'drizzle-orm';
 import { db } from '$lib/server/db/client';
 import { cities, regions } from '$lib/server/db/schema';
 import type { Cursor } from '$lib/server/pagination';
@@ -20,4 +20,11 @@ export function searchCities(q: string, cursor: Cursor | null, limit: number) {
 		)
 		.orderBy(asc(cities.name), asc(cities.id))
 		.limit(limit + 1);
+}
+
+export function findCityNames(ids: string[]) {
+	return db
+		.select({ id: cities.id, name: cities.name })
+		.from(cities)
+		.where(inArray(cities.id, ids));
 }

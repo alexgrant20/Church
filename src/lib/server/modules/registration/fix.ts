@@ -4,6 +4,7 @@ import { NotFoundError } from '$lib/server/errors';
 import type { RegistrationInput } from '$lib/registration/schema';
 import { recordAudits } from '$lib/server/modules/audit/service';
 import { hashSessionToken } from '$lib/server/modules/auth/token';
+import { cityNames } from '$lib/server/modules/location/service';
 import { enqueueMessages } from '$lib/server/modules/messaging/outbox';
 import * as repo from './fix-repository';
 import { insertConsents } from './repository';
@@ -37,11 +38,14 @@ export async function loadFix(token: string) {
 	const nikMasked = payload.people.map((p) =>
 		p.nikEncrypted ? maskNik(decryptNik(Buffer.from(p.nikEncrypted, 'base64'))) : null
 	);
+	const cityIds = payload.people.flatMap((p) => [p.birthCityId, p.address.cityId]);
 	return {
 		reason: reg.fixReason ?? '',
 		branchName: reg.branchName,
 		input: { ...payload, people } as RegistrationInput,
-		nikMasked
+		nikMasked,
+		// The form shows city names; the payload holds only their ids.
+		cityNames: await cityNames(cityIds)
 	};
 }
 
