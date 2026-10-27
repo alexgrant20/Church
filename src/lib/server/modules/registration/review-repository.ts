@@ -5,7 +5,7 @@ import type { Cursor } from '$lib/server/pagination';
 
 export type BranchScope = 'all' | string[];
 
-const inScope = (scope: BranchScope) =>
+export const inScope = (scope: BranchScope) =>
 	scope === 'all' ? undefined : scope.length ? inArray(registrations.branchId, scope) : sql`false`;
 
 type Queue = {

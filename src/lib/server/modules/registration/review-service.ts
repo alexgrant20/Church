@@ -12,7 +12,7 @@ type Consent = 'waiting' | 'given' | 'declined' | 'in_person_needed';
 type Warning = { personId: string; memberCode: string; fullName: string };
 
 // Only these roles review; the scope comes from them alone, so a pastor role elsewhere adds no access.
-function reviewScope(): repo.BranchScope {
+export function reviewScope(): repo.BranchScope {
 	const ctx = getContext();
 	const roleAssignments = ctx.roleAssignments.filter(
 		(r) => r.role === 'superadmin' || r.role === 'branch_admin'

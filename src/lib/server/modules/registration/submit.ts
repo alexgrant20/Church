@@ -15,7 +15,7 @@ const MAX_PER_DEVICE = 5;
 const MAX_PER_IP = 50;
 
 type Meta = { ip: string; deviceId: string; locale: Locale };
-type Member = Awaited<ReturnType<typeof repo.findMatchingMembers>>[number];
+export type Member = Awaited<ReturnType<typeof repo.findMatchingMembers>>[number];
 type Person = RegistrationInput['people'][number];
 
 async function enforceThrottle({ ip, deviceId }: Meta) {
@@ -48,7 +48,7 @@ function matchFor(person: Person, members: Member[]): Member | undefined {
 	);
 }
 
-function consentMessage(member: Member, registrantName: string, token: string) {
+export function consentMessage(member: Member, registrantName: string, token: string) {
 	const channel = member.phone ? ('whatsapp' as const) : ('email' as const);
 	return {
 		channel,
