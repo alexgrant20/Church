@@ -11,9 +11,8 @@ import {
 	check
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { id, createdAt, updatedAt, deletedAt } from './columns';
-import { branches } from './branch';
-import { households, people } from './people';
+import { id, createdAt, updatedAt } from './columns';
+import { people } from './people';
 
 export const accountStatusEnum = pgEnum('account_status', ['active', 'suspended']);
 export const otpPurposeEnum = pgEnum('otp_purpose', ['login', 'activation', 'password_reset']);
@@ -80,30 +79,4 @@ export const sessions = pgTable(
 		createdAt: createdAt()
 	},
 	(t) => [index().on(t.personId)]
-);
-
-export const registrationLinks = pgTable(
-	'registration_links',
-	{
-		id: id(),
-		tokenHash: char({ length: 64 }).notNull(),
-		branchId: uuid()
-			.notNull()
-			.references(() => branches.id, { onDelete: 'restrict' }),
-		createdByPersonId: uuid()
-			.notNull()
-			.references(() => people.id, { onDelete: 'restrict' }),
-		note: varchar({ length: 255 }),
-		usedAt: timestamp({ withTimezone: true }),
-		householdId: uuid().references(() => households.id, { onDelete: 'restrict' }),
-		revokedAt: timestamp({ withTimezone: true }),
-		createdAt: createdAt(),
-		deletedAt: deletedAt()
-	},
-	(t) => [
-		uniqueIndex('registration_links_token_hash_uniq')
-			.on(t.tokenHash)
-			.where(sql`${t.deletedAt} is null`),
-		index().on(t.branchId, t.createdAt)
-	]
 );

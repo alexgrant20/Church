@@ -7,15 +7,19 @@ import {
 	cities,
 	countries,
 	households,
+	memberProfiles,
 	people,
 	regions,
-	registrationLinks
+	registrationLinks,
+	registrations
 } from '$lib/server/db/schema';
 import { hashPassword } from '$lib/server/modules/auth/password';
 
 export type NewBranch = typeof branches.$inferInsert;
 export type NewAccount = typeof accounts.$inferInsert;
 export type NewRegistrationLink = typeof registrationLinks.$inferInsert;
+export type NewRegistration = typeof registrations.$inferInsert;
+export type NewMemberProfile = typeof memberProfiles.$inferInsert;
 export type NewAttachment = typeof attachments.$inferInsert;
 export type NewPerson = typeof people.$inferInsert;
 
@@ -108,6 +112,41 @@ export async function makeRegistrationLink(overrides: Partial<NewRegistrationLin
 		})
 		.returning();
 	return link;
+}
+
+export async function makeRegistration(overrides: Partial<NewRegistration> = {}) {
+	const branchId = overrides.branchId ?? (await makeBranch()).id;
+	const [registration] = await db
+		.insert(registrations)
+		.values({
+			registrationLinkId:
+				overrides.registrationLinkId ?? (await makeRegistrationLink({ branchId })).id,
+			branchId,
+			payload: {},
+			locale: 'id',
+			contactEmail: `reg${++counter}@mail.test`,
+			...overrides
+		})
+		.returning();
+	return registration;
+}
+
+export async function makeMemberProfile(
+	personId: string,
+	overrides: Partial<NewMemberProfile> = {}
+) {
+	const [profile] = await db
+		.insert(memberProfiles)
+		.values({
+			personId,
+			occupation: 'employee',
+			education: 'bachelor',
+			baptized: false,
+			sidi: false,
+			...overrides
+		})
+		.returning();
+	return profile;
 }
 
 export async function makeAttachment(overrides: Partial<NewAttachment> = {}) {

@@ -6,3 +6,5 @@ export * from './roles';
 export * from './system';
 export * from './attachment';
 export * from './audit';
+export * from './membership';
+export * from './registration';

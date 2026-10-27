@@ -5,6 +5,7 @@ import {
 	varchar,
 	char,
 	date,
+	boolean,
 	customType,
 	smallint,
 	integer,
@@ -34,7 +35,8 @@ export const people = pgTable(
 	'people',
 	{
 		id: id(),
-		memberCode: varchar({ length: 20 }).notNull().unique(),
+		isMember: boolean().notNull().default(true),
+		memberCode: varchar({ length: 20 }),
 		fullName: varchar({ length: 255 }).notNull(),
 		nickname: varchar({ length: 100 }),
 		chineseName: varchar({ length: 50 }),
@@ -69,6 +71,13 @@ export const people = pgTable(
 		uniqueIndex('people_nik_hash_uniq')
 			.on(t.nikHash)
 			.where(sql`${t.nikHash} is not null and ${t.deletedAt} is null`),
+		uniqueIndex('people_member_code_uniq')
+			.on(t.memberCode)
+			.where(sql`${t.memberCode} is not null and ${t.deletedAt} is null`),
+		check(
+			'people_member_code_matches_is_member',
+			sql`(${t.memberCode} is not null) = ${t.isMember}`
+		),
 		check('people_nik_hash_hex', sql`${t.nikHash} ~ '^[0-9a-f]{64}$'`),
 		index('people_full_name_trgm_idx').using('gin', sql`${t.fullName} gin_trgm_ops`),
 		index('people_nickname_trgm_idx').using('gin', sql`${t.nickname} gin_trgm_ops`),

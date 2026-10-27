@@ -1,11 +1,21 @@
+import { createHash, randomBytes } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import * as schema from '../../src/lib/server/db/schema';
 import { hashPassword } from '../../src/lib/server/modules/auth/password';
 import { nextMemberCode } from '../../src/lib/server/modules/people/member-code';
 import type { SeedDb } from './locations';
 
-const { accounts, branches, cities, households, people, personRelationships, roleAssignments } =
-	schema;
+const {
+	accounts,
+	branches,
+	cities,
+	households,
+	memberProfiles,
+	people,
+	personRelationships,
+	registrationLinks,
+	roleAssignments
+} = schema;
 
 const PASSWORD = 'devpassword123';
 const YEAR = new Date().getFullYear();
@@ -59,6 +69,13 @@ async function createPerson(db: SeedDb, seed: PersonSeed) {
 			})
 			.returning()
 	);
+	await db.insert(memberProfiles).values({
+		personId: person.id,
+		occupation: 'employee',
+		education: 'bachelor',
+		baptized: false,
+		sidi: false
+	});
 	if (seed.email) {
 		await db.insert(accounts).values({
 			personId: person.id,
@@ -146,6 +163,14 @@ export async function seedDevData(db: SeedDb): Promise<boolean> {
 		{ personId: rina.id, role: 'branch_admin', branchId: jkt.id }
 	]);
 	await seedFamily(db, jkt, kg);
+	// Only the hash is stored; the token itself is not needed until the link UI exists.
+	await db.insert(registrationLinks).values(
+		[jkt, kg].map((branch) => ({
+			tokenHash: createHash('sha256').update(randomBytes(32)).digest('hex'),
+			branchId: branch.id,
+			createdByPersonId: admin.id
+		}))
+	);
 	await db
 		.insert(schema.systemSettings)
 		.values({ key: 'household.adults_act_for_activated_adults', value: true });
