@@ -65,7 +65,7 @@ export const personSchema = z.object({
 	education: z.enum(EDUCATIONS, 'error_required'),
 	previousChurch: z.preprocess(
 		blankTo(null),
-		z.string().trim().max(255, 'error_too_long').nullable()
+		z.string('error_required').trim().max(255, 'error_too_long').nullable()
 	),
 	baptism: sacrament('baptized'),
 	sidi: sacrament('sidi'),

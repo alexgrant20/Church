@@ -115,4 +115,13 @@ describe('registrationSchema', () => {
 		Object.assign(people[0], { email: '', phone: '' });
 		expect(issuesOf(people).map((i) => i.message)).toContain('error_contact_required');
 	});
+
+	it('requires the previousChurch key', () => {
+		const people = family();
+		delete people[0].previousChurch;
+		expect(issuesOf(people)).toContainEqual({
+			path: 'people.0.previousChurch',
+			message: 'error_required'
+		});
+	});
 });

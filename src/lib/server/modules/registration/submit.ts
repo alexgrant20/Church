@@ -59,6 +59,15 @@ function consentMessage(member: Member, registrantName: string, token: string) {
 	};
 }
 
+function planConsents(data: RegistrationInput, members: Member[]) {
+	return data.people.flatMap((p, personIndex) => {
+		const member = matchFor(p, members);
+		if (!member) return [];
+		const token = member.activatedAt ? generateSessionToken() : null;
+		return [{ personIndex, member, token }];
+	});
+}
+
 type Link = NonNullable<Awaited<ReturnType<typeof resolveLink>>>;
 
 async function storeRegistration(
@@ -77,12 +86,7 @@ async function storeRegistration(
 			contactPhone: data.people[0].phone ?? null
 		});
 
-		const consents = data.people.flatMap((p, personIndex) => {
-			const member = matchFor(p, members);
-			if (!member) return [];
-			const token = member.activatedAt ? generateSessionToken() : null;
-			return [{ personIndex, member, token }];
-		});
+		const consents = planConsents(data, members);
 		await repo.insertConsents(
 			tx,
 			consents.map((c) => ({
