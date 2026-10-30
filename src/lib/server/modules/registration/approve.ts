@@ -67,6 +67,10 @@ function relationshipRows(stored: Stored, idAt: Map<number, string>) {
 	});
 }
 
+// The Member ID year follows the branch's calendar, not the server's.
+const yearIn = (timeZone: string) =>
+	Number(new Intl.DateTimeFormat('en-US', { timeZone, year: 'numeric' }).format(new Date()));
+
 const indexesOf = (stored: Stored, skip: Set<number>) =>
 	stored.people.flatMap((_, i) => (skip.has(i) ? [] : [i]));
 
@@ -92,7 +96,7 @@ async function createPeople(
 		indexesOf(stored, skip).map((i) => stored.people[i])
 	);
 	const branch = (await repo.findBranch(tx, reg.branchId))!;
-	const year = new Date().getFullYear();
+	const year = yearIn(branch.timezone);
 	const indexes = indexesOf(stored, skip);
 	const codes: string[] = [];
 	// The one accepted per-person call: an atomic counter, kept sequential so codes follow order.

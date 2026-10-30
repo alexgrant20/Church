@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db/client';
 import {
@@ -27,6 +27,7 @@ beforeEach(async () => {
 	await resetDb();
 	s = await setup();
 });
+afterEach(() => vi.useRealTimers());
 
 const inHousehold = async (householdId: string) =>
 	(await db.select().from(people).where(eq(people.householdId, householdId))).sort((a, b) =>
@@ -174,6 +175,22 @@ describe('approveRegistration', () => {
 		expect(await db.select().from(outboxMessages)).toHaveLength(0);
 		const [reg] = await db.select().from(registrations).where(eq(registrations.id, r.id));
 		expect(reg.status).toBe('pending');
+	});
+
+	it('numbers Member IDs by the branch calendar year, not the server year', async () => {
+		const r = await s.reg(['self']);
+		// The server runs in UTC, 00:30 on 1 January in Jakarta (UTC+7).
+		const tz = process.env.TZ;
+		process.env.TZ = 'UTC';
+		onTestFinished(() => {
+			if (tz === undefined) delete process.env.TZ;
+			else process.env.TZ = tz;
+		});
+		vi.useFakeTimers({ toFake: ['Date'] });
+		vi.setSystemTime(new Date('2026-12-31T17:30:00Z'));
+		const { householdId } = await approve(s.branch.id, r.id);
+		const [p] = await inHousehold(householdId);
+		expect(p.memberCode).toBe(`${s.branch.code}-2027-00001`);
 	});
 
 	it('enqueues one approved notice in the registration locale', async () => {

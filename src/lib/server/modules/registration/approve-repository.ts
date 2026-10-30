@@ -16,7 +16,7 @@ export async function insertHousehold(tx: Transaction): Promise<string> {
 
 export async function findBranch(tx: Transaction, id: string) {
 	const [row] = await tx
-		.select({ id: branches.id, code: branches.code })
+		.select({ id: branches.id, code: branches.code, timezone: branches.timezone })
 		.from(branches)
 		.where(eq(branches.id, id));
 	return row;
