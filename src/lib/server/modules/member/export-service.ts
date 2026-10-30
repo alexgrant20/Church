@@ -2,12 +2,11 @@ import { db } from '$lib/server/db/client';
 import { ValidationError } from '$lib/server/errors';
 import { recordAudit } from '$lib/server/modules/audit/service';
 import { ADULT_AGE, ageOn, todayIn } from '$lib/server/time';
+import type { AccessibleBranches } from '$lib/server/modules/branch/access';
 import type { MemberFilters } from './filters';
-import { checkedScope } from './list-service';
+import { checkedScope, MAX_EXPORT_ROWS } from './list-service';
 import * as repo from './repository';
 import { exportScope } from './scope';
-
-export const MAX_EXPORT_ROWS = 10_000;
 
 export type ExportRow = {
 	memberCode: string;
@@ -41,13 +40,13 @@ function householdHeads(living: Living[], today: string) {
 	return heads;
 }
 
-async function audit(filters: MemberFilters, rowCount: number) {
+async function audit(filters: MemberFilters, scope: AccessibleBranches, rowCount: number) {
 	await db.transaction((tx) =>
 		recordAudit(tx, {
 			action: 'members.exported',
 			entityType: 'member_export',
 			entityId: crypto.randomUUID(),
-			branchId: filters.branchId ?? null,
+			branchId: filters.branchId ?? (scope !== 'all' && scope.length === 1 ? scope[0] : null),
 			diff: { filters: { after: filters }, rowCount: { after: rowCount } }
 		})
 	);
@@ -72,6 +71,6 @@ export async function exportMembers(filters: MemberFilters) {
 			email: minor ? null : r.email
 		};
 	});
-	await audit(filters, rows.length);
+	await audit(filters, scope, rows.length);
 	return { rows, filename: `members-${todayIn('Asia/Jakarta')}.xlsx` };
 }

@@ -44,9 +44,19 @@
 <PageTitle title={m.members_title()}>
 	{#snippet actions()}
 		{#if data.canExport && !deceased}
-			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolved above, plus the query -->
-			<Button variant="outline" href={exportHref} data-sveltekit-reload>{m.members_export()}</Button
-			>
+			{#if data.exportTooLarge}
+				<p id="export-too-large" class="max-w-80 text-xs text-muted">
+					{m.error_export_too_large()}
+				</p>
+				<Button variant="outline" disabled aria-describedby="export-too-large">
+					{m.members_export()}
+				</Button>
+			{:else}
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolved above, plus the query -->
+				<Button variant="outline" href={exportHref} data-sveltekit-reload
+					>{m.members_export()}</Button
+				>
+			{/if}
 		{/if}
 	{/snippet}
 </PageTitle>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { m } from '$lib/paraglide/messages';
 	import { getLocale } from '$lib/paraglide/runtime';
 	import { formatDate, formatMissing } from '$lib/format';
@@ -9,14 +10,16 @@
 
 	let { data }: { data: PageData } = $props();
 
+	const tab = $derived(page.url.searchParams.get('tab') === 'family' ? 'family' : 'profile');
+
 	const r = $derived(data.record);
 	const p = $derived(r.person);
 	const date = (d: string | null) => (d ? formatDate(d, getLocale()) : formatMissing(null));
 	const sacrament = (s: { date: string; church: string } | null) =>
 		s ? `${date(s.date)} · ${s.church}` : m.common_no();
 	const tabs = $derived([
-		{ href: '?tab=profile', label: m.member_tab_profile(), current: data.tab === 'profile' },
-		{ href: '?tab=family', label: m.member_tab_family(), current: data.tab === 'family' }
+		{ href: '?tab=profile', label: m.member_tab_profile(), current: tab === 'profile' },
+		{ href: '?tab=family', label: m.member_tab_family(), current: tab === 'family' }
 	]);
 	const cards = $derived([
 		{
@@ -90,7 +93,7 @@
 
 <UnderlineTabs label={p.fullName} {tabs} />
 
-{#if data.tab === 'profile'}
+{#if tab === 'profile'}
 	<div class="grid grid-cols-1 gap-4 py-4 min-[1100px]:grid-cols-6">
 		{#each cards as card (card.title)}
 			<section class="rounded-2xl border border-border p-4 min-[1100px]:col-span-3">

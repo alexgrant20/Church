@@ -7,6 +7,9 @@ import { getBranch } from '$lib/server/modules/branch/service';
 import { cityNames } from '$lib/server/modules/location/service';
 import { canExportMembers, memberScope } from './scope';
 
+// Kept here, not imported from export-service, which itself imports this module.
+export const MAX_EXPORT_ROWS = 10_000;
+
 export type MemberRow = Awaited<ReturnType<typeof repo.listMemberRows>>[number];
 
 // A branch outside the caller's scope is refused, so the URL cannot widen what staff see.
@@ -42,6 +45,8 @@ export async function loadMemberList(filters: MemberFilters) {
 		total,
 		names: { ...cities, ...(branch ? { [branch.id]: branch.name } : {}) },
 		isSuperadmin,
-		canExport: canExportMembers()
+		canExport: canExportMembers(),
+		// The screen disables Export instead of sending the user to an error page.
+		exportTooLarge: total > MAX_EXPORT_ROWS
 	};
 }

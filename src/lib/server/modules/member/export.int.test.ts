@@ -14,6 +14,7 @@ import {
 import { ForbiddenError, ValidationError } from '$lib/server/errors';
 import { asStaff } from '$lib/server/modules/registration/test-support';
 import { exportMembers } from './export-service';
+import { loadMemberList } from './list-service';
 
 const active = { status: 'active' as const };
 
@@ -132,10 +133,38 @@ describe('member export', () => {
 		const rows = await db.select().from(auditLogs).where(eq(auditLogs.action, 'members.exported'));
 		expect(rows).toHaveLength(1);
 		expect(rows[0].entityType).toBe('member_export');
+		// A branch admin's export belongs on their branch's activity page.
+		expect(rows[0].branchId).toBe(a.id);
 		expect(rows[0].diff).toEqual({
 			filters: { after: { q: 'bud', status: 'active' } },
 			rowCount: { after: 1 }
 		});
 		expect(JSON.stringify(rows[0].diff)).not.toContain('Budi');
+	});
+
+	it('tells the list screen when an export would be too large', async () => {
+		const a = await makeBranch();
+		const [city, home] = [await makeCity(), await makeHousehold()];
+		for (let start = 0; start < 10_001; start += 5_000) {
+			const n = Math.min(5_000, 10_001 - start);
+			await db.insert(people).values(
+				Array.from({ length: n }, (_, i) => ({
+					memberCode: `Y-${start + i}`,
+					fullName: `P${start + i}`,
+					sex: 'male' as const,
+					birthDate: '1990-01-01',
+					addressLine: 'Jl. A',
+					homeBranchId: a.id,
+					householdId: home.id,
+					cityId: city.id
+				}))
+			);
+		}
+		const big = await asStaff('branch_admin', a.id, () => loadMemberList(active));
+		expect(big.exportTooLarge).toBe(true);
+		const small = await asStaff('branch_admin', a.id, () =>
+			loadMemberList({ ...active, q: 'P10000' })
+		);
+		expect(small.exportTooLarge).toBe(false);
 	});
 });

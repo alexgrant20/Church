@@ -25,8 +25,10 @@
 			{#each people as p (p.id)}
 				<li class="flex min-h-12 flex-wrap items-center gap-x-3 border-b border-rule last:border-0">
 					{#if p.linkable}
-						<a href={resolve(`/members/${p.id}`)} class="font-medium hover:underline"
-							>{p.fullName}</a
+						<a
+							href={resolve(`/members/${p.id}`)}
+							data-sveltekit-preload-data="tap"
+							class="font-medium hover:underline">{p.fullName}</a
 						>
 					{:else}
 						<span class="font-medium">{p.fullName}</span>
