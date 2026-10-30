@@ -10,7 +10,8 @@ import {
 	timestamp,
 	index,
 	uniqueIndex,
-	check
+	check,
+	boolean
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { id, bytea, createdAt, updatedAt, deletedAt } from './columns';
@@ -101,6 +102,8 @@ export const registrationConsents = pgTable(
 		decision: consentDecisionEnum().notNull().default('waiting'),
 		decidedAt: timestamp({ withTimezone: true }),
 		recordedByPersonId: uuid().references(() => people.id, { onDelete: 'restrict' }),
+		// Staff asked for this one by hand; a resubmit re-derives only the automatic matches.
+		requestedByStaff: boolean().notNull().default(false),
 		// A resubmitted registration can drop a match; the old consent is kept, not deleted.
 		deletedAt: deletedAt()
 	},

@@ -1,0 +1,1 @@
+ALTER TABLE "registration_consents" ADD COLUMN "requested_by_staff" boolean DEFAULT false NOT NULL;

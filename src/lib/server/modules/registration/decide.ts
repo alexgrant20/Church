@@ -157,6 +157,7 @@ export async function sendConsentRequest(
 			registrationId,
 			personIndex,
 			matchedPersonId: memberPersonId,
+			requestedByStaff: true,
 			tokenHash: token ? hashSessionToken(token) : null
 		});
 		if (!created) throw new ValidationError('error_consent_exists');

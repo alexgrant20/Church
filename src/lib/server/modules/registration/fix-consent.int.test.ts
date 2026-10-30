@@ -143,6 +143,51 @@ describe('fix link', () => {
 	});
 });
 
+describe('staff-requested consents on resubmit', () => {
+	it('keeps a consent staff asked for by hand', async () => {
+		const { token, reg } = await needsFix();
+		const { m } = await member();
+		await db.insert(registrationConsents).values({
+			registrationId: reg.id,
+			personIndex: 1,
+			matchedPersonId: m.id,
+			requestedByStaff: true
+		});
+		await resubmitFix(token, form(), meta);
+		const rows = await liveConsents(reg.id);
+		expect(rows).toHaveLength(1);
+		expect(rows[0]).toMatchObject({ matchedPersonId: m.id, decision: 'waiting' });
+	});
+
+	it('does not add an automatic match on a person that already has a staff consent', async () => {
+		const { token, reg } = await needsFix();
+		const staffPick = await member();
+		const auto = await member();
+		await db.insert(registrationConsents).values({
+			registrationId: reg.id,
+			personIndex: 1,
+			matchedPersonId: staffPick.m.id,
+			requestedByStaff: true
+		});
+		await resubmitFix(token, form({ email: auto.email }), meta);
+		const rows = await liveConsents(reg.id);
+		expect(rows.map((r) => r.matchedPersonId)).toEqual([staffPick.m.id]);
+	});
+
+	it('removes a staff consent whose person is no longer in the registration', async () => {
+		const { token, reg } = await needsFix();
+		const { m } = await member();
+		await db.insert(registrationConsents).values({
+			registrationId: reg.id,
+			personIndex: 1,
+			matchedPersonId: m.id,
+			requestedByStaff: true
+		});
+		await resubmitFix(token, { people: [form().people[0]] }, meta);
+		expect(await liveConsents(reg.id)).toHaveLength(0);
+	});
+});
+
 describe('consent link', () => {
 	it('only the matched member can open the consent link', async () => {
 		const reg = await s.reg(['self', 'child']);

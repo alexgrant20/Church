@@ -33,7 +33,8 @@ export function lockLiveConsents(tx: Transaction, registrationId: string) {
 		.select({
 			id: registrationConsents.id,
 			personIndex: registrationConsents.personIndex,
-			matchedPersonId: registrationConsents.matchedPersonId
+			matchedPersonId: registrationConsents.matchedPersonId,
+			requestedByStaff: registrationConsents.requestedByStaff
 		})
 		.from(registrationConsents)
 		.where(

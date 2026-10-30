@@ -52,12 +52,27 @@ export async function loadFix(token: string) {
 type Planned = ReturnType<typeof planConsents>[number];
 
 // A match that is still the same member keeps its decision; anything else is replaced.
-async function reconcileConsents(tx: Transaction, registrationId: string, planned: Planned[]) {
+// A consent staff asked for by hand is not derived from the form, so it stays unless its person was removed.
+async function reconcileConsents(
+	tx: Transaction,
+	registrationId: string,
+	planned: Planned[],
+	personCount: number
+) {
 	const existing = await repo.lockLiveConsents(tx, registrationId);
+	const byStaff = existing.filter((c) => c.requestedByStaff);
+	const staffKept = new Set(
+		byStaff.filter((c) => c.personIndex < personCount).map((c) => c.personIndex)
+	);
+	const automatic = existing.filter((c) => !c.requestedByStaff);
+	const wanted = planned.filter((p) => !staffKept.has(p.personIndex));
 	const same = (c: (typeof existing)[number], p: Planned) =>
 		c.personIndex === p.personIndex && c.matchedPersonId === p.member.id;
-	const dropped = existing.filter((c) => !planned.some((p) => same(c, p)));
-	const added = planned.filter((p) => !existing.some((c) => same(c, p)));
+	const dropped = [
+		...byStaff.filter((c) => !staffKept.has(c.personIndex)),
+		...automatic.filter((c) => !wanted.some((p) => same(c, p)))
+	];
+	const added = wanted.filter((p) => !automatic.some((c) => same(c, p)));
 	await repo.softDeleteConsents(
 		tx,
 		dropped.map((c) => c.id),
@@ -95,7 +110,7 @@ async function storeFix(
 		});
 		if (!reg) throw new NotFoundError('RegistrationFix', 'unknown');
 		const planned = planConsents(data, members, nikHashesOf(payload));
-		const { dropped, added } = await reconcileConsents(tx, reg.id, planned);
+		const { dropped, added } = await reconcileConsents(tx, reg.id, planned, data.people.length);
 		const name = data.people[0].fullName;
 		const ids = await enqueueMessages(
 			tx,
