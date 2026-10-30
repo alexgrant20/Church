@@ -29,7 +29,12 @@ export function memberWhere(filters: MemberFilters, scope: AccessibleBranches) {
 	);
 }
 
-type ListInput = { filters: MemberFilters; scope: AccessibleBranches; cursor: Cursor | null; limit: number };
+type ListInput = {
+	filters: MemberFilters;
+	scope: AccessibleBranches;
+	cursor: Cursor | null;
+	limit: number;
+};
 
 export function listMemberRows({ filters, scope, cursor, limit }: ListInput) {
 	const after = cursor

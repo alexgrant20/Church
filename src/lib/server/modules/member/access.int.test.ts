@@ -18,8 +18,11 @@ async function family() {
 	return { a, b, inA, inB, stranger };
 }
 
-const view = (role: 'branch_admin' | 'superadmin', branchId: string | null, p: typeof people.$inferSelect) =>
-	asStaff(role, branchId, () => canViewPerson(p, memberScope()));
+const view = (
+	role: 'branch_admin' | 'superadmin',
+	branchId: string | null,
+	p: typeof people.$inferSelect
+) => asStaff(role, branchId, () => canViewPerson(p, memberScope()));
 
 describe('member access', () => {
 	beforeEach(resetDb);
