@@ -43,6 +43,13 @@
       "when": 1793375119049,
       "tag": "0005_nebulous_exiles",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793401887725,
+      "tag": "0006_pale_tusk",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,7 @@
 import { db, type Transaction } from '$lib/server/db/client';
 import { config } from '$lib/server/config';
 import { ValidationError } from '$lib/server/errors';
+import { yearIn } from '$lib/server/time';
 import type { RegistrationInput } from '$lib/registration/schema';
 import { enqueueMessage } from '$lib/server/modules/messaging/outbox';
 import { nextMemberCode } from '$lib/server/modules/people/member-code';
@@ -66,10 +67,6 @@ function relationshipRows(stored: Stored, idAt: Map<number, string>) {
 		return [{ kind: r.kind, personId: a, relatedPersonId: b }];
 	});
 }
-
-// The Member ID year follows the branch's calendar, not the server's.
-const yearIn = (timeZone: string) =>
-	Number(new Intl.DateTimeFormat('en-US', { timeZone, year: 'numeric' }).format(new Date()));
 
 const indexesOf = (stored: Stored, skip: Set<number>) =>
 	stored.people.flatMap((_, i) => (skip.has(i) ? [] : [i]));

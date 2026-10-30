@@ -1,0 +1,2 @@
+ALTER TABLE "people" ADD COLUMN "deceased_on" date;--> statement-breakpoint
+CREATE INDEX "people_member_list_idx" ON "people" USING btree ("home_branch_id","full_name","id") WHERE "people"."is_member" and "people"."deleted_at" is null;

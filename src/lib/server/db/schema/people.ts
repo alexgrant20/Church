@@ -57,12 +57,16 @@ export const people = pgTable(
 		cityId: uuid()
 			.notNull()
 			.references(() => cities.id, { onDelete: 'restrict' }),
+		deceasedOn: date({ mode: 'string' }),
 		deletedAt: deletedAt(),
 		createdAt: createdAt(),
 		updatedAt: updatedAt()
 	},
 	(t) => [
 		index().on(t.homeBranchId, t.id),
+		index('people_member_list_idx')
+			.on(t.homeBranchId, t.fullName, t.id)
+			.where(sql`${t.isMember} and ${t.deletedAt} is null`),
 		index().on(t.householdId),
 		index().on(t.cityId),
 		uniqueIndex('people_nik_hash_uniq')
