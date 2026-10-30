@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '$lib/server/db/client';
-import { outboxMessages, registrationConsents } from '$lib/server/db/schema';
+import { auditLogs, outboxMessages, registrationConsents } from '$lib/server/db/schema';
 import { resetDb } from '$lib/server/db/test/reset';
 import { makeAccount, makePerson } from '$lib/server/db/test/factories';
 import { runWithContext } from '$lib/server/context';
@@ -100,6 +100,25 @@ describe('recordInPersonConsent', () => {
 		);
 		const [row] = await consents();
 		expect(row).toMatchObject({ decision: 'given', recordedByPersonId: staff.id });
+	});
+
+	it('records a decline with its own audit action, only from waiting', async () => {
+		const r = await registration();
+		const m = await member(false);
+		await admin(() => sendConsentRequest(r.id, 1, m.id));
+		await admin(() => recordInPersonConsent(r.id, 1, 'declined'));
+		const [row] = await consents();
+		expect(row).toMatchObject({ decision: 'declined' });
+		const audit = (await db.select().from(auditLogs)).find(
+			(a) => a.action === 'registration.consent_declined'
+		);
+		expect(audit?.diff).toMatchObject({
+			consent: { personIndex: 1, decision: { before: 'waiting', after: 'declined' } }
+		});
+		await expect(admin(() => recordInPersonConsent(r.id, 1, 'declined'))).rejects.toThrow(
+			'not found'
+		);
+		await expect(admin(() => recordInPersonConsent(r.id, 1))).rejects.toThrow('not found');
 	});
 
 	it('hides the registration from another branch', async () => {

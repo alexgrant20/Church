@@ -45,6 +45,10 @@ export const actions: Actions = {
 		const personIndex = index(await field(request, 'personIndex'));
 		return run(() => recordInPersonConsent(params.id, personIndex));
 	},
+	consentDeclinedInPerson: async ({ params, request }) => {
+		const personIndex = index(await field(request, 'personIndex'));
+		return run(() => recordInPersonConsent(params.id, personIndex, 'declined'));
+	},
 	consentRequest: async ({ params, request }) => {
 		const data = await request.formData();
 		const personIndex = index(String(data.get('personIndex') ?? ''));

@@ -48,15 +48,16 @@ export function lockConsents(tx: Transaction, registrationId: string) {
 		.for('update');
 }
 
-export async function markConsentGiven(
+export async function markConsentDecided(
 	tx: Transaction,
 	registrationId: string,
 	personIndex: number,
+	decision: 'given' | 'declined',
 	recordedByPersonId: string | null
 ) {
 	const rows = await tx
 		.update(registrationConsents)
-		.set({ decision: 'given', decidedAt: new Date(), recordedByPersonId })
+		.set({ decision, decidedAt: new Date(), recordedByPersonId })
 		.where(
 			and(
 				eq(registrationConsents.registrationId, registrationId),

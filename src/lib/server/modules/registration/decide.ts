@@ -112,21 +112,26 @@ function assertOpen(reg: { status: string } | undefined, id: string): asserts re
 	if (reg.status !== 'pending') throw new ValidationError('error_already_decided');
 }
 
-export async function recordInPersonConsent(registrationId: string, personIndex: number) {
+export async function recordInPersonConsent(
+	registrationId: string,
+	personIndex: number,
+	decision: 'given' | 'declined' = 'given'
+) {
 	const scope = reviewScope();
 	await db.transaction(async (tx) => {
 		const reg = await repo.findInScope(tx, registrationId, scope);
 		assertOpen(reg, registrationId);
 		const by = getContext().personId;
-		if (!(await repo.markConsentGiven(tx, registrationId, personIndex, by))) {
+		if (!(await repo.markConsentDecided(tx, registrationId, personIndex, decision, by))) {
 			throw new NotFoundError('Consent', `${registrationId}/${personIndex}`);
 		}
 		await recordAudit(tx, {
-			action: 'registration.consent_recorded',
+			action:
+				decision === 'given' ? 'registration.consent_recorded' : 'registration.consent_declined',
 			entityType: 'registration',
 			entityId: registrationId,
 			branchId: reg.branchId,
-			diff: { consent: { personIndex, decision: { before: 'waiting', after: 'given' } } }
+			diff: { consent: { personIndex, decision: { before: 'waiting', after: decision } } }
 		});
 	});
 }

@@ -95,6 +95,23 @@
 					{m.registration_consent_in_person()}
 				</Button>
 			</form>
+			<form
+				id="decline-form-{i}"
+				method="POST"
+				action="?/consentDeclinedInPerson"
+				hidden
+				use:enhance={decider.submit(m.registration_consent_decline_recorded())}
+			>
+				<input type="hidden" name="personIndex" value={i} />
+			</form>
+			<ConfirmDialog
+				label={m.registration_consent_decline_in_person()}
+				title={m.registration_consent_decline_title({ name: person.fullName })}
+				description={m.registration_consent_decline_body()}
+				confirm={m.registration_consent_decline_confirm()}
+				form="decline-form-{i}"
+				disabled={decider.busy}
+			/>
 		{/if}
 		{#if open && !person.consent}
 			{#each person.warnings as w (w.personId)}
