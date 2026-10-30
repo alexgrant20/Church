@@ -3,7 +3,9 @@ import { branchInScope, type AccessibleBranches } from '$lib/server/modules/bran
 import { toPage, type Cursor } from '$lib/server/pagination';
 import type { MemberFilters } from './filters';
 import * as repo from './repository';
-import { memberScope } from './scope';
+import { getBranch } from '$lib/server/modules/branch/service';
+import { cityNames } from '$lib/server/modules/location/service';
+import { canExportMembers, memberScope } from './scope';
 
 export type MemberRow = Awaited<ReturnType<typeof repo.listMemberRows>>[number];
 
@@ -24,4 +26,22 @@ export async function listMembers(
 
 export async function countMembers(filters: MemberFilters): Promise<number> {
 	return repo.countMemberRows(filters, checkedScope(filters, memberScope()));
+}
+
+// Everything the list screen renders on first load, so the route makes one call.
+export async function loadMemberList(filters: MemberFilters) {
+	const isSuperadmin = memberScope() === 'all';
+	const [first, total, cities, branch] = await Promise.all([
+		listMembers({ ...filters, cursor: null, limit: 50 }),
+		countMembers(filters),
+		cityNames(filters.cityId ? [filters.cityId] : []),
+		isSuperadmin && filters.branchId ? getBranch(filters.branchId).catch(() => null) : null
+	]);
+	return {
+		first,
+		total,
+		names: { ...cities, ...(branch ? { [branch.id]: branch.name } : {}) },
+		isSuperadmin,
+		canExport: canExportMembers()
+	};
 }
