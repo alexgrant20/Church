@@ -1,7 +1,18 @@
 import { describe, it, expect } from 'vitest';
-import { formatRupiah, formatCount, formatDay, formatTime, formatMissing } from './format';
+import {
+	formatRupiah,
+	formatCount,
+	formatDate,
+	formatDay,
+	formatTime,
+	formatMissing
+} from './format';
 
 describe('formatters', () => {
+	it('prints a calendar date the same in every time zone', () => {
+		expect(formatDate('1990-05-17', 'en')).toBe('May 17, 1990');
+		expect(formatDate('1990-05-17', 'id')).toBe('17 Mei 1990');
+	});
 	it('prints rupiah with dots and no decimals', () => {
 		expect(formatRupiah(1250000).replace(/\s/g, ' ')).toBe('Rp 1.250.000');
 	});

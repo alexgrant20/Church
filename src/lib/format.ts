@@ -41,3 +41,12 @@ export function formatDay(
 		month: 'short'
 	}).format(date);
 }
+
+// A birth or baptism date is a calendar day, not an instant: format it in UTC so it never shifts.
+export const formatDate = (isoDate: string, locale: string) =>
+	new Intl.DateTimeFormat(locale, {
+		day: 'numeric',
+		month: 'short',
+		year: 'numeric',
+		timeZone: 'UTC'
+	}).format(new Date(`${isoDate}T00:00:00Z`));
