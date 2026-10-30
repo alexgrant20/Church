@@ -61,19 +61,19 @@
   - `outboxMessages`: `id`, `channel`, `recipient varchar(255)`, `template varchar(50)`, `locale varchar(7)`, `params jsonb`, `status` enum `outbox_status` = `pending, sent, failed`, `attempts smallint default 0`, `lastError text`, `nextAttemptAt timestamptz default now()`, `createdAt`, `sentAt`. Index `(status, next_attempt_at)`.
   - Factories: `makeRegistrationLink`, `makeRegistration`, `makeMemberProfile`.
 
-- [ ] **Step 1: Write the failing tests** in `registration.int.test.ts`:
+- [x] **Step 1: Write the failing tests** in `registration.int.test.ts`:
   - `allows one live link per branch`: a second unrevoked link for the same branch fails with `/unique/`; after revoking the first, it succeeds.
   - `a member needs a Member ID and a non-member must not have one`: `makePerson({ isMember: false, memberCode: null })` succeeds; `{ isMember: true, memberCode: null }` and `{ isMember: false, memberCode: 'X' }` fail with `/check/`.
   - `baptism date and church follow the yes/no`: `baptized: true` without a date fails; `baptized: false` with a date fails.
   - `a registration needs a contact`: both contacts null fails.
 
-- [ ] **Step 2: Run them to verify they fail.** Run: `bun run test:int -- src/lib/server/db/schema/registration`. Expected: FAIL.
+- [x] **Step 2: Run them to verify they fail.** Run: `bun run test:int -- src/lib/server/db/schema/registration`. Expected: FAIL.
 
-- [ ] **Step 3: Implement the tables,** regenerate migrations from scratch (`rm -r drizzle && bun run db:generate`; no data to keep), update factories and the seed (one live link per seeded branch; seeded people get member profiles).
+- [x] **Step 3: Implement the tables,** regenerate migrations from scratch (`rm -r drizzle && bun run db:generate`; no data to keep), update factories and the seed (one live link per seeded branch; seeded people get member profiles).
 
-- [ ] **Step 4: Run all integration tests to verify they pass.** Run: `bun run test:int`. Expected: PASS.
+- [x] **Step 4: Run all integration tests to verify they pass.** Run: `bun run test:int`. Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/server/db scripts/seed drizzle src/lib/server/modules/registration
@@ -100,17 +100,17 @@ git commit -m "feat(db): registrations, consents, outbox, member profiles"
   - `runJobs(): Promise<void>` in `jobs.ts`: `deliverOutbox()`, then hard-delete `otp_codes` older than 1 day, `login_throttles` and `registration_throttles` idle 1 day, `error_logs` older than 1 month.
   - `hooks.server.ts` exports `init` that starts `setInterval(runJobs, 5 * 60_000)` unless `NODE_ENV === 'test'`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
   - `outbox.int.test.ts`: `a rolled-back transaction leaves no message` (enqueue inside a tx that throws, no row); `delivers and marks sent`; `retries with backoff and gives up after 5` (sender mocked to throw `DeliveryError`: after 1 run `attempts = 1`, `nextAttemptAt` about 5 min ahead, a run before then sends nothing; after 5 runs `failed`).
   - `jobs.int.test.ts`: `purges expired security rows and old error logs` while keeping fresh ones.
 
-- [ ] **Step 2: Run them to verify they fail.** Run: `bun run test:int -- src/lib/server/modules/messaging src/lib/server/jobs`. Expected: FAIL.
+- [x] **Step 2: Run them to verify they fail.** Run: `bun run test:int -- src/lib/server/modules/messaging src/lib/server/jobs`. Expected: FAIL.
 
-- [ ] **Step 3: Implement.** Add the three templates to the WhatsApp builder (utility templates named as the keys) and the email builder (subject and body messages per template in all four locales). One shortcut comment in `jobs.ts`: `// shortcut: in-process interval, one app instance only; move to a real scheduler before running more than one instance.`
+- [x] **Step 3: Implement.** Add the three templates to the WhatsApp builder (utility templates named as the keys) and the email builder (subject and body messages per template in all four locales). One shortcut comment in `jobs.ts`: `// shortcut: in-process interval, one app instance only; move to a real scheduler before running more than one instance.`
 
-- [ ] **Step 4: Run the tests to verify they pass.** Same command. Expected: PASS.
+- [x] **Step 4: Run the tests to verify they pass.** Same command. Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/server/modules/messaging src/lib/server/jobs.ts src/hooks.server.ts messages
@@ -136,15 +136,15 @@ git commit -m "feat(messaging): outbox with retries and scheduled clean-up"
   - URL format: `${config.ORIGIN}/register/${token}`, token from `generateSessionToken()`.
   - Both staff functions require `branch_admin` of that branch or `superadmin` (`ForbiddenError` otherwise).
 
-- [ ] **Step 1: Write the failing tests:** `creates one link per branch and returns the same one twice`; `rotating kills the old token at once` (`resolveLink(old)` is null right after rotate, new resolves); `a pastor cannot see or rotate the link` (`ForbiddenError`); `rotation writes one audit row without the token`.
+- [x] **Step 1: Write the failing tests:** `creates one link per branch and returns the same one twice`; `rotating kills the old token at once` (`resolveLink(old)` is null right after rotate, new resolves); `a pastor cannot see or rotate the link` (`ForbiddenError`); `rotation writes one audit row without the token`.
 
-- [ ] **Step 2: Run them to verify they fail.** Run: `bun run test:int -- src/lib/server/modules/registration/link`. Expected: FAIL.
+- [x] **Step 2: Run them to verify they fail.** Run: `bun run test:int -- src/lib/server/modules/registration/link`. Expected: FAIL.
 
-- [ ] **Step 3: Implement** the services. The QR is generated with `qrcode`'s `toString(url, { type: 'svg', margin: 1 })`.
+- [x] **Step 3: Implement** the services. The QR is generated with `qrcode`'s `toString(url, { type: 'svg', margin: 1 })`.
 
-- [ ] **Step 4: Run the tests to verify they pass.** Expected: PASS.
+- [x] **Step 4: Run the tests to verify they pass.** Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/server package.json bun.lock
@@ -168,18 +168,18 @@ git commit -m "feat(registration): branch link with QR code and rotation"
   - `deriveRelationships(people: RegistrationInput['people'], parentsMarried: boolean): Array<{ kind: 'parent' | 'spouse'; from: number; to: number }>` (indexes; for `parent`, `from` is the parent). Rules: spouse ↔ self; self → each child; spouse → each child unless `notChildOfSpouse`; each parent → self; each parent → each sibling; the two parents are spouses when `parentsMarried`; a sibling with no parent on the form gets no row.
   - `submitRegistration(token: string, input: unknown, meta: { ip: string; deviceId: string; locale: Locale }): Promise<void>`: unknown or revoked token → `NotFoundError`; throttle (`error_too_many_submissions` past 5 per device or 50 per IP per hour; the plan 2b route sets the `device_id` cookie and passes it in); parse; encrypt NIKs and add their hashes in the stored payload; insert `pending`; for each person whose NIK hash, email, or phone matches a live member, insert a `registrationConsents` row and, when that member has an activated account, enqueue `consent_request` to it; audit `registration.submitted` (diff lists people count only). Resolves the same way whether or not anything matched.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
   - `schema.test.ts`: a valid family of 4 parses; a baptized person without a date fails with the date key; two people with the same phone fail with `error_duplicate_in_form` on the second; a registrant with neither email nor phone fails; a third parent fails.
   - `relationships.test.ts`, one case per rule above, including `step-child is not the spouse's child` and `sibling without parents on the form gets no row`.
   - `submit.int.test.ts`: `stores a pending registration and creates no people`; `a matching email creates a waiting consent and a consent message, and the call resolves exactly like a clean one`; `a matched member without an activated account gets a consent row with no token and no message`; `the 6th submission from one device within an hour is refused`; `5 devices on one IP can each submit 5`; `the 51st submission from one IP within an hour is refused`; `a revoked or rotated link is refused`; `the stored payload holds no clear NIK`.
 
-- [ ] **Step 2: Run them to verify they fail.** Run: `bun run test:unit -- --run src/lib/registration src/lib/server/modules/registration` and `bun run test:int -- src/lib/server/modules/registration/submit`. Expected: FAIL.
+- [x] **Step 2: Run them to verify they fail.** Run: `bun run test:unit -- --run src/lib/registration src/lib/server/modules/registration` and `bun run test:int -- src/lib/server/modules/registration/submit`. Expected: FAIL.
 
-- [ ] **Step 3: Implement.** Matching is one query per list: collect the submitted hashes, emails, and phones, then one `select` joining `people` and `accounts` with `inArray` on each, grouped in memory.
+- [x] **Step 3: Implement.** Matching is one query per list: collect the submitted hashes, emails, and phones, then one `select` joining `people` and `accounts` with `inArray` on each, grouped in memory.
 
-- [ ] **Step 4: Run the tests to verify they pass.** Expected: PASS.
+- [x] **Step 4: Run the tests to verify they pass.** Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/registration src/lib/server/modules/registration
@@ -206,18 +206,18 @@ git commit -m "feat(registration): shared payload schema and submit"
   - `getRegistration(id: string): Promise<{ id; status; branchName; fixReason; people: (Person & { nikMasked?: string; consent?: 'waiting' | 'given' | 'declined' | 'in_person_needed'; warnings: { personId; memberCode; fullName }[] })[] }>`: warnings are live members with the same lowercased trimmed full name and birth date, found with one query for the whole registration.
   - The registration functions allow only `branch_admin` (own branch) and `superadmin`; others get `ForbiddenError`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
   - `pagination.test.ts`: `clamps limit to 100`; `defaults to 50`; `rejects a malformed cursor with error_bad_cursor`; `round-trips a cursor`.
   - `location.int.test.ts`: `finds a city from part of its name` (`"jakarta sel"` finds "Jakarta Selatan"); `pages with a cursor`.
   - `review.int.test.ts`: `lists only my branch's pending registrations, oldest first`; `pages with a cursor` (51 rows → 50 + cursor, then 1); `shows a name-and-birth-date warning`; `masks NIK`; `counts waiting consents`; `a pastor is forbidden`.
 
-- [ ] **Step 2: Run them to verify they fail.** Run: `bun run test:unit -- --run src/lib/server/pagination.test.ts` and `bun run test:int -- src/lib/server/modules/location src/lib/server/modules/registration/review`. Expected: FAIL.
+- [x] **Step 2: Run them to verify they fail.** Run: `bun run test:unit -- --run src/lib/server/pagination.test.ts` and `bun run test:int -- src/lib/server/modules/location src/lib/server/modules/registration/review`. Expected: FAIL.
 
-- [ ] **Step 3: Implement.** Each endpoint parses with `parsePage`, calls one service function, and maps errors with `mapErrorToHttp`.
+- [x] **Step 3: Implement.** Each endpoint parses with `parsePage`, calls one service function, and maps errors with `mapErrorToHttp`.
 
-- [ ] **Step 4: Run them to verify they pass.** Expected: PASS.
+- [x] **Step 4: Run them to verify they pass.** Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/server src/routes/api
@@ -243,17 +243,17 @@ git commit -m "feat(registration): city search and review queue services"
   - `recordInPersonConsent(registrationId: string, personIndex: number): Promise<void>`: staff only; sets `given` with `recordedByPersonId`; audited.
   - `sendConsentRequest(registrationId: string, personIndex: number, memberPersonId: string): Promise<void>`: from a name-and-birth-date warning; creates the consent row (with token and message when the member has an activated account).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
   - `approve.int.test.ts`: `creates household, people, profiles, accounts, and relationships for a family of 4` (assert the exact parent and spouse rows); `gives two concurrent approvals in one branch different Member IDs` (`Promise.all` of two registrations); `approving the same registration twice creates one household` (`Promise.all` of the same id; one rejects with `error_already_decided`); `refuses while a consent is waiting`; `moves a consenting member into the new household and keeps their Member ID`; `skips a declined person and says so in the notice`; `enqueues one approved notice in the registration locale`; `rolls back everything when a step fails` (force a unique violation; no household, no outbox row).
   - `decide.int.test.ts`: `needs fix stores the reason and sends the fix link`; `the WhatsApp needs-fix notice carries no reason`; `spam sends nothing`; `a decided registration cannot be decided again`.
 
-- [ ] **Step 2: Run them to verify they fail.** Run: `bun run test:int -- src/lib/server/modules/registration`. Expected: FAIL.
+- [x] **Step 2: Run them to verify they fail.** Run: `bun run test:int -- src/lib/server/modules/registration`. Expected: FAIL.
 
-- [ ] **Step 3: Implement** the services; split `approve.ts` into helpers to stay under 40 lines each.
+- [x] **Step 3: Implement** the services; split `approve.ts` into helpers to stay under 40 lines each.
 
-- [ ] **Step 4: Run them to verify they pass.** Expected: PASS.
+- [x] **Step 4: Run them to verify they pass.** Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/server/modules/registration
@@ -277,18 +277,18 @@ git commit -m "feat(registration): approve, needs fix, and spam decisions"
   - `resubmitFix(token: string, input: unknown, meta): Promise<void>`: same validation and matching as submit; sets `pending`, clears the fix token and reason; audited `registration.resubmitted`. A used or unknown token → `NotFoundError`.
   - `loadConsent(token: string): Promise<{ registrantName: string; branchName: string }>` and `decideConsent(token: string, decision: 'given' | 'declined'): Promise<void>`: the logged-in person must be the `matchedPersonId` (`NotFoundError` otherwise, so a stranger learns nothing); a decided consent cannot change; audited `registration.consent_given` / `registration.consent_declined`.
 
-- [ ] **Step 1: Write the failing tests:** `the fix link loads the reason and the data`; `resubmitting returns it to pending and kills the link`; `a used fix link is not found`; `only the matched member can open the consent link`; `declining marks the person declined and approval then skips them`; `a consent cannot be decided twice`.
+- [x] **Step 1: Write the failing tests:** `the fix link loads the reason and the data`; `resubmitting returns it to pending and kills the link`; `a used fix link is not found`; `only the matched member can open the consent link`; `declining marks the person declined and approval then skips them`; `a consent cannot be decided twice`.
 
-- [ ] **Step 2: Run them to verify they fail.** Expected: FAIL.
+- [x] **Step 2: Run them to verify they fail.** Expected: FAIL.
 
-- [ ] **Step 3: Implement** the services.
+- [x] **Step 3: Implement** the services.
 
-- [ ] **Step 4: Run all gates**
+- [x] **Step 4: Run all gates**
 
 Run: `bun run test:unit -- --run`, `bun run test:int`, `bunx playwright test` (existing suites must stay green), `bun run check`, `bun run lint`
 Expected: all pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/server/modules/registration
