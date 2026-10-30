@@ -226,5 +226,20 @@
 	"consent_thanks_declined": "Terima kasih. Anda tidak akan ditambahkan ke pendaftaran itu.",
 	"field_nik_saved": "Tersimpan sebagai {masked}. Kosongkan untuk tetap memakainya.",
 	"error_invalid_decision": "Pilih ya atau tidak.",
-	"registration_ask_consent_short": "Minta persetujuan"
+	"registration_ask_consent_short": "Minta persetujuan",
+	"members_export_col_member_id": "ID Jemaat",
+	"members_export_col_full_name": "Nama lengkap",
+	"members_export_col_nickname": "Nama panggilan",
+	"members_export_col_sex": "Jenis kelamin",
+	"members_export_col_birth_date": "Tanggal lahir",
+	"members_export_col_household": "Keluarga",
+	"members_export_col_phone": "Telepon",
+	"members_export_col_email": "Email",
+	"members_export_col_city": "Kota",
+	"members_export_col_home_branch": "Cabang asal",
+	"members_export_col_baptism": "Baptis",
+	"members_export_col_sidi": "Sidi",
+	"error_export_deceased": "Jemaat yang telah meninggal tidak diekspor.",
+	"error_export_too_large": "Lebih dari 10.000 jemaat cocok. Persempit filter, lalu ekspor lagi.",
+	"members_export_sheet": "Jemaat"
 }

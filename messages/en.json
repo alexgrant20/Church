@@ -226,5 +226,20 @@
 	"consent_thanks_declined": "Thank you. You will not be added to that registration.",
 	"field_nik_saved": "Saved as {masked}. Leave blank to keep it.",
 	"error_invalid_decision": "Choose yes or no.",
-	"registration_ask_consent_short": "Ask for consent"
+	"registration_ask_consent_short": "Ask for consent",
+	"members_export_col_member_id": "Member ID",
+	"members_export_col_full_name": "Full name",
+	"members_export_col_nickname": "Nickname",
+	"members_export_col_sex": "Sex",
+	"members_export_col_birth_date": "Birth date",
+	"members_export_col_household": "Household",
+	"members_export_col_phone": "Phone",
+	"members_export_col_email": "Email",
+	"members_export_col_city": "City",
+	"members_export_col_home_branch": "Home branch",
+	"members_export_col_baptism": "Baptized",
+	"members_export_col_sidi": "Sidi",
+	"error_export_deceased": "Deceased members are not exported.",
+	"error_export_too_large": "More than 10,000 members match. Narrow the filters and export again.",
+	"members_export_sheet": "Members"
 }

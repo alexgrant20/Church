@@ -1,6 +1,6 @@
-import { and, asc, count, eq, ilike, isNotNull, isNull, or, sql } from 'drizzle-orm';
+import { and, asc, count, eq, ilike, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { db } from '$lib/server/db/client';
-import { branches, cities, people } from '$lib/server/db/schema';
+import { accounts, branches, cities, memberProfiles, people } from '$lib/server/db/schema';
 import { columnInScope, type AccessibleBranches } from '$lib/server/modules/branch/access';
 import type { Cursor } from '$lib/server/pagination';
 import type { MemberFilters } from './filters';
@@ -56,6 +56,52 @@ export function listMemberRows({ filters, scope, cursor, limit }: ListInput) {
 		.where(and(memberWhere(filters, scope), after))
 		.orderBy(asc(people.fullName), asc(people.id))
 		.limit(limit + 1);
+}
+
+export function exportMemberRows(filters: MemberFilters, scope: AccessibleBranches, limit: number) {
+	return db
+		.select({
+			memberCode: sql<string>`${people.memberCode}`,
+			fullName: people.fullName,
+			nickname: people.nickname,
+			sex: people.sex,
+			birthDate: people.birthDate,
+			householdId: people.householdId,
+			phone: accounts.phone,
+			email: accounts.email,
+			city: cities.name,
+			homeBranch: branches.name,
+			timezone: branches.timezone,
+			baptized: sql<boolean>`coalesce(${memberProfiles.baptized}, false)`,
+			sidi: sql<boolean>`coalesce(${memberProfiles.sidi}, false)`
+		})
+		.from(people)
+		.innerJoin(cities, eq(cities.id, people.cityId))
+		.innerJoin(branches, eq(branches.id, people.homeBranchId))
+		.leftJoin(accounts, eq(accounts.personId, people.id))
+		.leftJoin(memberProfiles, eq(memberProfiles.personId, people.id))
+		.where(memberWhere(filters, scope))
+		.orderBy(asc(people.fullName), asc(people.id))
+		.limit(limit);
+}
+
+export function livingMembersOf(householdIds: string[]) {
+	if (!householdIds.length) return Promise.resolve([]);
+	return db
+		.select({
+			householdId: people.householdId,
+			memberCode: sql<string>`${people.memberCode}`,
+			birthDate: people.birthDate
+		})
+		.from(people)
+		.where(
+			and(
+				inArray(people.householdId, householdIds),
+				eq(people.isMember, true),
+				isNull(people.deletedAt),
+				isNull(people.deceasedOn)
+			)
+		);
 }
 
 export async function countMemberRows(filters: MemberFilters, scope: AccessibleBranches) {
