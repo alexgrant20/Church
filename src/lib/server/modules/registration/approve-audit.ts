@@ -54,3 +54,21 @@ export async function auditApproval(
 		}))
 	]);
 }
+
+type Link = { id: string; kind: string; personId: string; relatedPersonId: string };
+
+export const auditRelationships = (tx: Transaction, branchId: string, links: Link[]) =>
+	recordAudits(
+		tx,
+		links.map((l) => ({
+			action: 'person_relationship.created',
+			entityType: 'person_relationship',
+			entityId: l.id,
+			branchId,
+			diff: {
+				kind: { after: l.kind },
+				personId: { after: l.personId },
+				relatedPersonId: { after: l.relatedPersonId }
+			}
+		}))
+	);

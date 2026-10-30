@@ -40,12 +40,18 @@ export async function insertAccounts(tx: Transaction, rows: (typeof accounts.$in
 	if (rows.length) await tx.insert(accounts).values(rows);
 }
 
-// A linked person may already have this row from an earlier registration.
+// A linked person may already have this row from an earlier registration; only new rows come back.
 export async function insertRelationships(
 	tx: Transaction,
 	rows: (typeof personRelationships.$inferInsert)[]
 ) {
-	if (rows.length) await tx.insert(personRelationships).values(rows).onConflictDoNothing();
+	if (!rows.length) return [];
+	return tx.insert(personRelationships).values(rows).onConflictDoNothing().returning({
+		id: personRelationships.id,
+		kind: personRelationships.kind,
+		personId: personRelationships.personId,
+		relatedPersonId: personRelationships.relatedPersonId
+	});
 }
 
 export async function setRegisteredBy(tx: Transaction, ids: string[], registrantId: string) {

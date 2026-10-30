@@ -5,7 +5,7 @@ import type { RegistrationInput } from '$lib/registration/schema';
 import { enqueueMessage } from '$lib/server/modules/messaging/outbox';
 import { nextMemberCode } from '$lib/server/modules/people/member-code';
 import * as repo from './approve-repository';
-import { auditApproval } from './approve-audit';
+import { auditApproval, auditRelationships } from './approve-audit';
 import { claim, decided, deliverAfterCommit, noticeTo, registrantName } from './decide';
 import { lockConsents } from './decide-repository';
 import { deriveRelationships } from './relationships';
@@ -170,8 +170,9 @@ async function approveIn(tx: Transaction, id: string) {
 			registrant
 		);
 	}
-	await repo.insertRelationships(tx, relationshipRows(stored, idAt));
+	const links = await repo.insertRelationships(tx, relationshipRows(stored, idAt));
 	await auditApproval(tx, reg, householdId, stored.people, created, moves);
+	await auditRelationships(tx, reg.branchId, links);
 
 	const messageId = await enqueueMessage(tx, {
 		...noticeTo(reg, 'registration_approved'),

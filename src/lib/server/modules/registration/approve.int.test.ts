@@ -157,6 +157,34 @@ describe('approveRegistration', () => {
 		expect(msg.params).toMatchObject({ someoneNotAdded: 'yes' });
 	});
 
+	it('audits every new family link, including the spouse link of a moved member', async () => {
+		const r = await s.reg(['self', 'spouse', 'child']);
+		const old = await makeHousehold();
+		const member = await makePerson({ homeBranchId: s.branch.id, householdId: old.id });
+		await db.insert(registrationConsents).values({
+			registrationId: r.id,
+			personIndex: 1,
+			matchedPersonId: member.id,
+			decision: 'given'
+		});
+		await approve(s.branch.id, r.id);
+		const rels = await db.select().from(personRelationships);
+		const audits = (await db.select().from(auditLogs)).filter(
+			(a) => a.action === 'person_relationship.created'
+		);
+		expect(rels).toHaveLength(3);
+		expect(audits.map((a) => a.entityId).sort()).toEqual(rels.map((x) => x.id).sort());
+		for (const a of audits) {
+			const rel = rels.find((x) => x.id === a.entityId)!;
+			expect(a).toMatchObject({ entityType: 'person_relationship', branchId: s.branch.id });
+			expect(a.diff).toEqual({
+				kind: { after: rel.kind },
+				personId: { after: rel.personId },
+				relatedPersonId: { after: rel.relatedPersonId }
+			});
+		}
+	});
+
 	it('refuses to approve when every person declined, writing nothing', async () => {
 		const r = await s.reg(['self', 'child']);
 		const [a, b] = await Promise.all([
