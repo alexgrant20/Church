@@ -215,6 +215,7 @@
 	"registration_consent_requested": "Permintaan persetujuan dikirim",
 	"error_already_decided": "Pendaftaran ini sudah diputuskan.",
 	"error_waiting_for_consent": "Ada anggota tercantum yang belum memberi persetujuan.",
+	"error_everyone_declined": "Semua orang yang tercantum menolak, sehingga tidak ada yang bisa ditambahkan. Kembalikan untuk diperbaiki atau tandai sebagai spam.",
 	"error_contact_taken": "Email atau telepon dalam pendaftaran ini sudah dipakai akun lain.",
 	"error_consent_exists": "Permintaan persetujuan untuk orang ini sudah ada.",
 	"consent_title": "Apakah Anda tercantum dalam pendaftaran?",

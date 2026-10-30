@@ -215,6 +215,7 @@
 	"registration_consent_requested": "已发送同意请求",
 	"error_already_decided": "此登记已有处理结果。",
 	"error_waiting_for_consent": "有列出的会友尚未同意。",
+	"error_everyone_declined": "所有列出的人都已拒绝，没有可添加的人。请退回修改或标记为垃圾登记。",
 	"error_contact_taken": "此登记中的电子邮件或电话已属于某个账户。",
 	"error_consent_exists": "此人已有同意请求。",
 	"consent_title": "您是否被列入一份登记？",

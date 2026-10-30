@@ -115,11 +115,20 @@ async function createPeople(
 	return { indexes, ids, codes };
 }
 
-async function applyConsents(tx: Transaction, consents: Consent[], householdId: string) {
+async function applyConsents(
+	tx: Transaction,
+	consents: Consent[],
+	householdId: string,
+	peopleCount: number
+) {
 	if (consents.some((c) => c.decision === 'waiting')) {
 		throw new ValidationError('error_waiting_for_consent');
 	}
 	const given = consents.filter((c) => c.decision === 'given');
+	// Nobody would join the new household, and approval would leave an empty one behind.
+	if (!given.length && consents.length >= peopleCount) {
+		throw new ValidationError('error_everyone_declined');
+	}
 	const moves = await repo.movePeople(
 		tx,
 		given.map((c) => c.matchedPersonId),
@@ -137,7 +146,12 @@ async function approveIn(tx: Transaction, id: string) {
 	const reg = await claim(tx, id, { status: 'approved', ...decided() });
 	const consents = await lockConsents(tx, id);
 	const householdId = await repo.insertHousehold(tx);
-	const { skip, linked, declined, moves } = await applyConsents(tx, consents, householdId);
+	const { skip, linked, declined, moves } = await applyConsents(
+		tx,
+		consents,
+		householdId,
+		(reg.payload as Stored).people.length
+	);
 	const stored = reg.payload as Stored;
 	const created = await createPeople(tx, reg, stored, skip, householdId);
 

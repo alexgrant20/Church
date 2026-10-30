@@ -156,6 +156,26 @@ describe('approveRegistration', () => {
 		expect(msg.params).toMatchObject({ someoneNotAdded: 'yes' });
 	});
 
+	it('refuses to approve when every person declined, writing nothing', async () => {
+		const r = await s.reg(['self', 'child']);
+		const [a, b] = await Promise.all([
+			makePerson({ homeBranchId: s.branch.id }),
+			makePerson({ homeBranchId: s.branch.id })
+		]);
+		await db.insert(registrationConsents).values([
+			{ registrationId: r.id, personIndex: 0, matchedPersonId: a.id, decision: 'declined' },
+			{ registrationId: r.id, personIndex: 1, matchedPersonId: b.id, decision: 'declined' }
+		]);
+		const households0 = (await db.select().from(households)).length;
+		const people0 = (await db.select().from(people)).length;
+		await expect(approve(s.branch.id, r.id)).rejects.toThrow('error_everyone_declined');
+		expect(await db.select().from(households)).toHaveLength(households0);
+		expect(await db.select().from(people)).toHaveLength(people0);
+		expect(await db.select().from(outboxMessages)).toHaveLength(0);
+		const [reg] = await db.select().from(registrations).where(eq(registrations.id, r.id));
+		expect(reg.status).toBe('pending');
+	});
+
 	it('enqueues one approved notice in the registration locale', async () => {
 		const r = await s.reg(['self'], { locale: 'zh-Hans', contactEmail: 'a@mail.test' });
 		await approve(s.branch.id, r.id);

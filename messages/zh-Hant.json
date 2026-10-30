@@ -215,6 +215,7 @@
 	"registration_consent_requested": "已傳送同意請求",
 	"error_already_decided": "此登記已有處理結果。",
 	"error_waiting_for_consent": "有列出的會友尚未同意。",
+	"error_everyone_declined": "所有列出的人都已拒絕，沒有可新增的人。請退回修改或標記為垃圾登記。",
 	"error_contact_taken": "此登記中的電子郵件或電話已屬於某個帳戶。",
 	"error_consent_exists": "此人已有同意請求。",
 	"consent_title": "您是否被列入一份登記？",

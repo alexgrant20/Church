@@ -215,6 +215,7 @@
 	"registration_consent_requested": "Consent request sent",
 	"error_already_decided": "This registration was already decided.",
 	"error_waiting_for_consent": "A listed member has not consented yet.",
+	"error_everyone_declined": "Everyone listed declined, so there is no one to add. Send it back for a fix or mark it as spam.",
 	"error_contact_taken": "An email or phone in this registration already belongs to an account.",
 	"error_consent_exists": "A consent request already exists for this person.",
 	"consent_title": "Were you listed in a registration?",
