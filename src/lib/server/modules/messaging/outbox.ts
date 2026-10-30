@@ -12,6 +12,7 @@ import {
 const MAX_ATTEMPTS = 5;
 const BACKOFF_MS = 5 * 60_000;
 const LEASE_MS = 2 * 60_000;
+const BATCH = 20;
 
 const toRow = (msg: OutgoingMessage) => ({
 	channel: msg.channel,
@@ -28,9 +29,18 @@ export const enqueueMessage = (tx: Transaction, msg: OutgoingMessage) =>
 export const enqueueMessages = (tx: Transaction, msgs: OutgoingMessage[]) =>
 	repo.insertMessages(tx, msgs.map(toRow));
 
-export async function deliverOutbox(ids?: string[]): Promise<void> {
+// Runs queue behind each other: a slow batch outlasting its lease must never be reclaimed and resent.
+let tail: Promise<void> = Promise.resolve();
+
+export function deliverOutbox(ids?: string[]): Promise<void> {
+	const run = tail.then(() => deliverBatch(ids));
+	tail = run.catch(() => {});
+	return run;
+}
+
+async function deliverBatch(ids?: string[]): Promise<void> {
 	const now = new Date();
-	const due = await repo.claimDue(now, new Date(now.getTime() + LEASE_MS), ids);
+	const due = await repo.claimDue(now, new Date(now.getTime() + LEASE_MS), BATCH, ids);
 	for (const row of due) {
 		try {
 			await sendMessage({

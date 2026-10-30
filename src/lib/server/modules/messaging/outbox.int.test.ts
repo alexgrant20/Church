@@ -60,6 +60,34 @@ describe('outbox', () => {
 		expect(send).toHaveBeenCalledTimes(2);
 	});
 
+	it('claims at most 20 rows per run', async () => {
+		for (let i = 0; i < 25; i++) await enqueue();
+		await deliverOutbox();
+		expect(send).toHaveBeenCalledTimes(20);
+		await deliverOutbox();
+		expect(send).toHaveBeenCalledTimes(25);
+	});
+
+	it('never sends a row twice when a slow run overlaps the next one', async () => {
+		vi.useFakeTimers({ toFake: ['Date'] });
+		vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+		for (let i = 0; i < 25; i++) {
+			await db.transaction((tx) => enqueueMessage(tx, { ...msg, to: `r${i}@mail.test` }));
+		}
+		let release!: () => void;
+		send.mockImplementationOnce(() => new Promise<void>((r) => (release = r)));
+		const first = deliverOutbox();
+		// Past the lease, so only a run guard keeps the second run off the first run's rows.
+		vi.setSystemTime(new Date('2026-01-01T00:10:00Z'));
+		const second = deliverOutbox();
+		await new Promise((r) => setTimeout(r, 200));
+		release();
+		await Promise.all([first, second]);
+		const recipients = send.mock.calls.map(([m]) => m.to);
+		expect(recipients).toHaveLength(25);
+		expect(new Set(recipients).size).toBe(25);
+	});
+
 	it('retries with backoff and gives up after 5', async () => {
 		vi.useFakeTimers({ toFake: ['Date'] });
 		vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));

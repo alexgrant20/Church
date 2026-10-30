@@ -25,28 +25,44 @@ export async function insertMessages(
 	return inserted.map((r) => r.id);
 }
 
-// One conditional UPDATE is the claim: a concurrent run re-checks the WHERE after the row lock,
-// sees the pushed-out nextAttemptAt and skips the row. The lease also covers a crash mid-send.
-export function claimDue(now: Date, leaseUntil: Date, ids?: string[]) {
-	return db
-		.update(outboxMessages)
-		.set({ nextAttemptAt: leaseUntil })
-		.where(
-			and(
-				eq(outboxMessages.status, 'pending'),
-				lte(outboxMessages.nextAttemptAt, at(now)),
-				ids ? inArray(outboxMessages.id, ids) : undefined
+// Select-then-update in one transaction: SKIP LOCKED keeps concurrent runs (also in other processes)
+// off each other's rows. A single UPDATE ... IN (subquery LIMIT) lets Postgres re-plan the subquery
+// as a join and touch more than `limit` rows. The lease also covers a crash mid-send.
+export function claimDue(now: Date, leaseUntil: Date, limit: number, ids?: string[]) {
+	return db.transaction(async (tx) => {
+		const due = await tx
+			.select({ id: outboxMessages.id })
+			.from(outboxMessages)
+			.where(
+				and(
+					eq(outboxMessages.status, 'pending'),
+					lte(outboxMessages.nextAttemptAt, at(now)),
+					ids ? inArray(outboxMessages.id, ids) : undefined
+				)
 			)
-		)
-		.returning({
-			id: outboxMessages.id,
-			channel: outboxMessages.channel,
-			recipient: outboxMessages.recipient,
-			template: outboxMessages.template,
-			locale: outboxMessages.locale,
-			params: outboxMessages.params,
-			attempts: outboxMessages.attempts
-		});
+			.orderBy(outboxMessages.nextAttemptAt)
+			.limit(limit)
+			.for('update', { skipLocked: true });
+		if (!due.length) return [];
+		return tx
+			.update(outboxMessages)
+			.set({ nextAttemptAt: leaseUntil })
+			.where(
+				inArray(
+					outboxMessages.id,
+					due.map((r) => r.id)
+				)
+			)
+			.returning({
+				id: outboxMessages.id,
+				channel: outboxMessages.channel,
+				recipient: outboxMessages.recipient,
+				template: outboxMessages.template,
+				locale: outboxMessages.locale,
+				params: outboxMessages.params,
+				attempts: outboxMessages.attempts
+			});
+	});
 }
 
 export async function markSent(id: string, now: Date): Promise<void> {
