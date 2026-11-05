@@ -171,8 +171,9 @@ export async function seedDevData(db: SeedDb): Promise<boolean> {
 			createdByPersonId: admin.id
 		}))
 	);
-	await db
-		.insert(schema.systemSettings)
-		.values({ key: 'household.adults_act_for_activated_adults', value: true });
+	await db.insert(schema.systemSettings).values([
+		{ key: 'household.adults_act_for_activated_adults', value: true },
+		{ key: 'membership.family_tree_enabled', value: true }
+	]);
 	return true;
 }
