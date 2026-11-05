@@ -285,5 +285,8 @@
 	"settings_family_tree_description": "Staf dapat membuka diagram seluruh keluarga seorang jemaat. Matikan untuk menyembunyikannya di semua cabang.",
 	"settings_save": "Simpan",
 	"settings_saved": "Tersimpan",
-	"settings_family_tree_enabled": "Izinkan silsilah keluarga"
+	"settings_family_tree_enabled": "Izinkan silsilah keluarga",
+	"member_family_tree": "Silsilah keluarga",
+	"member_family_tree_truncated": "Menampilkan {count} kerabat terdekat",
+	"member_back_to_record": "Kembali ke data jemaat"
 }

@@ -285,5 +285,8 @@
 	"settings_family_tree_description": "让同工打开会员整个家庭的关系图。关闭后所有分支都将隐藏。",
 	"settings_save": "保存",
 	"settings_saved": "已保存",
-	"settings_family_tree_enabled": "允许使用家谱"
+	"settings_family_tree_enabled": "允许使用家谱",
+	"member_family_tree": "家谱",
+	"member_family_tree_truncated": "显示最近的 {count} 位亲属",
+	"member_back_to_record": "返回会员资料"
 }

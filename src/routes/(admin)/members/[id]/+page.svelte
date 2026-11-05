@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
+	import { Button } from '$lib/components/ui/button/index.js';
 	import { m } from '$lib/paraglide/messages';
 	import { getLocale } from '$lib/paraglide/runtime';
 	import { formatDate, formatMissing } from '$lib/format';
@@ -84,7 +86,12 @@
 			{[p.memberCode, p.homeBranch, p.address.city].filter(Boolean).join(' · ')}
 		</p>
 	</div>
-	<div class="flex flex-wrap gap-2">
+	<div class="flex flex-wrap items-center gap-2">
+		{#if r.treeEnabled}
+			<Button variant="outline" href={resolve(`/members/${p.id}/tree`)}>
+				{m.member_family_tree()}
+			</Button>
+		{/if}
 		{#if r.access === 'cross'}<StatusPill tone="warning" label={m.member_view_only()} />{/if}
 		{#if !p.isMember}<StatusPill tone="neutral" label={m.member_not_member()} />{/if}
 		{#if p.deceasedOn}<StatusPill tone="neutral" label={m.members_deceased()} />{/if}

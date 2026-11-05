@@ -19,8 +19,8 @@ test('a branch admin opens Budi and his family', async ({ page }) => {
 	await expect(page.getByRole('heading', { level: 1, name: /Budi/ })).toBeVisible();
 	await expect(page.getByText(/JKT-\d{4}-\d{5}/).first()).toBeVisible();
 	await expect(page.getByText('Personal')).toBeVisible();
-	await page.getByRole('link', { name: 'Family' }).click();
-	await expect(page.getByText('This household')).toBeVisible();
+	await page.getByRole('link', { name: 'Family', exact: true }).click();
+	await expect(page.getByText('This household', { exact: true })).toBeVisible();
 	await expect(page.getByRole('link', { name: /^Sari/ })).toBeVisible();
 	await expect(page.getByRole('link', { name: /^Andi/ })).toBeVisible();
 });
