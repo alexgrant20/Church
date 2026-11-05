@@ -288,5 +288,9 @@
 	"settings_family_tree_enabled": "Allow the family tree",
 	"member_family_tree": "Family tree",
 	"member_family_tree_truncated": "Showing the {count} closest relatives",
-	"member_back_to_record": "Back to the record"
+	"member_back_to_record": "Back to the record",
+	"member_tree_child_of": "Child of {names}",
+	"member_tree_spouse_of": "Spouse of {names}",
+	"member_tree_former_spouse_of": "Former spouse of {names}",
+	"member_tree_parent_of": "Parent of {names}"
 }

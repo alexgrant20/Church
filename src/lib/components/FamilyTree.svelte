@@ -2,51 +2,30 @@
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages';
 	import StatusPill from './StatusPill.svelte';
-	import type { FamilyTree } from '$lib/server/modules/member/tree-service';
+	import { getLocale } from '$lib/paraglide/runtime';
+	import { COL, H, ROW, W, relationsOf, treeLines, type FamilyTree } from '$lib/family-tree';
 
 	let { tree }: { tree: FamilyTree } = $props();
 
-	// rem, so the diagram grows with the OS text size.
-	const W = 10;
-	const H = 3.5;
-	const COL = W + 1.5;
-	const ROW = H + 3;
-
-	const at = $derived(new Map(tree.nodes.map((n) => [n.id, n])));
 	const width = $derived(Math.max(...tree.nodes.map((n) => n.col)) * COL + W);
 	const height = $derived(Math.max(...tree.nodes.map((n) => n.row)) * ROW + H);
-	const centre = (n: { col: number }) => n.col * COL + W / 2;
+	const lines = $derived(treeLines(tree));
 
-	const spouseLines = $derived(
-		tree.links.flatMap((l) => {
-			const [a, b] = [at.get(l.from), at.get(l.to)];
-			if (l.kind !== 'spouse' || !a || !b || a.row !== b.row) return [];
-			const [left, right] = a.col < b.col ? [a, b] : [b, a];
-			const y = left.row * ROW + H / 2;
-			return [
-				{
-					key: `${l.from}-${l.to}`,
-					d: `M${left.col * COL + W} ${y}H${right.col * COL}`,
-					ended: l.ended
-				}
-			];
-		})
-	);
-
-	// One elbow per child, from the middle of its recorded parents down to the child.
-	const childLines = $derived(
-		tree.nodes.flatMap((child) => {
-			const parents = tree.links
-				.filter((l) => l.kind === 'parent' && l.to === child.id)
-				.flatMap((l) => at.get(l.from) ?? []);
-			if (!parents.length) return [];
-			const x = parents.reduce((sum, p) => sum + centre(p), 0) / parents.length;
-			const top = parents[0].row * ROW + (parents.length > 1 ? H / 2 : H);
-			const childTop = child.row * ROW;
-			const elbow = childTop - (ROW - H) / 2;
-			return [{ key: child.id, d: `M${x} ${top}V${elbow}H${centre(child)}V${childTop}` }];
-		})
-	);
+	// The lines are hidden from screen readers, so each person also carries them as words.
+	function describe(id: string) {
+		const list = new Intl.ListFormat(getLocale(), { type: 'conjunction' });
+		const r = relationsOf(tree, id);
+		return [
+			r.parents.length ? m.member_tree_child_of({ names: list.format(r.parents) }) : '',
+			r.spouses.length ? m.member_tree_spouse_of({ names: list.format(r.spouses) }) : '',
+			r.formerSpouses.length
+				? m.member_tree_former_spouse_of({ names: list.format(r.formerSpouses) })
+				: '',
+			r.children.length ? m.member_tree_parent_of({ names: list.format(r.children) }) : ''
+		]
+			.filter(Boolean)
+			.join('. ');
+	}
 
 	// Opens on the highlighted person; 'nearest' keeps the page itself from jumping down.
 	function scrollToRoot(node: HTMLElement, isRoot: boolean) {
@@ -63,7 +42,7 @@
 			style:height="{height}rem"
 			viewBox="0 0 {width} {height}"
 		>
-			{#each spouseLines as line (line.key)}
+			{#each lines.spouses as line (line.key)}
 				<path
 					d={line.d}
 					fill="none"
@@ -73,7 +52,7 @@
 					stroke-dasharray={line.ended ? '4 4' : undefined}
 				/>
 			{/each}
-			{#each childLines as line (line.key)}
+			{#each lines.families as line (line.key)}
 				<path
 					d={line.d}
 					fill="none"
@@ -111,6 +90,7 @@
 							{/if}
 							{#if n.deceased}<StatusPill tone="neutral" label={m.members_deceased()} />{/if}
 						</span>
+						<span class="sr-only">{describe(n.id)}</span>
 					</svelte:element>
 				</li>
 			{/each}

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { FamilyTree, TreeNode } from '$lib/family-tree';
 import { db } from '$lib/server/db/client';
 import { NotFoundError } from '$lib/server/errors';
 import { recordAudit } from '$lib/server/modules/audit/service';
@@ -10,17 +11,6 @@ import { layoutTree, type TreeLink } from './tree-layout';
 import * as repo from './tree-repository';
 
 export const TREE_LIMIT = 200;
-
-export type TreeNode = {
-	id: string;
-	fullName: string;
-	memberCode: string | null;
-	isMember: boolean;
-	deceased: boolean;
-	linkable: boolean;
-	row: number;
-	col: number;
-};
 
 // 404 for "switched off", "no such person" and "not yours" alike: the URL confirms nothing.
 async function findRoot(id: string) {
@@ -44,7 +34,7 @@ async function findRoot(id: string) {
 	return { person: d.person, access, scope };
 }
 
-export async function getFamilyTree(id: string) {
+export async function getFamilyTree(id: string): Promise<FamilyTree> {
 	const { person, access, scope } = await findRoot(id);
 	const found = await repo.connectedPersonIds(id, TREE_LIMIT + 1);
 	const ids = found.slice(0, TREE_LIMIT);
@@ -66,6 +56,8 @@ export async function getFamilyTree(id: string) {
 		linkable: viewAccess(p, scope, households) !== null,
 		...slots.get(p.id)!
 	}));
+	// Reading order, so keyboard and screen-reader users meet people as the diagram shows them.
+	nodes.sort((a, b) => a.row - b.row || a.col - b.col);
 	return {
 		rootId: id,
 		rootName: person.fullName,
@@ -75,5 +67,3 @@ export async function getFamilyTree(id: string) {
 		links
 	};
 }
-
-export type FamilyTree = Awaited<ReturnType<typeof getFamilyTree>>;

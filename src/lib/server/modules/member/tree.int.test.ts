@@ -107,4 +107,12 @@ describe('family tree', () => {
 		expect(tree.nodes).toHaveLength(TREE_LIMIT);
 		expect(tree.truncated).toBe(true);
 	});
+
+	it('lists people in reading order, row by row then left to right', async () => {
+		const f = await familyOfBudi();
+		const tree = await asAdminOf(f.a.id, () => getFamilyTree(f.budi.id));
+		const order = tree.nodes.map((n) => [n.row, n.col]);
+		const sorted = [...order].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+		expect(order).toEqual(sorted);
+	});
 });

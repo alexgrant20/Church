@@ -288,5 +288,9 @@
 	"settings_family_tree_enabled": "Izinkan silsilah keluarga",
 	"member_family_tree": "Silsilah keluarga",
 	"member_family_tree_truncated": "Menampilkan {count} kerabat terdekat",
-	"member_back_to_record": "Kembali ke data jemaat"
+	"member_back_to_record": "Kembali ke data jemaat",
+	"member_tree_child_of": "Anak dari {names}",
+	"member_tree_spouse_of": "Pasangan dari {names}",
+	"member_tree_former_spouse_of": "Mantan pasangan dari {names}",
+	"member_tree_parent_of": "Orang tua dari {names}"
 }

@@ -288,5 +288,9 @@
 	"settings_family_tree_enabled": "允許使用家譜",
 	"member_family_tree": "家譜",
 	"member_family_tree_truncated": "顯示最近的 {count} 位親屬",
-	"member_back_to_record": "返回會員資料"
+	"member_back_to_record": "返回會員資料",
+	"member_tree_child_of": "{names}的子女",
+	"member_tree_spouse_of": "{names}的配偶",
+	"member_tree_former_spouse_of": "{names}的前配偶",
+	"member_tree_parent_of": "{names}的父母"
 }
