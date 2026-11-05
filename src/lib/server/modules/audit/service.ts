@@ -1,6 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm';
-import { db } from '$lib/server/db/client';
-import { auditLogs } from '$lib/server/db/schema/audit';
+import * as repo from './repository';
 import type { Transaction } from '$lib/server/db/client';
 import { getContext } from '$lib/server/context';
 
@@ -31,7 +29,10 @@ export const recordAudit = (tx: Transaction, input: RecordAuditInput) => recordA
 export async function recordAudits(tx: Transaction, inputs: RecordAuditInput[]) {
 	if (!inputs.length) return;
 	const ctx = safeGetContext();
-	await tx.insert(auditLogs).values(inputs.map((i) => toRow(i, ctx)));
+	await repo.insertAuditRows(
+		tx,
+		inputs.map((i) => toRow(i, ctx))
+	);
 }
 
 export async function withAudit<T>(
@@ -46,20 +47,8 @@ export async function withAudit<T>(
 }
 
 // Lets an undo find what the change it reverses recorded, without a column kept just for that.
-export function findAudits(entityType: string, entityId: string, action: string) {
-	return db
-		.select({ diff: auditLogs.diff, createdAt: auditLogs.createdAt })
-		.from(auditLogs)
-		.where(
-			and(
-				eq(auditLogs.entityType, entityType),
-				eq(auditLogs.entityId, entityId),
-				eq(auditLogs.action, action)
-			)
-		)
-		.orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
-		.limit(50);
-}
+export const findAudits = (entityType: string, entityId: string, action: string) =>
+	repo.findAuditRows(entityType, entityId, action);
 
 function safeGetContext() {
 	try {

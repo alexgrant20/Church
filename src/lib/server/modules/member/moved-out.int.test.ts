@@ -218,4 +218,19 @@ describe('moved out', () => {
 		expect(await audits('person.moved_out_undone')).toHaveLength(1);
 		expect((await reread(f.child.id)).householdId).toBe(f.home.id);
 	});
+
+	it('is still 16 on the evening before their 17th birthday in Jakarta', async () => {
+		vi.useFakeTimers({ toFake: ['Date'] });
+		vi.setSystemTime(new Date('2026-10-01T16:00:00Z'));
+		const f = await family();
+		const teen = await makePerson({
+			homeBranchId: f.branch.id,
+			householdId: f.home.id,
+			birthDate: '2009-10-02'
+		});
+		await rejectsWith(
+			asAdmin(f.branch.id, () => recordMovedOut(teen.id, { address: f.address })),
+			'error_not_adult'
+		);
+	});
 });

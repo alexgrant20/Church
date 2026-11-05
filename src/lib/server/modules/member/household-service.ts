@@ -23,6 +23,16 @@ async function me() {
 	return self;
 }
 
+export async function canOpenMyHousehold() {
+	try {
+		await me();
+		return true;
+	} catch (err) {
+		if (err instanceof NotFoundError) return false;
+		throw err;
+	}
+}
+
 export async function getMyHousehold(): Promise<{ people: HouseholdPerson[] }> {
 	const self = await me();
 	const rows = await householdMembers(self.householdId);

@@ -13,9 +13,16 @@
 	let {
 		name,
 		deceased,
+		canMoveOut,
 		canUndoMoveOut,
 		address
-	}: { name: string; deceased: boolean; canUndoMoveOut: boolean; address: Address } = $props();
+	}: {
+		name: string;
+		deceased: boolean;
+		canMoveOut: boolean;
+		canUndoMoveOut: boolean;
+		address: Address;
+	} = $props();
 
 	const decider = createDecider();
 	let deathOpen = $state(false);
@@ -90,7 +97,8 @@
 			form="undo-moved-out"
 			disabled={decider.busy}
 		/>
-	{:else}
+	{/if}
+	{#if canMoveOut}
 		<Dialog.Root bind:open={moveOpen}>
 			<Dialog.Trigger>
 				{#snippet child({ props })}

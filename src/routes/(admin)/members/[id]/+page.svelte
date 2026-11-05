@@ -92,6 +92,7 @@
 			<LifeChangeDialogs
 				name={p.fullName}
 				deceased={p.deceasedOn !== null}
+				canMoveOut={r.changes.canMoveOut}
 				canUndoMoveOut={r.changes.canUndoMoveOut}
 				address={p.address}
 			/>

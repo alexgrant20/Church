@@ -299,7 +299,7 @@
 	"member_passed_away_confirm": "將{name}記錄為已離世",
 	"member_undo_passed_away": "撤銷離世記錄",
 	"member_undo_passed_away_description": "{name}將重新顯示為在世，其帳戶可再次登入。",
-	"member_moved_out": "已遷出",
+	"member_moved_out": "遷出",
 	"member_moved_out_title": "遷入自己的新家庭",
 	"member_moved_out_description": "{name}將擁有新的家庭。家庭關係保持不變。",
 	"member_moved_out_submit": "遷出",
@@ -319,5 +319,7 @@
 	"household_passed_away_confirm": "將{name}記錄為已離世？",
 	"household_passed_away_description": "其帳戶將無法登入。若有誤，教會管理員可撤銷。",
 	"household_done_moved_out": "已遷出，現已擁有自己的家庭。",
-	"household_done_passed_away": "已記錄為離世。"
+	"household_done_passed_away": "已記錄為離世。",
+	"household_move_out_named": "遷出：{name}",
+	"household_passed_away_named": "已離世：{name}"
 }

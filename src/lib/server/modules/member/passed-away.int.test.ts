@@ -138,4 +138,29 @@ describe('passed away', () => {
 			NotFoundError
 		);
 	});
+
+	it('undo leaves a login suspended that the death did not suspend', async () => {
+		const f = await family();
+		await makeAccount(f.grandpa.id, { status: 'suspended' });
+		await asAdmin(f.branch.id, () => recordPassedAway(f.grandpa.id, { deceasedOn: '2026-10-01' }));
+		await asAdmin(f.branch.id, () => undoPassedAway(f.grandpa.id));
+		expect(await statusOf(f.grandpa.id)).toBe('suspended');
+		const [row] = await audits('person.passed_away_undone');
+		expect(row.diff).toEqual({ deceasedOn: { before: '2026-10-01', after: null } });
+	});
+
+	it('staff cannot record their own death', async () => {
+		const f = await family();
+		const self = () =>
+			runWithContext(
+				{
+					personId: f.adult.id,
+					actingAsPersonId: null,
+					ip: '127.0.0.1',
+					roleAssignments: [{ role: 'branch_admin', branchId: f.branch.id, groupId: null }]
+				},
+				() => recordPassedAway(f.adult.id, { deceasedOn: '2026-10-01' })
+			);
+		await rejectsWith(self(), 'error_cannot_record_own_death');
+	});
 });

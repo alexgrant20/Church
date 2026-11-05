@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import { passedAwaySchema } from '$lib/life-change/schema';
 import { db } from '$lib/server/db/client';
+import { getContext } from '$lib/server/context';
 import { NotFoundError, ValidationError } from '$lib/server/errors';
 import { reactivateAccount, suspendAccount } from '$lib/server/modules/auth/account-status';
-import { recordAudit } from '$lib/server/modules/audit/service';
+import { findAudits, recordAudit } from '$lib/server/modules/audit/service';
 import { todayIn } from '$lib/server/time';
 import { lifeChangeActor, staffOnly } from './life-change-access';
 import { findSubject, setDeceasedOn, type Subject } from './life-change-repository';
@@ -33,8 +34,8 @@ function parseDate(input: unknown, subject: Subject) {
 
 export async function recordPassedAway(personId: string, input: unknown) {
 	const subject = await subjectOf(personId);
-	const actor = await lifeChangeActor(subject);
-	if (actor.kind === 'family' && actor.personId === subject.id)
+	await lifeChangeActor(subject);
+	if (getContext().personId === subject.id)
 		throw new ValidationError('error_cannot_record_own_death');
 	const deceasedOn = parseDate(input, subject);
 	if (subject.deceasedOn) throw new ValidationError('error_already_deceased');
@@ -55,10 +56,13 @@ export async function undoPassedAway(personId: string) {
 	const subject = await subjectOf(personId);
 	staffOnly(subject);
 	if (!subject.deceasedOn) throw new ValidationError('error_not_deceased');
+	// Reactivate only a login this death suspended; one suspended before it stays suspended.
+	const [death] = await findAudits('person', subject.id, 'person.passed_away');
+	const suspendedByDeath = (death?.diff as { accountStatus?: unknown } | null)?.accountStatus;
 	await db.transaction(async (tx) => {
 		if (!(await setDeceasedOn(tx, subject.id, null, 'deceased')))
 			throw new ValidationError('error_not_deceased');
-		const account = await reactivateAccount(tx, subject.id);
+		const account = suspendedByDeath ? await reactivateAccount(tx, subject.id) : null;
 		const diff = {
 			deceasedOn: { before: subject.deceasedOn, after: null },
 			...(account ? { accountStatus: account } : {})

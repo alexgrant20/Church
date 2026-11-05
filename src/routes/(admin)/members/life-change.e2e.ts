@@ -30,7 +30,7 @@ test('an admin moves an adult out and back', async ({ page }) => {
 	const fam = await e2eFamily();
 	await signIn(page, ADMIN);
 	await page.goto(`/members/${fam.child}`);
-	await page.getByRole('button', { name: 'Moved out' }).click();
+	await page.getByRole('button', { name: 'Move out', exact: true }).click();
 	const dialog = page.getByRole('dialog');
 	await dialog.getByLabel('Street address').fill('Jl. Baru 9');
 	await dialog.getByRole('button', { name: 'Move out' }).click();
@@ -48,5 +48,5 @@ test('a pastor sees no life-change actions', async ({ page }) => {
 	await page.goto(`/members/${fam.child}`);
 	await expect(page.getByRole('heading', { level: 1, name: fam.names.child })).toBeVisible();
 	await expect(page.getByRole('button', { name: 'Passed away' })).toHaveCount(0);
-	await expect(page.getByRole('button', { name: 'Moved out' })).toHaveCount(0);
+	await expect(page.getByRole('button', { name: 'Move out' })).toHaveCount(0);
 });

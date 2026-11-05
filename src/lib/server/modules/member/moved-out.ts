@@ -54,13 +54,22 @@ async function write(subject: repo.Subject, action: string, move: Move) {
 	});
 }
 
+// The reason a move out would be refused, or null when it can go ahead.
+async function moveOutRefusal(subject: repo.Subject) {
+	if (subject.deceasedOn) return 'error_already_deceased';
+	if (!isAdult(subject)) return 'error_not_adult';
+	if ((await repo.livePeopleIn(subject.householdId)) <= 1) return 'error_already_alone';
+	return null;
+}
+
+export const canMoveOut = async (personId: string) =>
+	(await moveOutRefusal(await subjectOf(personId))) === null;
+
 export async function recordMovedOut(personId: string, input: unknown) {
 	const subject = await subjectOf(personId);
 	await lifeChangeActor(subject);
-	if (subject.deceasedOn) throw new ValidationError('error_already_deceased');
-	if (!isAdult(subject)) throw new ValidationError('error_not_adult');
-	if ((await repo.livePeopleIn(subject.householdId)) <= 1)
-		throw new ValidationError('error_already_alone');
+	const refusal = await moveOutRefusal(subject);
+	if (refusal) throw new ValidationError(refusal);
 	const parsed = movedOutSchema.safeParse(input);
 	if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);
 	const { line, postalCode, cityId } = parsed.data.address;

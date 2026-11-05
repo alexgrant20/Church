@@ -120,7 +120,7 @@ describe('member record', () => {
 	it('says whether staff may change the person and move them back', async () => {
 		const f = await familyOfBudi();
 		const own = await asAdminOf(f.a.id, () => getMember(f.budi.id));
-		expect(own.changes).toEqual({ canChange: true, canUndoMoveOut: false });
+		expect(own.changes).toEqual({ canChange: true, canMoveOut: true, canUndoMoveOut: false });
 		const pastor = await asStaff('pastor', f.a.id, () => getMember(f.budi.id));
 		expect(pastor.changes.canChange).toBe(false);
 		const cross = await asAdminOf(f.b.id, () => getMember(f.budi.id));
@@ -137,5 +137,30 @@ describe('member record', () => {
 		expect((await asAdminOf(f.a.id, () => getMember(f.budi.id))).changes.canUndoMoveOut).toBe(
 			false
 		);
+	});
+
+	it('offers move out only to a living adult who does not live alone', async () => {
+		const f = await familyOfBudi();
+		const changes = async (id: string) =>
+			(await asAdminOf(f.a.id, () => getMember(id))).changes.canMoveOut;
+		expect(await changes(f.budi.id)).toBe(true);
+		const kid = await makePerson({
+			homeBranchId: f.a.id,
+			householdId: f.budi.householdId,
+			birthDate: `${new Date().getUTCFullYear() - 10}-01-01`
+		});
+		expect(await changes(kid.id)).toBe(false);
+		expect(await changes(f.mother.id)).toBe(false);
+	});
+
+	it('offers move out and move back together after a move', async () => {
+		const f = await familyOfBudi();
+		const city = (await recordRepo.findPersonDetail(f.budi.id))!.person.cityId;
+		await makePerson({ homeBranchId: f.a.id, householdId: f.budi.householdId });
+		const address = { line: 'Jl. Baru 3', postalCode: '10330', cityId: city };
+		await asAdminOf(f.a.id, () => recordMovedOut(f.budi.id, { address }));
+		const { changes } = await asAdminOf(f.a.id, () => getMember(f.budi.id));
+		expect(changes.canUndoMoveOut).toBe(true);
+		expect(changes.canMoveOut).toBe(false);
 	});
 });

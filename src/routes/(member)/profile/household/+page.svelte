@@ -44,7 +44,9 @@
 						<Button
 							variant="outline"
 							size="member"
-							href={resolve(`/profile/household/${p.id}/moved-out`)}>{m.member_moved_out()}</Button
+							href={resolve(`/profile/household/${p.id}/moved-out`)}
+							aria-label={m.household_move_out_named({ name: p.fullName })}
+							>{m.member_moved_out()}</Button
 						>
 					{/if}
 					{#if p.canRecordDeath}
@@ -52,6 +54,7 @@
 							variant="outline"
 							size="member"
 							href={resolve(`/profile/household/${p.id}/passed-away`)}
+							aria-label={m.household_passed_away_named({ name: p.fullName })}
 							>{m.member_passed_away()}</Button
 						>
 					{/if}

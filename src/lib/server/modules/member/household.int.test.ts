@@ -3,7 +3,7 @@ import { runWithContext } from '$lib/server/context';
 import { resetDb } from '$lib/server/db/test/reset';
 import { makeBranch, makeHousehold, makePerson } from '$lib/server/db/test/factories';
 import { NotFoundError } from '$lib/server/errors';
-import { getHouseholdMember, getMyHousehold } from './household-service';
+import { canOpenMyHousehold, getHouseholdMember, getMyHousehold } from './household-service';
 
 const asPerson = <T>(personId: string, fn: () => T) =>
 	runWithContext({ personId, actingAsPersonId: null, ip: '127.0.0.1', roleAssignments: [] }, fn);
@@ -66,5 +66,12 @@ describe('my household', () => {
 		await expect(asPerson(h.me.id, () => getHouseholdMember(stranger.id))).rejects.toThrow(
 			NotFoundError
 		);
+	});
+
+	it('says whether I may open my household', async () => {
+		const h = await home();
+		expect(await asPerson(h.me.id, canOpenMyHousehold)).toBe(true);
+		expect(await asPerson(h.teen.id, canOpenMyHousehold)).toBe(false);
+		expect(await asPerson(h.late.id, canOpenMyHousehold)).toBe(false);
 	});
 });

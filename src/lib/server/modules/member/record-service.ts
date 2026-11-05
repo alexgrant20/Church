@@ -6,7 +6,7 @@ import { recordAudit } from '$lib/server/modules/audit/service';
 import { findAudits } from '$lib/server/modules/audit/service';
 import { getSetting } from '$lib/server/modules/settings/service';
 import { isStaffFor } from './life-change-access';
-import { moveToUndo } from './moved-out';
+import { canMoveOut, moveToUndo } from './moved-out';
 import type { AccessibleBranches } from '$lib/server/modules/branch/access';
 import { viewAccess, type HouseholdBranch } from './access';
 import * as repo from './record-repository';
@@ -140,7 +140,11 @@ export async function getMember(id: string) {
 	const moves = canChange ? await findAudits('person', id, 'person.moved_out') : [];
 	return {
 		access,
-		changes: { canChange, canUndoMoveOut: canChange && moveToUndo(d.person, moves) !== undefined },
+		changes: {
+			canChange,
+			canMoveOut: canChange && (await canMoveOut(id)),
+			canUndoMoveOut: canChange && moveToUndo(d.person, moves) !== undefined
+		},
 		treeEnabled: await getSetting('membership.family_tree_enabled'),
 		person: toPerson(d),
 		profile: toProfile(d.profile),

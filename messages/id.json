@@ -319,5 +319,7 @@
 	"household_passed_away_confirm": "Catat {name} telah meninggal dunia?",
 	"household_passed_away_description": "Akunnya tidak dapat dipakai lagi. Admin gereja dapat membatalkannya bila keliru.",
 	"household_done_moved_out": "Sudah pindah. Kini memiliki rumah tangga sendiri.",
-	"household_done_passed_away": "Tercatat telah meninggal dunia."
+	"household_done_passed_away": "Tercatat telah meninggal dunia.",
+	"household_move_out_named": "Pindah keluar: {name}",
+	"household_passed_away_named": "Meninggal dunia: {name}"
 }

@@ -11,7 +11,7 @@ test('a member moves their grown child out', async ({ page }) => {
 	await page.goto('/profile');
 	await page.getByRole('link', { name: 'My household' }).click();
 	for (const name of Object.values(fam.names)) await expect(row(page, name)).toBeVisible();
-	await row(page, fam.names.child).getByRole('link', { name: 'Moved out' }).click();
+	await page.getByRole('link', { name: `Move out: ${fam.names.child}` }).click();
 	await expect(page.getByRole('heading', { level: 1 })).toContainText(fam.names.child);
 	await expect(page.getByLabel('Street address')).toHaveValue('Jl. Uji 5');
 	await page.getByLabel('Street address').fill('Jl. Baru 7');
@@ -24,7 +24,7 @@ test('a member records a death with a confirmation naming the person', async ({ 
 	const fam = await e2eFamily();
 	await signIn(page, fam.adultEmail);
 	await page.goto('/profile/household');
-	await row(page, fam.names.spouse).getByRole('link', { name: 'Passed away' }).click();
+	await page.getByRole('link', { name: `Passed away: ${fam.names.spouse}` }).click();
 	await page.getByLabel('Date of death').fill('2026-10-01');
 	await page.getByRole('button', { name: 'Record as passed away' }).click();
 	const dialog = page.getByRole('alertdialog');
