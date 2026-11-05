@@ -2,7 +2,8 @@ import { getContext } from '$lib/server/context';
 import { NotFoundError } from '$lib/server/errors';
 import { cityNames } from '$lib/server/modules/location/service';
 import { isAdult, lifeChangeActor } from './life-change-access';
-import { findSubject, householdMembers } from './life-change-repository';
+import { relationOf } from './family-relation';
+import { familyLinks, findSubject, householdMembers } from './life-change-repository';
 import { liveSpouseIds } from './marriage-repository';
 import { marriageRule } from './married';
 import { todayIn } from '$lib/server/time';
@@ -41,20 +42,23 @@ export async function getMyHousehold(): Promise<{ people: HouseholdPerson[] }> {
 	const self = await me();
 	const rows = await householdMembers(self.householdId);
 	const living = rows.filter((r) => r.deceasedOn === null).length;
-	const married = await liveSpouseIds(rows.map((r) => r.id));
+	const ids = rows.map((r) => r.id);
+	const [married, links] = await Promise.all([liveSpouseIds(ids), familyLinks(ids)]);
 	const people = rows.map((r) => {
 		const deceased = r.deceasedOn !== null;
 		const adult = isAdult(r);
 		const isSelf = r.id === self.id;
+		// Another adult only as direct family; any child of the household (user decision).
+		const mayAct = !adult || relationOf(self.id, r.id, links) !== null;
 		return {
 			id: r.id,
 			fullName: r.fullName,
 			isSelf,
 			adult,
 			deceased,
-			canRecordDeath: !isSelf && !deceased,
-			canMoveOut: !deceased && adult && living > 1,
-			canMarry: marriageRule(r, married.has(r.id), todayIn(r.timezone)) === null
+			canRecordDeath: mayAct && !isSelf && !deceased,
+			canMoveOut: mayAct && !deceased && adult && living > 1,
+			canMarry: mayAct && marriageRule(r, married.has(r.id), todayIn(r.timezone)) === null
 		};
 	});
 	return { people };

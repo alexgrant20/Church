@@ -32,6 +32,9 @@ async function family(subjectBorn = '1998-03-01') {
 	const at = { homeBranchId: branch.id, householdId: home.id };
 	const parent = await makePerson({ ...at, birthDate: '1970-01-01' });
 	const subject = await makePerson({ ...at, birthDate: subjectBorn });
+	await db
+		.insert(personRelationships)
+		.values({ kind: 'parent', personId: parent.id, relatedPersonId: subject.id });
 	const city = await makeCity();
 	return { branch, home, parent, subject, city };
 }
@@ -64,12 +67,16 @@ describe('got married, new non-member spouse', () => {
 			await db.select().from(memberProfiles).where(eq(memberProfiles.personId, spouseId))
 		).toEqual([]);
 		expect(await db.select().from(accounts).where(eq(accounts.personId, spouseId))).toEqual([]);
-		const links = await db.select().from(personRelationships);
+		const links = await db
+			.select()
+			.from(personRelationships)
+			.where(eq(personRelationships.kind, 'spouse'));
 		expect(links).toHaveLength(1);
 		expect(links[0]).toMatchObject({ kind: 'spouse', startedOn: '2026-06-01' });
 		expect((await reread(f.parent.id)).householdId).toBe(f.home.id);
 		const [married] = await audits('person.married');
 		expect(married).toMatchObject({ entityId: f.subject.id, actorPersonId: f.parent.id });
+		expect(married.metadata).toMatchObject({ actedAs: 'parent' });
 		expect(married.diff).toMatchObject({
 			householdId: { before: f.home.id, after: householdId },
 			spouseId: { after: spouseId },
@@ -179,7 +186,9 @@ describe('got married, new non-member spouse', () => {
 				.from(people)
 				.where(and(eq(people.fullName, 'Rani Putri')))
 		).toHaveLength(1);
-		expect(await db.select().from(personRelationships)).toHaveLength(1);
+		expect(
+			await db.select().from(personRelationships).where(eq(personRelationships.kind, 'spouse'))
+		).toHaveLength(1);
 	});
 
 	it('a stranger gets NotFoundError', async () => {
@@ -229,7 +238,9 @@ describe('got married, two people on record', () => {
 		const [groom, bride] = [await reread(c.subject.id), await reread(c.bride.id)];
 		expect(groom).toMatchObject({ householdId, addressLine: 'Jl. Nikah 2' });
 		expect(bride).toMatchObject({ householdId, addressLine: 'Jl. Nikah 2' });
-		expect(await db.select().from(personRelationships)).toHaveLength(1);
+		expect(
+			await db.select().from(personRelationships).where(eq(personRelationships.kind, 'spouse'))
+		).toHaveLength(1);
 		const rows = await audits('person.married');
 		expect(rows).toHaveLength(2);
 		const spouseOf = (id: string) =>

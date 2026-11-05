@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { runWithContext } from '$lib/server/context';
+import { db } from '$lib/server/db/client';
+import { personRelationships } from '$lib/server/db/schema';
 import { resetDb } from '$lib/server/db/test/reset';
 import { makeBranch, makeHousehold, makePerson } from '$lib/server/db/test/factories';
 import { NotFoundError } from '$lib/server/errors';
@@ -23,8 +25,33 @@ async function household() {
 	const relative = await makePerson({ homeBranchId: other.id, householdId: home.id });
 	const movedAway = await makePerson({ homeBranchId: branch.id, birthDate: yearsAgo(30) });
 	const stranger = await makePerson({ homeBranchId: branch.id, birthDate: yearsAgo(30) });
+	const sibling = await makePerson({ ...at, birthDate: yearsAgo(38) });
+	const grandchild = await makePerson({ ...at, birthDate: yearsAgo(20) });
+	const lodger = await makePerson({ ...at, birthDate: yearsAgo(35) });
+	const kid = await makePerson({ ...at, birthDate: yearsAgo(10) });
+	await db.insert(personRelationships).values([
+		{ kind: 'parent', personId: subject.id, relatedPersonId: adult.id },
+		{ kind: 'parent', personId: subject.id, relatedPersonId: sibling.id },
+		{ kind: 'parent', personId: adult.id, relatedPersonId: grandchild.id }
+	]);
 	const s = (await findSubject(subject.id))!;
-	return { branch, other, s, adult, teen, late, relative, movedAway, stranger };
+	const of = async (p: { id: string }) => (await findSubject(p.id))!;
+	return {
+		branch,
+		other,
+		s,
+		adult,
+		teen,
+		late,
+		relative,
+		movedAway,
+		stranger,
+		sibling,
+		grandchild,
+		lodger,
+		kid,
+		of
+	};
 }
 
 describe('lifeChangeActor', () => {
@@ -62,7 +89,8 @@ describe('lifeChangeActor', () => {
 		const h = await household();
 		expect(await asPerson(h.adult.id, () => lifeChangeActor(h.s))).toEqual({
 			kind: 'family',
-			personId: h.adult.id
+			personId: h.adult.id,
+			relation: 'child'
 		});
 	});
 
@@ -88,5 +116,41 @@ describe('lifeChangeActor', () => {
 		await expect(asPerson(h.stranger.id, () => lifeChangeActor(h.s))).rejects.toThrow(
 			NotFoundError
 		);
+	});
+
+	it('a sibling may act for an adult sibling', async () => {
+		const h = await household();
+		const actor = await asPerson(h.sibling.id, async () => lifeChangeActor(await h.of(h.adult)));
+		expect(actor).toMatchObject({ kind: 'family', relation: 'sibling' });
+	});
+
+	it('a parent may act for an adult child', async () => {
+		const h = await household();
+		const actor = await asPerson(h.s.id, async () => lifeChangeActor(await h.of(h.adult)));
+		expect(actor).toMatchObject({ kind: 'family', relation: 'parent' });
+	});
+
+	it('a grandchild may not act for an adult grandparent', async () => {
+		const h = await household();
+		await expect(asPerson(h.grandchild.id, () => lifeChangeActor(h.s))).rejects.toThrow(
+			NotFoundError
+		);
+	});
+
+	it('an unrelated adult in the household may not act for another adult', async () => {
+		const h = await household();
+		await expect(asPerson(h.lodger.id, () => lifeChangeActor(h.s))).rejects.toThrow(NotFoundError);
+	});
+
+	it('any adult of the household may act for a child', async () => {
+		const h = await household();
+		const actor = await asPerson(h.lodger.id, async () => lifeChangeActor(await h.of(h.kid)));
+		expect(actor).toMatchObject({ kind: 'family', relation: 'household' });
+	});
+
+	it('an adult may act for themself', async () => {
+		const h = await household();
+		const actor = await asPerson(h.lodger.id, async () => lifeChangeActor(await h.of(h.lodger)));
+		expect(actor).toMatchObject({ kind: 'family', relation: 'self' });
 	});
 });

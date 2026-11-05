@@ -2,9 +2,13 @@ import { getContext } from '$lib/server/context';
 import { ForbiddenError, NotFoundError } from '$lib/server/errors';
 import { branchInScope, scopeFor } from '$lib/server/modules/branch/access';
 import { ADULT_AGE, ageOn, todayIn } from '$lib/server/time';
-import { findSubject, type Subject } from './life-change-repository';
+import { relationOf, type Relation } from './family-relation';
+import { familyLinks, findSubject, type Subject } from './life-change-repository';
 
-export type Actor = { kind: 'staff' } | { kind: 'family'; personId: string };
+// 'household' is any adult of the household acting for a child, whom anyone there may look after.
+export type FamilyRelation = Relation | 'household';
+export type Actor =
+	{ kind: 'staff' } | { kind: 'family'; personId: string; relation: FamilyRelation };
 
 export const isAdult = (p: Pick<Subject, 'birthDate' | 'timezone'>) =>
 	ageOn(p.birthDate, todayIn(p.timezone)) >= ADULT_AGE;
@@ -29,9 +33,21 @@ export async function lifeChangeActor(subject: Subject): Promise<Actor> {
 		actor.deceasedOn === null &&
 		actor.householdId === subject.householdId &&
 		isAdult(actor);
-	if (!family) throw new NotFoundError('Person', subject.id);
-	return { kind: 'family', personId: actor.id };
+	const relation = family ? await relationTo(actor, subject) : null;
+	if (!actor || !relation) throw new NotFoundError('Person', subject.id);
+	return { kind: 'family', personId: actor.id, relation };
 }
+
+// An adult acts for another adult only as direct family; for a child, any household adult may.
+async function relationTo(actor: Subject, subject: Subject): Promise<FamilyRelation | null> {
+	const links = await familyLinks([actor.id, subject.id]);
+	const relation = relationOf(actor.id, subject.id, links);
+	return relation ?? (isAdult(subject) ? null : 'household');
+}
+
+// The audit row names the family tie the actor used; staff need none.
+export const actedAs = (actor: Actor) =>
+	actor.kind === 'family' ? { actedAs: actor.relation } : undefined;
 
 export function staffOnly(subject: Subject) {
 	if (!isStaffFor(subject)) throw new NotFoundError('Person', subject.id);

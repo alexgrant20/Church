@@ -33,6 +33,7 @@ describe('my household', () => {
 
 	it('lists my household with what I may do', async () => {
 		const h = await home();
+		await db.transaction((tx) => insertSpouseLink(tx, h.me.id, h.spouse.id, '2010-01-01'));
 		const { people } = await asPerson(h.me.id, getMyHousehold);
 		expect(people.map((p) => p.fullName)).toEqual(['Late', 'Me', 'Spouse', 'Teen', 'Kid']);
 		const of = (name: string) => people.find((p) => p.fullName === name)!;
@@ -56,6 +57,7 @@ describe('my household', () => {
 
 	it('getHouseholdMember returns a household member with their address', async () => {
 		const h = await home();
+		await db.transaction((tx) => insertSpouseLink(tx, h.me.id, h.spouse.id, '2010-01-01'));
 		const p = await asPerson(h.me.id, () => getHouseholdMember(h.spouse.id));
 		expect(p).toMatchObject({ id: h.spouse.id, fullName: 'Spouse' });
 		expect(p.address.cityId).toBe(h.spouse.cityId);
@@ -85,13 +87,13 @@ describe('my household', () => {
 			);
 		expect(await flags()).toMatchObject({
 			Me: true,
-			Spouse: true,
 			Teen: false,
 			Kid: false,
 			Late: false
 		});
 		await db.transaction((tx) => insertSpouseLink(tx, h.me.id, h.spouse.id, '2010-01-01'));
 		expect(await flags()).toMatchObject({ Me: false, Spouse: false });
+		// Spouse is false either way: an unrelated adult before the link, married after it.
 	});
 
 	it('someone widowed may be recorded as married again', async () => {
@@ -99,5 +101,16 @@ describe('my household', () => {
 		await db.transaction((tx) => insertSpouseLink(tx, h.me.id, h.late.id, '1990-01-01'));
 		const me = (await asPerson(h.me.id, getMyHousehold)).people.find((p) => p.isSelf)!;
 		expect(me.canMarry).toBe(true);
+	});
+
+	it('an unrelated adult in my household gets no actions', async () => {
+		const h = await home();
+		const { people } = await asPerson(h.me.id, getMyHousehold);
+		expect(people.find((p) => p.fullName === 'Spouse')).toMatchObject({
+			canRecordDeath: false,
+			canMoveOut: false,
+			canMarry: false
+		});
+		expect(people.find((p) => p.fullName === 'Kid')).toMatchObject({ canRecordDeath: true });
 	});
 });

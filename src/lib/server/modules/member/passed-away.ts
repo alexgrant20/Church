@@ -6,7 +6,7 @@ import { NotFoundError, ValidationError } from '$lib/server/errors';
 import { reactivateAccount, suspendAccount } from '$lib/server/modules/auth/account-status';
 import { findAudits, recordAudit } from '$lib/server/modules/audit/service';
 import { todayIn } from '$lib/server/time';
-import { lifeChangeActor, staffOnly } from './life-change-access';
+import { actedAs, lifeChangeActor, staffOnly } from './life-change-access';
 import { findSubject, setDeceasedOn, type Subject } from './life-change-repository';
 
 export async function subjectOf(id: string) {
@@ -15,12 +15,13 @@ export async function subjectOf(id: string) {
 	return subject;
 }
 
-const audit = (subject: Subject, action: string, diff: object) => ({
+const audit = (subject: Subject, action: string, diff: object, metadata?: object) => ({
 	action,
 	entityType: 'person',
 	entityId: subject.id,
 	branchId: subject.homeBranchId,
-	diff
+	diff,
+	metadata
 });
 
 function parseDate(input: unknown, subject: Subject) {
@@ -34,7 +35,7 @@ function parseDate(input: unknown, subject: Subject) {
 
 export async function recordPassedAway(personId: string, input: unknown) {
 	const subject = await subjectOf(personId);
-	await lifeChangeActor(subject);
+	const actor = await lifeChangeActor(subject);
 	if (getContext().personId === subject.id)
 		throw new ValidationError('error_cannot_record_own_death');
 	const deceasedOn = parseDate(input, subject);
@@ -48,7 +49,7 @@ export async function recordPassedAway(personId: string, input: unknown) {
 			deceasedOn: { before: null, after: deceasedOn },
 			...(account && account.before !== account.after ? { accountStatus: account } : {})
 		};
-		await recordAudit(tx, audit(subject, 'person.passed_away', diff));
+		await recordAudit(tx, audit(subject, 'person.passed_away', diff, actedAs(actor)));
 	});
 }
 

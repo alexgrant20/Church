@@ -1,6 +1,6 @@
-import { and, asc, count, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { db, type Transaction } from '$lib/server/db/client';
-import { branches, households, people } from '$lib/server/db/schema';
+import { branches, households, people, personRelationships } from '$lib/server/db/schema';
 
 export type Address = { addressLine: string; postalCode: string | null; cityId: string };
 
@@ -129,4 +129,23 @@ export async function closeEmptyHouseholds(tx: Transaction, ids: string[]) {
 		.update(households)
 		.set({ deletedAt: new Date() })
 		.where(and(inArray(households.id, ids), sql`not exists (${living})`));
+}
+
+// Every live parent and spouse row touching these people, for working out how they are related.
+export function familyLinks(personIds: string[], tx: Transaction | typeof db = db) {
+	const r = personRelationships;
+	return tx
+		.select({
+			kind: r.kind,
+			personId: r.personId,
+			relatedPersonId: r.relatedPersonId,
+			endedOn: r.endedOn
+		})
+		.from(r)
+		.where(
+			and(
+				isNull(r.deletedAt),
+				or(inArray(r.personId, personIds), inArray(r.relatedPersonId, personIds))
+			)
+		);
 }

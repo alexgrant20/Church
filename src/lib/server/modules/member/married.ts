@@ -4,7 +4,7 @@ import { db, type Transaction } from '$lib/server/db/client';
 import { NotFoundError, ValidationError } from '$lib/server/errors';
 import { recordAudits } from '$lib/server/modules/audit/service';
 import { ageOn, todayIn } from '$lib/server/time';
-import { lifeChangeActor, staffOnly } from './life-change-access';
+import { actedAs, lifeChangeActor, staffOnly } from './life-change-access';
 import * as repo from './life-change-repository';
 import * as marriages from './marriage-repository';
 import { diffOf, placeOf } from './moved-out';
@@ -83,7 +83,8 @@ export async function marry(
 	tx: Transaction,
 	couple: repo.Subject[],
 	w: Wedding,
-	spouse?: NewSpouse
+	spouse?: NewSpouse,
+	metadata?: object
 ) {
 	const leaving = [...new Set(couple.map((s) => s.householdId))];
 	await repo.lockHouseholds(tx, leaving);
@@ -108,7 +109,7 @@ export async function marry(
 	await repo.closeEmptyHouseholds(tx, leaving);
 	const other = (id: string) => ids.find((i) => i !== id)!;
 	await recordAudits(tx, [
-		...couple.map((s) => marriedAudit(s, householdId, other(s.id), w)),
+		...couple.map((s) => ({ ...marriedAudit(s, householdId, other(s.id), w), metadata })),
 		...(newId && spouse ? [createdAudit(newId, spouse, at)] : [])
 	]);
 	return { householdId, spouseId: other(couple[0].id) };
@@ -122,13 +123,13 @@ const toAddress = (a: { line: string; postalCode: string; cityId: string }): rep
 
 export async function recordMarriage(personId: string, input: unknown) {
 	const subject = await subjectOf(personId);
-	await lifeChangeActor(subject);
+	const actor = await lifeChangeActor(subject);
 	const data = parseWith(marriedNewSchema, input);
 	await assertMayMarry(subject, data.weddingOn);
 	if (!oldEnough(data.spouse.birthDate, data.weddingOn))
 		throw new ValidationError('error_not_marriage_age');
 	const wedding = { weddingOn: data.weddingOn, address: toAddress(data.address) };
-	return db.transaction((tx) => marry(tx, [subject], wedding, data.spouse));
+	return db.transaction((tx) => marry(tx, [subject], wedding, data.spouse, actedAs(actor)));
 }
 
 // Missing and out of scope read the same, so the answer confirms nothing; a toast, not a 404 page.

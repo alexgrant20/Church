@@ -2,7 +2,7 @@ import { movedOutSchema } from '$lib/life-change/schema';
 import { db } from '$lib/server/db/client';
 import { ValidationError } from '$lib/server/errors';
 import { findAudits, recordAudit } from '$lib/server/modules/audit/service';
-import { isAdult, lifeChangeActor, staffOnly } from './life-change-access';
+import { actedAs, isAdult, lifeChangeActor, staffOnly } from './life-change-access';
 import * as repo from './life-change-repository';
 import { subjectOf } from './passed-away';
 
@@ -29,7 +29,7 @@ export function diffOf(before: Place, after: Place): MoveDiff {
 }
 
 // The checks that matter under concurrency run here, after the lock, against fresh rows.
-async function write(subject: repo.Subject, action: string, move: Move) {
+async function write(subject: repo.Subject, action: string, move: Move, metadata?: object) {
 	const from = subject.householdId;
 	return db.transaction(async (tx) => {
 		await repo.lockHouseholds(tx, [from]);
@@ -48,7 +48,8 @@ async function write(subject: repo.Subject, action: string, move: Move) {
 			entityType: 'person',
 			entityId: subject.id,
 			branchId: subject.homeBranchId,
-			diff: diffOf(placeOf(subject), to)
+			diff: diffOf(placeOf(subject), to),
+			metadata
 		});
 		return householdId;
 	});
@@ -67,17 +68,22 @@ export const canMoveOut = async (personId: string) =>
 
 export async function recordMovedOut(personId: string, input: unknown) {
 	const subject = await subjectOf(personId);
-	await lifeChangeActor(subject);
+	const actor = await lifeChangeActor(subject);
 	const refusal = await moveOutRefusal(subject);
 	if (refusal) throw new ValidationError(refusal);
 	const parsed = movedOutSchema.safeParse(input);
 	if (!parsed.success) throw new ValidationError(parsed.error.issues[0].message);
 	const { line, postalCode, cityId } = parsed.data.address;
-	const householdId = await write(subject, 'person.moved_out', {
-		dest: { addressLine: line, postalCode, cityId },
-		failure: 'error_already_alone',
-		keepOne: true
-	});
+	const householdId = await write(
+		subject,
+		'person.moved_out',
+		{
+			dest: { addressLine: line, postalCode, cityId },
+			failure: 'error_already_alone',
+			keepOne: true
+		},
+		actedAs(actor)
+	);
 	return { householdId };
 }
 

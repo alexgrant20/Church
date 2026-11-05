@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db/client';
-import { accounts, auditLogs, people, sessions } from '$lib/server/db/schema';
+import { accounts, auditLogs, people, sessions, personRelationships } from '$lib/server/db/schema';
 import { runWithContext } from '$lib/server/context';
 import { resetDb } from '$lib/server/db/test/reset';
 import { makeAccount, makeBranch, makeHousehold, makePerson } from '$lib/server/db/test/factories';
@@ -22,6 +22,9 @@ async function family() {
 	const at = { homeBranchId: branch.id, householdId: home.id };
 	const grandpa = await makePerson({ ...at, birthDate: '1940-05-05' });
 	const adult = await makePerson({ ...at, birthDate: '1980-01-01' });
+	await db
+		.insert(personRelationships)
+		.values({ kind: 'parent', personId: grandpa.id, relatedPersonId: adult.id });
 	return { branch, grandpa, adult };
 }
 const asAdmin = <T>(branchId: string, fn: () => T) => asStaff('branch_admin', branchId, fn);
@@ -68,6 +71,7 @@ describe('passed away', () => {
 		await asPerson(f.adult.id, () => recordPassedAway(f.grandpa.id, { deceasedOn: '2026-10-01' }));
 		const [row] = await audits('person.passed_away');
 		expect(row.actorPersonId).toBe(f.adult.id);
+		expect(row.metadata).toMatchObject({ actedAs: 'child' });
 	});
 
 	it('a family member cannot record their own death', async () => {
