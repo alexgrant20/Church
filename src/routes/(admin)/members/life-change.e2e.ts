@@ -63,6 +63,7 @@ test('an admin records a marriage to someone new', async ({ page }) => {
 	await dialog.getByLabel('Birth date').fill('1998-02-02');
 	await dialog.getByLabel('Wedding date').fill('2026-06-01');
 	await dialog.getByRole('button', { name: 'Record the marriage' }).click();
+	await page.getByRole('alertdialog').getByRole('button', { name: 'Record the marriage' }).click();
 	await expect(page.getByText('Saved')).toBeVisible();
 	await page.getByRole('link', { name: 'Family', exact: true }).click();
 	await expect(page.getByText(`Bride of ${fam.names.child}`)).toBeVisible();
@@ -81,6 +82,7 @@ test('an admin marries two members', async ({ page }) => {
 	await page.getByRole('option', { name: new RegExp(single.name) }).click();
 	await dialog.getByLabel('Wedding date').fill('2026-06-01');
 	await dialog.getByRole('button', { name: 'Record the marriage' }).click();
+	await page.getByRole('alertdialog').getByRole('button', { name: 'Record the marriage' }).click();
 	await expect(page.getByText('Saved')).toBeVisible();
 	await page.getByRole('link', { name: 'Family', exact: true }).click();
 	await expect(page.getByRole('link', { name: single.name })).toBeVisible();

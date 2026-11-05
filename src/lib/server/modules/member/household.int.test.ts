@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { runWithContext } from '$lib/server/context';
 import { db } from '$lib/server/db/client';
-import { insertSpouseLink } from './life-change-repository';
+import { insertSpouseLink } from './marriage-repository';
 import { resetDb } from '$lib/server/db/test/reset';
 import { makeBranch, makeHousehold, makePerson } from '$lib/server/db/test/factories';
 import { NotFoundError } from '$lib/server/errors';

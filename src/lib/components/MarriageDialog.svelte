@@ -5,15 +5,17 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import AddressFields from './AddressFields.svelte';
+	import ConfirmDialog from './ConfirmDialog.svelte';
 	import MemberSelect from './MemberSelect.svelte';
 	import { createDecider } from './decider.svelte';
 
 	type Address = { line: string; postalCode: string | null; cityId: string; city: string };
 
-	let { address }: { address: Address } = $props();
+	let { name, address }: { name: string; address: Address } = $props();
 
 	const decider = createDecider();
 	let open = $state(false);
+	let confirming = $state(false);
 	let mode = $state<'new' | 'existing'>('new');
 	let spouseId = $state<string | null>(null);
 	// svelte-ignore state_referenced_locally
@@ -38,9 +40,14 @@
 			<Dialog.Title>{m.member_married_title()}</Dialog.Title>
 		</Dialog.Header>
 		<form
+			id="marriage-form"
 			method="POST"
 			action={mode === 'new' ? '?/married' : '?/marriedMember'}
-			use:enhance={decider.submit(m.common_saved(), false, undefined, () => (open = false))}
+			use:enhance={(event) => {
+				// Close the confirmation first, so a refusal's toast is not hidden behind it.
+				confirming = false;
+				return decider.submit(m.common_saved(), false, undefined, () => (open = false))(event);
+			}}
 			class="flex flex-col gap-3"
 		>
 			<fieldset class="flex flex-wrap gap-4">
@@ -82,7 +89,15 @@
 			<input type="hidden" name="postalCode" value={draft.postalCode} />
 			<input type="hidden" name="cityId" value={draft.cityId} />
 			<div class="mt-2 flex justify-end">
-				<Button type="submit" disabled={decider.busy}>{m.member_married_submit()}</Button>
+				<ConfirmDialog
+					label={m.member_married_submit()}
+					title={m.member_married_confirm_title()}
+					description={m.member_married_confirm_description({ name })}
+					confirm={m.member_married_submit()}
+					form="marriage-form"
+					bind:open={confirming}
+					disabled={decider.busy}
+				/>
 			</div>
 		</form>
 	</Dialog.Content>

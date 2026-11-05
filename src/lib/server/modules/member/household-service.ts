@@ -2,9 +2,10 @@ import { getContext } from '$lib/server/context';
 import { NotFoundError } from '$lib/server/errors';
 import { cityNames } from '$lib/server/modules/location/service';
 import { isAdult, lifeChangeActor } from './life-change-access';
-import { findSubject, householdMembers, liveSpouseIds } from './life-change-repository';
-import { MARRIAGE_AGE } from './married';
-import { ageOn, todayIn } from '$lib/server/time';
+import { findSubject, householdMembers } from './life-change-repository';
+import { liveSpouseIds } from './marriage-repository';
+import { marriageRule } from './married';
+import { todayIn } from '$lib/server/time';
 import { subjectOf } from './passed-away';
 
 export type HouseholdPerson = {
@@ -53,8 +54,7 @@ export async function getMyHousehold(): Promise<{ people: HouseholdPerson[] }> {
 			deceased,
 			canRecordDeath: !isSelf && !deceased,
 			canMoveOut: !deceased && adult && living > 1,
-			canMarry:
-				!deceased && !married.has(r.id) && ageOn(r.birthDate, todayIn(r.timezone)) >= MARRIAGE_AGE
+			canMarry: marriageRule(r, married.has(r.id), todayIn(r.timezone)) === null
 		};
 	});
 	return { people };

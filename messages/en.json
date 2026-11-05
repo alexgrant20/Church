@@ -336,5 +336,9 @@
 	"error_same_person": "Choose someone else to marry.",
 	"household_married_named": "Got married: {name}",
 	"household_married_step": "Step {step} of 2",
-	"household_done_married": "Recorded the marriage."
+	"household_done_married": "Recorded the marriage.",
+	"member_married_confirm_title": "Record this marriage?",
+	"member_married_confirm_description": "{name} and their spouse move into a new household of their own. This cannot be undone here.",
+	"error_changed_meanwhile": "Someone changed this person at the same moment. Reload the page and try again.",
+	"error_spouse_unavailable": "This person can't be chosen here."
 }

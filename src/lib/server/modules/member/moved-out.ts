@@ -32,7 +32,7 @@ export function diffOf(before: Place, after: Place): MoveDiff {
 async function write(subject: repo.Subject, action: string, move: Move) {
 	const from = subject.householdId;
 	return db.transaction(async (tx) => {
-		await repo.lockHousehold(tx, from);
+		await repo.lockHouseholds(tx, [from]);
 		const staying = await repo.livePeopleIn(from, tx);
 		if (move.keepOne && staying <= 1) throw new ValidationError(move.failure);
 		const to = {

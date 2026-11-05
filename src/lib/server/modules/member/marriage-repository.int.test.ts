@@ -4,7 +4,7 @@ import { db } from '$lib/server/db/client';
 import { people, personRelationships } from '$lib/server/db/schema';
 import { resetDb } from '$lib/server/db/test/reset';
 import { makeHousehold, makePerson } from '$lib/server/db/test/factories';
-import { hasLiveSpouse, insertPerson, insertSpouseLink } from './life-change-repository';
+import { hasLiveSpouse, insertPerson, insertSpouseLink } from './marriage-repository';
 
 describe('marriage repository', () => {
 	beforeEach(resetDb);

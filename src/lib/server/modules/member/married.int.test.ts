@@ -14,8 +14,9 @@ import { resetDb } from '$lib/server/db/test/reset';
 import { makeBranch, makeCity, makeHousehold, makePerson } from '$lib/server/db/test/factories';
 import { NotFoundError, ValidationError } from '$lib/server/errors';
 import { asStaff } from '$lib/server/modules/registration/test-support';
-import { insertSpouseLink } from './life-change-repository';
-import { recordMarriage, recordMarriageToMember } from './married';
+import { findSubject } from './life-change-repository';
+import { insertSpouseLink } from './marriage-repository';
+import { marry, recordMarriage, recordMarriageToMember } from './married';
 import { recordPassedAway } from './passed-away';
 
 const asPerson = <T>(personId: string, fn: () => T) =>
@@ -81,7 +82,11 @@ describe('got married, new non-member spouse', () => {
 			sex: { after: 'female' },
 			birthDate: { after: '1999-02-02' },
 			isMember: { after: false },
-			householdId: { after: householdId }
+			householdId: { after: householdId },
+			homeBranchId: { after: f.branch.id },
+			addressLine: { after: 'Jl. Nikah 1' },
+			postalCode: { after: '10110' },
+			cityId: { after: f.city.id }
 		});
 	});
 
@@ -274,12 +279,43 @@ describe('got married, two people on record', () => {
 		);
 	});
 
-	it('staff whose scope covers only one of them gets NotFoundError', async () => {
+	it('a spouse outside scope reads the same as one that does not exist', async () => {
 		const c = await couple();
 		const elsewhere = await makePerson({ birthDate: '1999-01-01' });
-		await expect(
-			asAdmin(c.branch.id, () => recordMarriageToMember(c.subject.id, c.toMember(elsewhere.id)))
-		).rejects.toThrow(NotFoundError);
+		await rejectsWith(
+			asAdmin(c.branch.id, () => recordMarriageToMember(c.subject.id, c.toMember(elsewhere.id))),
+			'error_spouse_unavailable'
+		);
+		await rejectsWith(
+			asAdmin(c.branch.id, () =>
+				recordMarriageToMember(c.subject.id, c.toMember(crypto.randomUUID()))
+			),
+			'error_spouse_unavailable'
+		);
+	});
+
+	it('a person who moved since they were read loses with "changed meanwhile"', async () => {
+		const c = await couple();
+		const stale = (await findSubject(c.subject.id))!;
+		await db
+			.update(people)
+			.set({ householdId: c.bride.householdId })
+			.where(eq(people.id, c.subject.id));
+		const wedding = {
+			weddingOn: '2026-06-01',
+			address: { addressLine: 'Jl. X', postalCode: '10110', cityId: c.city.id }
+		};
+		await rejectsWith(
+			db.transaction((tx) =>
+				marry(tx, [stale], wedding, {
+					fullName: 'N',
+					nickname: 'N',
+					sex: 'female',
+					birthDate: '1990-01-01'
+				})
+			),
+			'error_changed_meanwhile'
+		);
 	});
 
 	it('a family adult cannot use it', async () => {

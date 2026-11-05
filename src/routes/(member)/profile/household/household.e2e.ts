@@ -61,8 +61,12 @@ test("a member records their grown child's marriage", async ({ page }) => {
 	await page.getByLabel('Wedding date').fill('2026-06-01');
 	await page.getByRole('button', { name: 'Next' }).click();
 	await expect(page.getByText('Step 2 of 2')).toBeVisible();
+	await expect(page.getByLabel('Street address')).toBeFocused();
 	await expect(page.getByLabel('Street address')).toHaveValue('Jl. Uji 5');
 	await page.getByRole('button', { name: 'Record the marriage' }).click();
+	const confirm = page.getByRole('alertdialog');
+	await expect(confirm).toContainText(fam.names.child);
+	await confirm.getByRole('button', { name: 'Record the marriage' }).click();
 	await expect(page.getByText('Recorded the marriage.')).toBeVisible();
 	await expect(row(page, fam.names.child)).toHaveCount(0);
 });

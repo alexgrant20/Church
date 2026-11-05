@@ -1,7 +1,6 @@
-import { and, asc, count, eq, inArray, isNotNull, isNull, or, type SQL } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/pg-core';
+import { and, asc, count, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import { db, type Transaction } from '$lib/server/db/client';
-import { branches, households, people, personRelationships } from '$lib/server/db/schema';
+import { branches, households, people } from '$lib/server/db/schema';
 
 export type Address = { addressLine: string; postalCode: string | null; cityId: string };
 
@@ -92,15 +91,6 @@ export async function moveTo(
 	return rows.length === 1;
 }
 
-// Moves out of one household take turns, so two of them cannot both see "someone stays".
-export async function lockHousehold(tx: Transaction, householdId: string) {
-	await tx
-		.select({ id: households.id })
-		.from(households)
-		.where(eq(households.id, householdId))
-		.for('update');
-}
-
 export async function softDeleteHousehold(tx: Transaction, householdId: string) {
 	await tx.update(households).set({ deletedAt: new Date() }).where(eq(households.id, householdId));
 }
@@ -113,62 +103,30 @@ export async function householdExists(householdId: string) {
 	return row !== undefined;
 }
 
-const spouseA = alias(people, 'spouse_a');
-const spouseB = alias(people, 'spouse_b');
-
-// A marriage is live while it has not ended and both spouses are alive: a death ends it, and
-// undoing the death brings it back, with nothing to restore.
-function liveSpouseRows(tx: Transaction | typeof db, where: SQL | undefined) {
-	const r = personRelationships;
-	return tx
-		.select({ a: r.personId, b: r.relatedPersonId })
-		.from(r)
-		.innerJoin(spouseA, and(eq(spouseA.id, r.personId), isNull(spouseA.deceasedOn)))
-		.innerJoin(spouseB, and(eq(spouseB.id, r.relatedPersonId), isNull(spouseB.deceasedOn)))
-		.where(and(eq(r.kind, 'spouse'), isNull(r.endedOn), isNull(r.deletedAt), where));
-}
-
-export async function hasLiveSpouse(personId: string, tx: Transaction | typeof db = db) {
-	const r = personRelationships;
-	const rows = await liveSpouseRows(
-		tx,
-		or(eq(r.personId, personId), eq(r.relatedPersonId, personId))
-	).limit(1);
-	return rows.length > 0;
-}
-
-export type NewPerson = Address & {
-	fullName: string;
-	nickname: string;
-	sex: 'male' | 'female';
-	birthDate: string;
-	homeBranchId: string;
-	householdId: string;
-};
-
-export async function insertPerson(tx: Transaction, row: NewPerson) {
-	const [p] = await tx
-		.insert(people)
-		.values({ ...row, isMember: false, memberCode: null })
-		.returning({ id: people.id });
-	return p.id;
-}
-
-// The spouse_order check wants the smaller id first.
-export async function insertSpouseLink(tx: Transaction, a: string, b: string, startedOn: string) {
-	const [personId, relatedPersonId] = [a, b].sort();
+// One locking read for every household a change leaves, in id order so two changes cannot deadlock.
+export async function lockHouseholds(tx: Transaction, ids: string[]) {
 	await tx
-		.insert(personRelationships)
-		.values({ kind: 'spouse', personId, relatedPersonId, startedOn });
+		.select({ id: households.id })
+		.from(households)
+		.where(inArray(households.id, ids))
+		.orderBy(asc(households.id))
+		.for('update');
 }
 
-// One query for a whole household, so the list never asks per person.
-export async function liveSpouseIds(personIds: string[]) {
-	if (!personIds.length) return new Set<string>();
-	const r = personRelationships;
-	const rows = await liveSpouseRows(
-		db,
-		or(inArray(r.personId, personIds), inArray(r.relatedPersonId, personIds))
-	);
-	return new Set(rows.flatMap((row) => [row.a, row.b]));
+// Closes, in one statement, each of these households that no living person is left in.
+export async function closeEmptyHouseholds(tx: Transaction, ids: string[]) {
+	const living = tx
+		.select({ id: people.id })
+		.from(people)
+		.where(
+			and(
+				eq(people.householdId, households.id),
+				isNull(people.deletedAt),
+				isNull(people.deceasedOn)
+			)
+		);
+	await tx
+		.update(households)
+		.set({ deletedAt: new Date() })
+		.where(and(inArray(households.id, ids), sql`not exists (${living})`));
 }

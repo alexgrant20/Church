@@ -336,5 +336,9 @@
 	"error_same_person": "请选择另一个人。",
 	"household_married_named": "已结婚：{name}",
 	"household_married_step": "第{step}步，共2步",
-	"household_done_married": "已记录婚姻。"
+	"household_done_married": "已记录婚姻。",
+	"member_married_confirm_title": "记录这桩婚姻？",
+	"member_married_confirm_description": "{name}和配偶将迁入新的家庭。此操作无法在此撤销。",
+	"error_changed_meanwhile": "有人同时修改了此人。请重新加载页面后再试。",
+	"error_spouse_unavailable": "此处无法选择此人。"
 }

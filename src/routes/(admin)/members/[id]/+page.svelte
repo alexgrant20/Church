@@ -98,7 +98,7 @@
 				address={p.address}
 			/>
 		{/if}
-		{#if r.changes.canMarry}<MarriageDialog address={p.address} />{/if}
+		{#if r.changes.canMarry}<MarriageDialog name={p.fullName} address={p.address} />{/if}
 		{#if r.treeEnabled}
 			<Button variant="outline" href={resolve(`/members/${p.id}/tree`)}>
 				{m.member_family_tree()}

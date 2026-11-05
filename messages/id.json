@@ -336,5 +336,9 @@
 	"error_same_person": "Pilih orang lain untuk dinikahi.",
 	"household_married_named": "Menikah: {name}",
 	"household_married_step": "Langkah {step} dari 2",
-	"household_done_married": "Pernikahan sudah dicatat."
+	"household_done_married": "Pernikahan sudah dicatat.",
+	"member_married_confirm_title": "Catat pernikahan ini?",
+	"member_married_confirm_description": "{name} dan pasangannya pindah ke rumah tangga baru. Ini tidak dapat dibatalkan di sini.",
+	"error_changed_meanwhile": "Orang ini baru saja diubah oleh orang lain. Muat ulang halaman lalu coba lagi.",
+	"error_spouse_unavailable": "Orang ini tidak dapat dipilih di sini."
 }
