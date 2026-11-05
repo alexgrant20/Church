@@ -3,7 +3,10 @@ import { db } from '$lib/server/db/client';
 import { decryptNik, maskNik } from '$lib/server/crypto';
 import { NotFoundError } from '$lib/server/errors';
 import { recordAudit } from '$lib/server/modules/audit/service';
+import { findLatestAudit } from '$lib/server/modules/audit/service';
 import { getSetting } from '$lib/server/modules/settings/service';
+import { isStaffFor } from './life-change-access';
+import { canMoveBack } from './moved-out';
 import type { AccessibleBranches } from '$lib/server/modules/branch/access';
 import { viewAccess, type HouseholdBranch } from './access';
 import * as repo from './record-repository';
@@ -72,7 +75,13 @@ function toPerson(d: Detail) {
 		birthDate: p.birthDate,
 		birthCity: d.birthCity,
 		nikMasked: p.nikEncrypted ? maskNik(decryptNik(p.nikEncrypted)) : null,
-		address: { line: p.addressLine, postalCode: p.postalCode, city: d.city, region: d.region },
+		address: {
+			line: p.addressLine,
+			postalCode: p.postalCode,
+			cityId: p.cityId,
+			city: d.city,
+			region: d.region
+		},
 		homeBranch: d.homeBranch,
 		deceasedOn: p.deceasedOn
 	};
@@ -127,8 +136,11 @@ export async function getMember(id: string) {
 			})
 		);
 	}
+	const canChange = access === 'own' && isStaffFor(d.person);
+	const latestMove = canChange ? await findLatestAudit('person.moved_out', id) : undefined;
 	return {
 		access,
+		changes: { canChange, canUndoMoveOut: canChange && canMoveBack(d.person, latestMove) },
 		treeEnabled: await getSetting('membership.family_tree_enabled'),
 		person: toPerson(d),
 		profile: toProfile(d.profile),

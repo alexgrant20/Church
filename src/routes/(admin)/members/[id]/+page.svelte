@@ -7,6 +7,7 @@
 	import { formatDate, formatMissing } from '$lib/format';
 	import StatusPill from '$lib/components/StatusPill.svelte';
 	import UnderlineTabs from '$lib/components/UnderlineTabs.svelte';
+	import LifeChangeDialogs from '$lib/components/LifeChangeDialogs.svelte';
 	import FamilyList from './FamilyList.svelte';
 	import type { PageData } from './$types';
 
@@ -87,6 +88,14 @@
 		</p>
 	</div>
 	<div class="flex flex-wrap items-center gap-2">
+		{#if r.changes.canChange}
+			<LifeChangeDialogs
+				name={p.fullName}
+				deceased={p.deceasedOn !== null}
+				canUndoMoveOut={r.changes.canUndoMoveOut}
+				address={p.address}
+			/>
+		{/if}
 		{#if r.treeEnabled}
 			<Button variant="outline" href={resolve(`/members/${p.id}/tree`)}>
 				{m.member_family_tree()}

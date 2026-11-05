@@ -14,7 +14,7 @@
 		resetForm: false,
 		taintedMessage: null,
 		onUpdated: ({ form }) => {
-			if (form.message === 'saved') toast.success(m.settings_saved());
+			if (form.message === 'saved') toast.success(m.common_saved());
 		}
 	});
 </script>

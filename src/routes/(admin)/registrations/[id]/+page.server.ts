@@ -1,5 +1,4 @@
-import { fail } from '@sveltejs/kit';
-import { mapErrorToHttp, ValidationError } from '$lib/server/errors';
+import { mapErrorToHttp, runAction as run } from '$lib/server/errors';
 import { approveRegistration } from '$lib/server/modules/registration/approve';
 import {
 	markSpam,
@@ -17,17 +16,6 @@ export const load: PageServerLoad = async ({ params }) => {
 		mapErrorToHttp(err);
 	}
 };
-
-// A validation error stays on the page as a message; anything else becomes an HTTP error.
-async function run(action: () => Promise<unknown>) {
-	try {
-		await action();
-		return { ok: true };
-	} catch (err) {
-		if (err instanceof ValidationError) return fail(400, { error: err.message });
-		mapErrorToHttp(err);
-	}
-}
 
 const field = async (request: Request, name: string) =>
 	String((await request.formData()).get(name) ?? '');

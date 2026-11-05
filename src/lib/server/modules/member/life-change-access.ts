@@ -10,7 +10,7 @@ export const isAdult = (p: Pick<Subject, 'birthDate' | 'timezone'>) =>
 	ageOn(p.birthDate, todayIn(p.timezone)) >= ADULT_AGE;
 
 // Pastors read members but do not change them; cross-branch views never edit.
-function isStaffFor(subject: Subject) {
+export function isStaffFor(subject: Pick<Subject, 'homeBranchId'>) {
 	try {
 		return branchInScope(scopeFor(['superadmin', 'branch_admin']), subject.homeBranchId);
 	} catch (err) {

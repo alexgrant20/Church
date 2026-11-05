@@ -9,13 +9,19 @@ import { translateError } from '$lib/components/person-errors';
 export function createDecider() {
 	let busy = $state(false);
 
-	function submit(success: string, leave = false, check = () => true): SubmitFunction {
+	function submit(
+		success: string,
+		leave = false,
+		check = () => true,
+		done = () => {}
+	): SubmitFunction {
 		return ({ cancel }) => {
 			if (busy || !check()) return cancel();
 			busy = true;
 			return async ({ result, update }) => {
 				if (result.type === 'success') {
 					toast.success(success);
+					done();
 					if (leave) return goto(resolve('/registrations'));
 					await update();
 				} else if (result.type === 'failure') {

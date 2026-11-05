@@ -9,6 +9,7 @@ import { asStaff } from '$lib/server/modules/registration/test-support';
 import * as recordRepo from './record-repository';
 import { getMember } from './record-service';
 import { familyOfBudi } from './test-family';
+import { recordMovedOut, undoMovedOut } from './moved-out';
 
 const asAdminOf = <T>(branchId: string, fn: () => T) => asStaff('branch_admin', branchId, fn);
 const viewAudits = () =>
@@ -114,5 +115,27 @@ describe('member record', () => {
 		expect((await asAdminOf(f.a.id, () => getMember(f.budi.id))).treeEnabled).toBe(true);
 		await db.insert(systemSettings).values({ key: 'membership.family_tree_enabled', value: false });
 		expect((await asAdminOf(f.a.id, () => getMember(f.budi.id))).treeEnabled).toBe(false);
+	});
+
+	it('says whether staff may change the person and move them back', async () => {
+		const f = await familyOfBudi();
+		const own = await asAdminOf(f.a.id, () => getMember(f.budi.id));
+		expect(own.changes).toEqual({ canChange: true, canUndoMoveOut: false });
+		const pastor = await asStaff('pastor', f.a.id, () => getMember(f.budi.id));
+		expect(pastor.changes.canChange).toBe(false);
+		const cross = await asAdminOf(f.b.id, () => getMember(f.budi.id));
+		expect(cross.changes.canChange).toBe(false);
+	});
+
+	it('offers move back only while the latest move stands', async () => {
+		const f = await familyOfBudi();
+		const city = (await recordRepo.findPersonDetail(f.budi.id))!.person.cityId;
+		const address = { line: 'Jl. Baru 3', postalCode: '10330', cityId: city };
+		await asAdminOf(f.a.id, () => recordMovedOut(f.budi.id, { address }));
+		expect((await asAdminOf(f.a.id, () => getMember(f.budi.id))).changes.canUndoMoveOut).toBe(true);
+		await asAdminOf(f.a.id, () => undoMovedOut(f.budi.id));
+		expect((await asAdminOf(f.a.id, () => getMember(f.budi.id))).changes.canUndoMoveOut).toBe(
+			false
+		);
 	});
 });

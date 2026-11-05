@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 
 export class NotFoundError extends Error {
 	constructor(entity: string, id: string) {
@@ -30,4 +30,16 @@ export function mapErrorToHttp(err: unknown): never {
 	if (err instanceof ValidationError) throw error(400, err.message);
 	console.error(err);
 	throw error(500, 'Internal server error');
+}
+
+// A form action's result: a validation error stays on the page as a message key; anything else
+// becomes an HTTP error.
+export async function runAction(action: () => Promise<unknown>) {
+	try {
+		await action();
+		return { ok: true };
+	} catch (err) {
+		if (err instanceof ValidationError) return fail(400, { error: err.message });
+		mapErrorToHttp(err);
+	}
 }

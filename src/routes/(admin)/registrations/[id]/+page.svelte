@@ -7,7 +7,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { submittedLabel } from '$lib/registration/submitted';
 	import FixDialog from './FixDialog.svelte';
-	import { createDecider } from './decider.svelte';
+	import { createDecider } from '$lib/components/decider.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

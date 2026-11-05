@@ -167,3 +167,42 @@ export async function ensureStaff(
 		return person.id as string;
 	});
 }
+
+// A JKT family of its own, so life-change tests never touch the seeded Santoso family.
+export async function e2eFamily(): Promise<{
+	adult: string;
+	spouse: string;
+	child: string;
+	adultEmail: string;
+	names: { adult: string; spouse: string; child: string };
+}> {
+	const tag = uniq();
+	const branch = await branchByCode('JKT');
+	const adultEmail = `e2e-fam-${tag}@grii.test`;
+	const year = new Date().getUTCFullYear();
+	const names = {
+		adult: `Fam ${tag} Adult`,
+		spouse: `Fam ${tag} Spouse`,
+		child: `Fam ${tag} Child`
+	};
+	return sql.begin(async (tx) => {
+		const [household] = await tx`insert into households default values returning id`;
+		const add = async (fullName: string, birthDate: string, code: string) => {
+			const [p] = await tx`
+				insert into people (member_code, full_name, sex, birth_date, home_branch_id, household_id,
+					address_line, postal_code, city_id)
+				select ${code}, ${fullName}, 'female', ${birthDate}, id, ${household.id}, 'Jl. Uji 5',
+					'10110', city_id from branches where id = ${branch.id}
+				returning id`;
+			return p.id as string;
+		};
+		const adult = await add(names.adult, `${year - 45}-03-01`, `E2E-${tag}-1`);
+		const spouse = await add(names.spouse, `${year - 40}-03-01`, `E2E-${tag}-2`);
+		const child = await add(names.child, `${year - 20}-03-01`, `E2E-${tag}-3`);
+		await tx`
+			insert into accounts (person_id, email, password_hash, activated_at)
+			select ${adult}, ${adultEmail}, password_hash, now() from accounts
+			where email = 'rina@grii.test'`;
+		return { adult, spouse, child, adultEmail, names };
+	});
+}
