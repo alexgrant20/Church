@@ -333,5 +333,8 @@
 	"member_married_submit": "Catat pernikahan",
 	"error_not_marriage_age": "Keduanya harus berusia 19 tahun atau lebih pada tanggal pernikahan.",
 	"error_already_married": "Orang ini sudah menikah.",
-	"error_same_person": "Pilih orang lain untuk dinikahi."
+	"error_same_person": "Pilih orang lain untuk dinikahi.",
+	"household_married_named": "Menikah: {name}",
+	"household_married_step": "Langkah {step} dari 2",
+	"household_done_married": "Pernikahan sudah dicatat."
 }

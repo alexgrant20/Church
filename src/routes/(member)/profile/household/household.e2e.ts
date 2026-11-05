@@ -47,3 +47,22 @@ test('a refused death date is shown, not hidden behind the confirmation', async 
 	await expect(page.getByRole('alert')).toHaveText('The date is before their birth date.');
 	await expect(page.getByRole('alertdialog')).toBeHidden();
 });
+
+test("a member records their grown child's marriage", async ({ page }) => {
+	const fam = await e2eFamily();
+	await signIn(page, fam.adultEmail);
+	await page.goto('/profile/household');
+	await page.getByRole('link', { name: `Got married: ${fam.names.child}` }).click();
+	await expect(page.getByText('Step 1 of 2')).toBeVisible();
+	await page.getByLabel('Full name').fill(`Spouse of ${fam.names.child}`);
+	await page.getByLabel('Nickname').fill('Spouse');
+	await page.getByLabel('Female').check();
+	await page.getByLabel('Birth date').fill('1998-02-02');
+	await page.getByLabel('Wedding date').fill('2026-06-01');
+	await page.getByRole('button', { name: 'Next' }).click();
+	await expect(page.getByText('Step 2 of 2')).toBeVisible();
+	await expect(page.getByLabel('Street address')).toHaveValue('Jl. Uji 5');
+	await page.getByRole('button', { name: 'Record the marriage' }).click();
+	await expect(page.getByText('Recorded the marriage.')).toBeVisible();
+	await expect(row(page, fam.names.child)).toHaveCount(0);
+});

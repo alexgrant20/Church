@@ -1,4 +1,4 @@
-import { and, asc, count, eq, isNotNull, isNull, or } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, isNotNull, isNull, or } from 'drizzle-orm';
 import { db, type Transaction } from '$lib/server/db/client';
 import { branches, households, people, personRelationships } from '$lib/server/db/schema';
 
@@ -155,4 +155,22 @@ export async function insertSpouseLink(tx: Transaction, a: string, b: string, st
 	await tx
 		.insert(personRelationships)
 		.values({ kind: 'spouse', personId, relatedPersonId, startedOn });
+}
+
+// One query for a whole household, so the list never asks per person.
+export async function liveSpouseIds(personIds: string[]) {
+	if (!personIds.length) return new Set<string>();
+	const r = personRelationships;
+	const rows = await db
+		.select({ a: r.personId, b: r.relatedPersonId })
+		.from(r)
+		.where(
+			and(
+				eq(r.kind, 'spouse'),
+				isNull(r.endedOn),
+				isNull(r.deletedAt),
+				or(inArray(r.personId, personIds), inArray(r.relatedPersonId, personIds))
+			)
+		);
+	return new Set(rows.flatMap((row) => [row.a, row.b]));
 }

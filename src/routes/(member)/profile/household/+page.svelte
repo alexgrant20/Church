@@ -13,7 +13,8 @@
 
 	const done = {
 		'moved-out': m.household_done_moved_out,
-		'passed-away': m.household_done_passed_away
+		'passed-away': m.household_done_passed_away,
+		married: m.household_done_married
 	} as const;
 
 	// The toast reports the change made on the previous screen, then the URL forgets it.
@@ -38,8 +39,17 @@
 					>{/if}
 			</p>
 			{#if p.deceased}<div><StatusPill tone="neutral" label={m.members_deceased()} /></div>{/if}
-			{#if p.canRecordDeath || p.canMoveOut}
+			{#if p.canRecordDeath || p.canMoveOut || p.canMarry}
 				<div class="flex flex-wrap gap-2">
+					{#if p.canMarry}
+						<Button
+							variant="outline"
+							size="member"
+							href={resolve(`/profile/household/${p.id}/married`)}
+							aria-label={m.household_married_named({ name: p.fullName })}
+							>{m.member_married()}</Button
+						>
+					{/if}
 					{#if p.canMoveOut}
 						<Button
 							variant="outline"

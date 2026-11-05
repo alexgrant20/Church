@@ -333,5 +333,8 @@
 	"member_married_submit": "Record the marriage",
 	"error_not_marriage_age": "Both must be 19 or older on the wedding date.",
 	"error_already_married": "This person is already married.",
-	"error_same_person": "Choose someone else to marry."
+	"error_same_person": "Choose someone else to marry.",
+	"household_married_named": "Got married: {name}",
+	"household_married_step": "Step {step} of 2",
+	"household_done_married": "Recorded the marriage."
 }

@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { runWithContext } from '$lib/server/context';
+import { db } from '$lib/server/db/client';
+import { insertSpouseLink } from './life-change-repository';
 import { resetDb } from '$lib/server/db/test/reset';
 import { makeBranch, makeHousehold, makePerson } from '$lib/server/db/test/factories';
 import { NotFoundError } from '$lib/server/errors';
@@ -73,5 +75,22 @@ describe('my household', () => {
 		expect(await asPerson(h.me.id, canOpenMyHousehold)).toBe(true);
 		expect(await asPerson(h.teen.id, canOpenMyHousehold)).toBe(false);
 		expect(await asPerson(h.late.id, canOpenMyHousehold)).toBe(false);
+	});
+
+	it('says who may be recorded as married', async () => {
+		const h = await home();
+		const flags = async () =>
+			Object.fromEntries(
+				(await asPerson(h.me.id, getMyHousehold)).people.map((p) => [p.fullName, p.canMarry])
+			);
+		expect(await flags()).toMatchObject({
+			Me: true,
+			Spouse: true,
+			Teen: false,
+			Kid: false,
+			Late: false
+		});
+		await db.transaction((tx) => insertSpouseLink(tx, h.me.id, h.spouse.id, '2010-01-01'));
+		expect(await flags()).toMatchObject({ Me: false, Spouse: false });
 	});
 });

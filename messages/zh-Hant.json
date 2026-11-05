@@ -333,5 +333,8 @@
 	"member_married_submit": "記錄婚姻",
 	"error_not_marriage_age": "雙方在結婚日期時都必須年滿19歲。",
 	"error_already_married": "此人已婚。",
-	"error_same_person": "請選擇另一個人。"
+	"error_same_person": "請選擇另一個人。",
+	"household_married_named": "已結婚：{name}",
+	"household_married_step": "第{step}步，共2步",
+	"household_done_married": "已記錄婚姻。"
 }

@@ -2,7 +2,9 @@ import { getContext } from '$lib/server/context';
 import { NotFoundError } from '$lib/server/errors';
 import { cityNames } from '$lib/server/modules/location/service';
 import { isAdult, lifeChangeActor } from './life-change-access';
-import { findSubject, householdMembers } from './life-change-repository';
+import { findSubject, householdMembers, liveSpouseIds } from './life-change-repository';
+import { MARRIAGE_AGE } from './married';
+import { ageOn, todayIn } from '$lib/server/time';
 import { subjectOf } from './passed-away';
 
 export type HouseholdPerson = {
@@ -13,6 +15,7 @@ export type HouseholdPerson = {
 	deceased: boolean;
 	canRecordDeath: boolean;
 	canMoveOut: boolean;
+	canMarry: boolean;
 };
 
 // Only a living adult sees and changes their household; anyone else is told nothing.
@@ -37,6 +40,7 @@ export async function getMyHousehold(): Promise<{ people: HouseholdPerson[] }> {
 	const self = await me();
 	const rows = await householdMembers(self.householdId);
 	const living = rows.filter((r) => r.deceasedOn === null).length;
+	const married = await liveSpouseIds(rows.map((r) => r.id));
 	const people = rows.map((r) => {
 		const deceased = r.deceasedOn !== null;
 		const adult = isAdult(r);
@@ -48,7 +52,9 @@ export async function getMyHousehold(): Promise<{ people: HouseholdPerson[] }> {
 			adult,
 			deceased,
 			canRecordDeath: !isSelf && !deceased,
-			canMoveOut: !deceased && adult && living > 1
+			canMoveOut: !deceased && adult && living > 1,
+			canMarry:
+				!deceased && !married.has(r.id) && ageOn(r.birthDate, todayIn(r.timezone)) >= MARRIAGE_AGE
 		};
 	});
 	return { people };
