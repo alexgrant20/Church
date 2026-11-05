@@ -49,8 +49,10 @@ test('a branch admin browses, searches, and exports members', async ({ page }) =
 test('the deceased tab shows only deceased members and offers no export', async ({ page }) => {
 	const name = await deceasedMember();
 	await signIn(page, ADMIN);
-	await page.goto('/members?status=deceased');
+	// Searched by name: earlier runs leave many deceased test people, and only visible rows render.
+	await page.goto(`/members?status=deceased&q=${encodeURIComponent(name)}`);
 	await expect(page.getByRole('link', { name })).toBeVisible();
+	await page.goto('/members?status=deceased&q=Budi');
 	await expect(page.getByRole('link', { name: /Budi/ })).toHaveCount(0);
 	await expect(page.getByRole('link', { name: 'Export' })).toHaveCount(0);
 });

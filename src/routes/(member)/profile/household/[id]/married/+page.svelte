@@ -41,7 +41,13 @@
 <form
 	method="POST"
 	class="mt-6 flex flex-col gap-4"
-	use:enhance={() => {
+	use:enhance={({ cancel }) => {
+		// Enter (or a phone's Go key) on step 1 must not save before the address was seen.
+		if (step === 1) {
+			cancel();
+			next();
+			return;
+		}
 		busy = true;
 		return async ({ update }) => {
 			await update({ reset: false });

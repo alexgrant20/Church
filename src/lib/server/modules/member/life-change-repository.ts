@@ -1,4 +1,5 @@
-import { and, asc, count, eq, inArray, isNotNull, isNull, or } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, isNotNull, isNull, or, type SQL } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { db, type Transaction } from '$lib/server/db/client';
 import { branches, households, people, personRelationships } from '$lib/server/db/schema';
 
@@ -112,24 +113,28 @@ export async function householdExists(householdId: string) {
 	return row !== undefined;
 }
 
-const liveSpouseRow = (personId: string) =>
-	and(
-		eq(personRelationships.kind, 'spouse'),
-		isNull(personRelationships.endedOn),
-		isNull(personRelationships.deletedAt),
-		or(
-			eq(personRelationships.personId, personId),
-			eq(personRelationships.relatedPersonId, personId)
-		)
-	);
+const spouseA = alias(people, 'spouse_a');
+const spouseB = alias(people, 'spouse_b');
+
+// A marriage is live while it has not ended and both spouses are alive: a death ends it, and
+// undoing the death brings it back, with nothing to restore.
+function liveSpouseRows(tx: Transaction | typeof db, where: SQL | undefined) {
+	const r = personRelationships;
+	return tx
+		.select({ a: r.personId, b: r.relatedPersonId })
+		.from(r)
+		.innerJoin(spouseA, and(eq(spouseA.id, r.personId), isNull(spouseA.deceasedOn)))
+		.innerJoin(spouseB, and(eq(spouseB.id, r.relatedPersonId), isNull(spouseB.deceasedOn)))
+		.where(and(eq(r.kind, 'spouse'), isNull(r.endedOn), isNull(r.deletedAt), where));
+}
 
 export async function hasLiveSpouse(personId: string, tx: Transaction | typeof db = db) {
-	const [row] = await tx
-		.select({ id: personRelationships.id })
-		.from(personRelationships)
-		.where(liveSpouseRow(personId))
-		.limit(1);
-	return row !== undefined;
+	const r = personRelationships;
+	const rows = await liveSpouseRows(
+		tx,
+		or(eq(r.personId, personId), eq(r.relatedPersonId, personId))
+	).limit(1);
+	return rows.length > 0;
 }
 
 export type NewPerson = Address & {
@@ -161,16 +166,9 @@ export async function insertSpouseLink(tx: Transaction, a: string, b: string, st
 export async function liveSpouseIds(personIds: string[]) {
 	if (!personIds.length) return new Set<string>();
 	const r = personRelationships;
-	const rows = await db
-		.select({ a: r.personId, b: r.relatedPersonId })
-		.from(r)
-		.where(
-			and(
-				eq(r.kind, 'spouse'),
-				isNull(r.endedOn),
-				isNull(r.deletedAt),
-				or(inArray(r.personId, personIds), inArray(r.relatedPersonId, personIds))
-			)
-		);
+	const rows = await liveSpouseRows(
+		db,
+		or(inArray(r.personId, personIds), inArray(r.relatedPersonId, personIds))
+	);
 	return new Set(rows.flatMap((row) => [row.a, row.b]));
 }

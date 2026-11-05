@@ -66,3 +66,17 @@ test("a member records their grown child's marriage", async ({ page }) => {
 	await expect(page.getByText('Recorded the marriage.')).toBeVisible();
 	await expect(row(page, fam.names.child)).toHaveCount(0);
 });
+
+test('pressing Enter on step 1 goes to step 2 instead of saving', async ({ page }) => {
+	const fam = await e2eFamily();
+	await signIn(page, fam.adultEmail);
+	await page.goto(`/profile/household/${fam.child}/married`);
+	await page.getByLabel('Full name').fill(`Enter ${fam.names.child}`);
+	await page.getByLabel('Nickname').fill('Enter');
+	await page.getByLabel('Female').check();
+	await page.getByLabel('Birth date').fill('1998-02-02');
+	await page.getByLabel('Wedding date').fill('2026-06-01');
+	await page.getByLabel('Full name').press('Enter');
+	await expect(page.getByText('Step 2 of 2')).toBeVisible();
+	await expect(page).toHaveURL(new RegExp(`/profile/household/${fam.child}/married`));
+});

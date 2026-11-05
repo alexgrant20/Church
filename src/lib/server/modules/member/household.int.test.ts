@@ -93,4 +93,11 @@ describe('my household', () => {
 		await db.transaction((tx) => insertSpouseLink(tx, h.me.id, h.spouse.id, '2010-01-01'));
 		expect(await flags()).toMatchObject({ Me: false, Spouse: false });
 	});
+
+	it('someone widowed may be recorded as married again', async () => {
+		const h = await home();
+		await db.transaction((tx) => insertSpouseLink(tx, h.me.id, h.late.id, '1990-01-01'));
+		const me = (await asPerson(h.me.id, getMyHousehold)).people.find((p) => p.isSelf)!;
+		expect(me.canMarry).toBe(true);
+	});
 });

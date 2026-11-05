@@ -16,6 +16,7 @@ import { NotFoundError, ValidationError } from '$lib/server/errors';
 import { asStaff } from '$lib/server/modules/registration/test-support';
 import { insertSpouseLink } from './life-change-repository';
 import { recordMarriage, recordMarriageToMember } from './married';
+import { recordPassedAway } from './passed-away';
 
 const asPerson = <T>(personId: string, fn: () => T) =>
 	runWithContext({ personId, actingAsPersonId: null, ip: '127.0.0.1', roleAssignments: [] }, fn);
@@ -182,6 +183,22 @@ describe('got married, new non-member spouse', () => {
 		await expect(
 			asPerson(stranger.id, () => recordMarriage(f.subject.id, input(f)))
 		).rejects.toThrow(NotFoundError);
+	});
+});
+
+describe('got married after being widowed', () => {
+	beforeEach(resetDb);
+
+	it('a widow may marry again once the spouse’s death is recorded', async () => {
+		const f = await family();
+		const { spouseId } = await asAdmin(f.branch.id, () => recordMarriage(f.subject.id, input(f)));
+		await asAdmin(f.branch.id, () => recordPassedAway(spouseId, { deceasedOn: '2026-07-01' }));
+		const again = input(f, {
+			weddingOn: '2026-09-01',
+			spouse: { fullName: 'Second', nickname: 'Second', sex: 'female', birthDate: '1997-01-01' }
+		});
+		await asAdmin(f.branch.id, () => recordMarriage(f.subject.id, again));
+		expect(await audits('person.married')).toHaveLength(2);
 	});
 });
 
