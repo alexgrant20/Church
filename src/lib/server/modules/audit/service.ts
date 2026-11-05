@@ -1,3 +1,5 @@
+import { and, desc, eq } from 'drizzle-orm';
+import { db } from '$lib/server/db/client';
 import { auditLogs } from '$lib/server/db/schema/audit';
 import type { Transaction } from '$lib/server/db/client';
 import { getContext } from '$lib/server/context';
@@ -41,6 +43,17 @@ export async function withAudit<T>(
 	const { entityId, branchId, diff, result } = await fn();
 	await recordAudit(tx, { action, entityType, entityId, branchId, diff });
 	return result;
+}
+
+// Lets an undo find what the change it reverses recorded, without a column kept just for that.
+export async function findLatestAudit(action: string, entityId: string) {
+	const [row] = await db
+		.select({ diff: auditLogs.diff, createdAt: auditLogs.createdAt })
+		.from(auditLogs)
+		.where(and(eq(auditLogs.action, action), eq(auditLogs.entityId, entityId)))
+		.orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
+		.limit(1);
+	return row;
 }
 
 function safeGetContext() {
