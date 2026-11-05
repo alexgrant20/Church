@@ -67,6 +67,23 @@ export async function deleteSessionsByPersonId(tx: Transaction, personId: string
 	await tx.delete(sessions).where(eq(sessions.personId, personId));
 }
 
+export async function findAccountStatus(tx: Transaction, personId: string) {
+	const [row] = await tx
+		.select({ status: accounts.status })
+		.from(accounts)
+		.where(eq(accounts.personId, personId))
+		.for('update');
+	return row?.status;
+}
+
+export async function updateAccountStatus(
+	tx: Transaction,
+	personId: string,
+	status: 'active' | 'suspended'
+) {
+	await tx.update(accounts).set({ status }).where(eq(accounts.personId, personId));
+}
+
 export async function findLockedUntil(identifierHash: string) {
 	const [row] = await db
 		.select({ lockedUntil: loginThrottles.lockedUntil })

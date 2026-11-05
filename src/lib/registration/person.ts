@@ -6,14 +6,14 @@ export const RELATIONS = ['self', 'spouse', 'child', 'parent', 'sibling'] as con
 
 const text = (max: number) =>
 	z.string('error_required').trim().min(1, 'error_required').max(max, 'error_too_long');
-const today = () => new Date().toISOString().slice(0, 10);
+export const today = () => new Date().toISOString().slice(0, 10);
 // Browsers post "" for an empty input; treat it as absent.
 const blankTo = (empty: undefined | null) => (v: unknown) =>
 	typeof v === 'string' && v.trim() === '' ? empty : v;
 const optional = <T extends z.ZodType>(schema: T) =>
 	z.preprocess(blankTo(undefined), schema.optional());
 // An empty date is a missing answer, not a malformed one.
-const date = z.iso.date({
+export const date = z.iso.date({
 	error: (issue) =>
 		issue.input === '' || issue.input == null ? 'error_required' : 'error_invalid_date'
 });
@@ -54,6 +54,12 @@ const nik = optional(
 		.refine((v) => v.length === 16, 'error_invalid_nik')
 );
 
+export const addressSchema = z.object({
+	line: text(500),
+	postalCode: text(10),
+	cityId: z.uuid('error_required')
+});
+
 export const personSchema = z.object({
 	relation: z.enum(RELATIONS),
 	fullName: text(255),
@@ -65,11 +71,7 @@ export const personSchema = z.object({
 	nik,
 	email: contact('email'),
 	phone: contact('phone'),
-	address: z.object({
-		line: text(500),
-		postalCode: text(10),
-		cityId: z.uuid('error_required')
-	}),
+	address: addressSchema,
 	occupation: z.enum(OCCUPATIONS, 'error_required'),
 	education: z.enum(EDUCATIONS, 'error_required'),
 	previousChurch: z.preprocess(
