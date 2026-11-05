@@ -199,6 +199,12 @@ export async function e2eFamily(): Promise<{
 		const adult = await add(names.adult, `${year - 45}-03-01`, `E2E-${tag}-1`);
 		const spouse = await add(names.spouse, `${year - 40}-03-01`, `E2E-${tag}-2`);
 		const child = await add(names.child, `${year - 25}-03-01`, `E2E-${tag}-3`);
+		// Real family ties: a household adult acts for another adult only as direct family.
+		const [x, y] = [adult, spouse].sort();
+		await tx`
+			insert into person_relationships (kind, person_id, related_person_id, started_on)
+			values ('spouse', ${x}, ${y}, '2000-01-01'), ('parent', ${adult}, ${child}, null),
+				('parent', ${spouse}, ${child}, null)`;
 		await tx`
 			insert into accounts (person_id, email, password_hash, activated_at)
 			select ${adult}, ${adultEmail}, password_hash, now() from accounts
