@@ -125,6 +125,13 @@ and a phone-first member app together (see the research report).
     sidi status. Never NIK, photo, or contact details of anyone under 17.
     Every export writes an audit row with who, when, the filters, and the row
     count.
+21. **Who acts for whom in a household.** An adult may act for another adult
+    in their household only as direct family: spouse, parent, child or
+    sibling. Any adult of the household may act for a child. The tie used is
+    recorded in the audit row.
+22. **Children go with the last adult.** When the last adult leaves a
+    household, by moving out, being moved back, or marrying, their children
+    under 17 in that household go with them.
 
 ## Calls I made (check these)
 

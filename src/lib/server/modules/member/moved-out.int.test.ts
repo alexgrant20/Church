@@ -234,3 +234,78 @@ describe('moved out', () => {
 		);
 	});
 });
+
+describe('children under 17 move with the last adult', () => {
+	beforeEach(resetDb);
+	const kidBorn = `${new Date().getUTCFullYear() - 10}-01-01`;
+
+	async function parentAndKid() {
+		const branch = await makeBranch();
+		const home = await makeHousehold();
+		const at = { homeBranchId: branch.id, householdId: home.id, addressLine: 'Jl. Lama 1' };
+		const parent = await makePerson({ ...at, birthDate: '1980-01-01' });
+		const kid = await makePerson({ ...at, birthDate: kidBorn });
+		await db
+			.insert(personRelationships)
+			.values({ kind: 'parent', personId: parent.id, relatedPersonId: kid.id });
+		const city = await makeCity();
+		const address = { line: 'Jl. Baru 2', postalCode: '10220', cityId: city.id };
+		const moveOut = () => asAdmin(branch.id, () => recordMovedOut(parent.id, { address }));
+		return { branch, home, at, parent, kid, address, moveOut };
+	}
+
+	it('a parent who is the last adult takes their 10-year-old along', async () => {
+		const f = await parentAndKid();
+		const { householdId } = await f.moveOut();
+		expect(await reread(f.kid.id)).toMatchObject({
+			householdId,
+			addressLine: 'Jl. Baru 2',
+			postalCode: '10220',
+			cityId: f.address.cityId
+		});
+		expect((await household(f.home.id)).deletedAt).not.toBeNull();
+		const rows = await audits('person.moved_with_parent');
+		expect(rows).toHaveLength(1);
+		expect(rows[0]).toMatchObject({
+			entityType: 'person',
+			entityId: f.kid.id,
+			branchId: f.branch.id,
+			metadata: { parentId: f.parent.id }
+		});
+		expect(rows[0].diff).toMatchObject({
+			householdId: { before: f.home.id, after: householdId },
+			addressLine: { before: 'Jl. Lama 1', after: 'Jl. Baru 2' }
+		});
+	});
+
+	it('children stay while another adult lives there', async () => {
+		const f = await parentAndKid();
+		await makePerson({ ...f.at, birthDate: '1982-01-01' });
+		await f.moveOut();
+		expect((await reread(f.kid.id)).householdId).toBe(f.home.id);
+		expect(await audits('person.moved_with_parent')).toHaveLength(0);
+	});
+
+	it('a minor who is not the leaver’s child stays', async () => {
+		const f = await parentAndKid();
+		const niece = await makePerson({ ...f.at, birthDate: kidBorn });
+		const { householdId } = await f.moveOut();
+		expect((await reread(f.kid.id)).householdId).toBe(householdId);
+		expect((await reread(niece.id)).householdId).toBe(f.home.id);
+		expect((await household(f.home.id)).deletedAt).toBeNull();
+	});
+
+	it('move back brings parent and child back, reopening the old household', async () => {
+		const f = await parentAndKid();
+		const { householdId } = await f.moveOut();
+		await asAdmin(f.branch.id, () => undoMovedOut(f.parent.id));
+		expect((await reread(f.parent.id)).householdId).toBe(f.home.id);
+		expect(await reread(f.kid.id)).toMatchObject({
+			householdId: f.home.id,
+			addressLine: 'Jl. Lama 1'
+		});
+		expect((await household(f.home.id)).deletedAt).toBeNull();
+		expect((await household(householdId)).deletedAt).not.toBeNull();
+		expect(await audits('person.moved_with_parent')).toHaveLength(2);
+	});
+});

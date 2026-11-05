@@ -37,6 +37,21 @@ export function householdMembers(householdId: string) {
 
 export type Subject = NonNullable<Awaited<ReturnType<typeof findSubject>>>;
 
+// The living people of the households a change leaves, in one query.
+export function livingIn(tx: Transaction, householdIds: string[]) {
+	return tx
+		.select(subjectColumns)
+		.from(people)
+		.innerJoin(branches, eq(branches.id, people.homeBranchId))
+		.where(
+			and(
+				inArray(people.householdId, householdIds),
+				isNull(people.deletedAt),
+				isNull(people.deceasedOn)
+			)
+		);
+}
+
 export async function livePeopleIn(householdId: string, tx: Transaction | typeof db = db) {
 	const [row] = await tx
 		.select({ n: count() })
@@ -91,16 +106,17 @@ export async function moveTo(
 	return rows.length === 1;
 }
 
-export async function softDeleteHousehold(tx: Transaction, householdId: string) {
-	await tx.update(households).set({ deletedAt: new Date() }).where(eq(households.id, householdId));
-}
-
+// Closed or not: a household everyone left can be reopened by a move back.
 export async function householdExists(householdId: string) {
 	const [row] = await db
 		.select({ id: households.id })
 		.from(households)
-		.where(and(eq(households.id, householdId), isNull(households.deletedAt)));
+		.where(eq(households.id, householdId));
 	return row !== undefined;
+}
+
+export async function reopenHousehold(tx: Transaction, householdId: string) {
+	await tx.update(households).set({ deletedAt: null }).where(eq(households.id, householdId));
 }
 
 // One locking read for every household a change leaves, in id order so two changes cannot deadlock.

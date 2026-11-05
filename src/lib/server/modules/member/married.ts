@@ -7,7 +7,7 @@ import { ageOn, todayIn } from '$lib/server/time';
 import { actedAs, lifeChangeActor, staffOnly } from './life-change-access';
 import * as repo from './life-change-repository';
 import * as marriages from './marriage-repository';
-import { diffOf, placeOf } from './moved-out';
+import { diffOf, moveChildrenAlong, placeOf } from './moved-out';
 import { subjectOf } from './passed-away';
 
 // The legal marriage age in Indonesia (UU 16/2019).
@@ -100,6 +100,7 @@ export async function marry(
 	const householdId = await repo.insertHousehold(tx);
 	const at = { householdId, ...w.address, homeBranchId: couple[0].homeBranchId };
 	const newId = spouse ? await marriages.insertPerson(tx, { ...spouse, ...at }) : undefined;
+	await moveChildrenAlong(tx, couple, { householdId, ...w.address });
 	const moves = couple.map((s) => ({ id: s.id, from: s.householdId }));
 	// Someone moved or died since they were read: say so, rather than guess why.
 	if ((await marriages.moveAll(tx, moves, householdId, w.address)) !== couple.length)

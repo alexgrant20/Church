@@ -1,9 +1,11 @@
 import { movedOutSchema } from '$lib/life-change/schema';
-import { db } from '$lib/server/db/client';
+import { db, type Transaction } from '$lib/server/db/client';
 import { ValidationError } from '$lib/server/errors';
-import { findAudits, recordAudit } from '$lib/server/modules/audit/service';
+import { findAudits, recordAudit, recordAudits } from '$lib/server/modules/audit/service';
+import { childrenWhoGo } from './children-who-go';
 import { actedAs, isAdult, lifeChangeActor, staffOnly } from './life-change-access';
 import * as repo from './life-change-repository';
+import { moveAll } from './marriage-repository';
 import { subjectOf } from './passed-away';
 
 export type Place = repo.Address & { householdId: string };
@@ -28,21 +30,47 @@ export function diffOf(before: Place, after: Place): MoveDiff {
 	);
 }
 
+// The last adults out take their children under 17 along. Call it after the household lock and
+// before the leavers move, so it reads who lives there now.
+export async function moveChildrenAlong(tx: Transaction, leavers: repo.Subject[], to: Place) {
+	const homes = [...new Set(leavers.map((l) => l.householdId))];
+	const residents = (await repo.livingIn(tx, homes)).map((r) => ({ ...r, adult: isAdult(r) }));
+	const ids = leavers.map((l) => l.id);
+	const going = childrenWhoGo(residents, ids, await repo.familyLinks(ids, tx));
+	if (!going.length) return;
+	const { householdId, ...address } = to;
+	const moves = going.map(({ child }) => ({ id: child.id, from: child.householdId }));
+	if ((await moveAll(tx, moves, householdId, address)) !== moves.length)
+		throw new ValidationError('error_changed_meanwhile');
+	await recordAudits(
+		tx,
+		going.map(({ child, parentId }) => ({
+			action: 'person.moved_with_parent',
+			entityType: 'person',
+			entityId: child.id,
+			branchId: child.homeBranchId,
+			diff: diffOf(placeOf(child), to),
+			metadata: { parentId }
+		}))
+	);
+}
+
 // The checks that matter under concurrency run here, after the lock, against fresh rows.
 async function write(subject: repo.Subject, action: string, move: Move, metadata?: object) {
 	const from = subject.householdId;
 	return db.transaction(async (tx) => {
 		await repo.lockHouseholds(tx, [from]);
-		const staying = await repo.livePeopleIn(from, tx);
-		if (move.keepOne && staying <= 1) throw new ValidationError(move.failure);
-		const to = {
-			...move.dest,
-			householdId: move.dest.householdId ?? (await repo.insertHousehold(tx))
-		};
+		if (move.keepOne && (await repo.livePeopleIn(from, tx)) <= 1)
+			throw new ValidationError(move.failure);
+		const back = move.dest.householdId;
+		// A move back may return to a household closed when everyone left it.
+		if (back) await repo.reopenHousehold(tx, back);
+		const to = { ...move.dest, householdId: back ?? (await repo.insertHousehold(tx)) };
+		await moveChildrenAlong(tx, [subject], to);
 		const { householdId, ...address } = to;
 		if (!(await repo.moveTo(tx, subject.id, from, householdId, address)))
 			throw new ValidationError(move.failure);
-		if (staying === 1) await repo.softDeleteHousehold(tx, from);
+		await repo.closeEmptyHouseholds(tx, [from]);
 		await recordAudit(tx, {
 			action,
 			entityType: 'person',

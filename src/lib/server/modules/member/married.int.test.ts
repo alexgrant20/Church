@@ -336,3 +336,45 @@ describe('got married, two people on record', () => {
 		).rejects.toThrow(NotFoundError);
 	});
 });
+
+describe('children under 17 move with a parent who marries', () => {
+	beforeEach(resetDb);
+
+	async function parentsAndKid() {
+		const branch = await makeBranch();
+		const home = await makeHousehold();
+		const at = { homeBranchId: branch.id, householdId: home.id };
+		const parent = await makePerson({ ...at, birthDate: '1980-01-01' });
+		const other = await makePerson({ ...at, birthDate: '1981-01-01' });
+		const kid = await makePerson({
+			...at,
+			birthDate: `${new Date().getUTCFullYear() - 10}-01-01`
+		});
+		await db.insert(personRelationships).values([
+			{ kind: 'parent', personId: parent.id, relatedPersonId: kid.id },
+			{ kind: 'parent', personId: other.id, relatedPersonId: kid.id }
+		]);
+		const city = await makeCity();
+		return { branch, home, parent, other, kid, city };
+	}
+
+	it('a widowed parent who is the last adult takes their child into the new household', async () => {
+		const f = await parentsAndKid();
+		await db.transaction((tx) => insertSpouseLink(tx, f.parent.id, f.other.id, '2010-01-01'));
+		await asAdmin(f.branch.id, () => recordPassedAway(f.other.id, { deceasedOn: '2026-01-01' }));
+		const { householdId } = await asAdmin(f.branch.id, () => recordMarriage(f.parent.id, input(f)));
+		expect(await reread(f.kid.id)).toMatchObject({ householdId, addressLine: 'Jl. Nikah 1' });
+		const rows = await audits('person.moved_with_parent');
+		expect(rows).toHaveLength(1);
+		expect(rows[0]).toMatchObject({ entityId: f.kid.id, metadata: { parentId: f.parent.id } });
+		const old = (await db.select().from(households).where(eq(households.id, f.home.id)))[0];
+		expect(old.deletedAt).not.toBeNull();
+	});
+
+	it('children stay when the other parent still lives there', async () => {
+		const f = await parentsAndKid();
+		await asAdmin(f.branch.id, () => recordMarriage(f.parent.id, input(f)));
+		expect((await reread(f.kid.id)).householdId).toBe(f.home.id);
+		expect(await audits('person.moved_with_parent')).toHaveLength(0);
+	});
+});
