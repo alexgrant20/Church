@@ -13,8 +13,14 @@
 	let {
 		fullName,
 		pendingCount,
-		canSeeMembers
-	}: { fullName: string; pendingCount: number | null; canSeeMembers: boolean } = $props();
+		canSeeMembers,
+		canEditSettings
+	}: {
+		fullName: string;
+		pendingCount: number | null;
+		canSeeMembers: boolean;
+		canEditSettings: boolean;
+	} = $props();
 
 	let open = $state(false);
 	afterNavigate(() => (open = false));
@@ -34,7 +40,7 @@
 		</Sheet.Header>
 		<nav aria-label={m.nav_main()}>
 			<ul class="flex flex-col gap-1">
-				{#each visibleNav(pendingCount, canSeeMembers) as item (item.href)}
+				{#each visibleNav(pendingCount, canSeeMembers, canEditSettings) as item (item.href)}
 					{@const active = page.url.pathname.startsWith(item.href)}
 					<li>
 						<a

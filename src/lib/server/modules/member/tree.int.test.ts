@@ -94,7 +94,7 @@ describe('family tree', () => {
 
 	it('caps at TREE_LIMIT', async () => {
 		const branch = await makeBranch();
-		const chain = [];
+		const chain: { id: string }[] = [];
 		for (let i = 0; i <= TREE_LIMIT; i++) chain.push(await makePerson({ homeBranchId: branch.id }));
 		await db.insert(personRelationships).values(
 			chain.slice(1).map((p, i) => ({

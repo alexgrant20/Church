@@ -8,7 +8,9 @@ import * as repo from './repository';
 
 export async function getSetting<K extends SettingKey>(key: K): Promise<SettingValue<K>> {
 	const row = await repo.findSetting(key);
-	return row ? SETTINGS[key].schema.parse(row.value) : SETTINGS[key].default;
+	const value = row ? SETTINGS[key].schema.parse(row.value) : SETTINGS[key].default;
+	// TypeScript cannot narrow SETTINGS[K] through a generic index; the schema guarantees the type.
+	return value as SettingValue<K>;
 }
 
 export async function setSetting<K extends SettingKey>(key: K, value: SettingValue<K>) {

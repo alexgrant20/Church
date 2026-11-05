@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import { pendingBadge } from '$lib/server/modules/registration/review-service';
 import { canSeeMembers } from '$lib/server/modules/member/scope';
+import { canEditSettings } from '$lib/server/modules/settings/service';
 import type { LayoutServerLoad } from './$types';
 
 const STAFF_ROLES = new Set(['superadmin', 'pastor', 'branch_admin', 'group_admin']);
@@ -11,6 +12,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	return {
 		person: locals.person,
 		pendingCount: await pendingBadge(),
-		canSeeMembers: canSeeMembers()
+		canSeeMembers: canSeeMembers(),
+		canEditSettings: canEditSettings()
 	};
 };

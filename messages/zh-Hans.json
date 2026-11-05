@@ -278,5 +278,12 @@
 	"member_login_status": "账户",
 	"member_login_activated": "已激活",
 	"member_login_not_activated": "尚未激活",
-	"member_login_none": "无登录账户"
+	"member_login_none": "无登录账户",
+	"nav_settings": "设置",
+	"settings_title": "设置",
+	"settings_family_tree_title": "家谱",
+	"settings_family_tree_description": "让同工打开会员整个家庭的关系图。关闭后所有分支都将隐藏。",
+	"settings_save": "保存",
+	"settings_saved": "已保存",
+	"settings_family_tree_enabled": "允许使用家谱"
 }

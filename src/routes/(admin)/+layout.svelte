@@ -16,7 +16,11 @@
 </script>
 
 <div class="density-staff flex min-h-dvh bg-ground text-text">
-	<StaffSidebar pendingCount={data.pendingCount} canSeeMembers={data.canSeeMembers} />
+	<StaffSidebar
+		pendingCount={data.pendingCount}
+		canSeeMembers={data.canSeeMembers}
+		canEditSettings={data.canEditSettings}
+	/>
 
 	<div class="flex min-w-0 flex-1 flex-col">
 		<header
@@ -34,6 +38,7 @@
 					fullName={data.person.fullName}
 					pendingCount={data.pendingCount}
 					canSeeMembers={data.canSeeMembers}
+					canEditSettings={data.canEditSettings}
 				/>
 			</div>
 			<div class="hidden min-[1100px]:block">

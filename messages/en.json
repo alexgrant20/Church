@@ -278,5 +278,12 @@
 	"member_login_status": "Account",
 	"member_login_activated": "Activated",
 	"member_login_not_activated": "Not activated yet",
-	"member_login_none": "No sign-in"
+	"member_login_none": "No sign-in",
+	"nav_settings": "Settings",
+	"settings_title": "Settings",
+	"settings_family_tree_title": "Family tree",
+	"settings_family_tree_description": "Lets staff open a diagram of a member's whole family. Turn it off to hide it for every branch.",
+	"settings_save": "Save",
+	"settings_saved": "Saved",
+	"settings_family_tree_enabled": "Allow the family tree"
 }

@@ -4,18 +4,27 @@
 	import Building2 from '@lucide/svelte/icons/building-2';
 	import Inbox from '@lucide/svelte/icons/inbox';
 	import Users from '@lucide/svelte/icons/users';
+	import Settings from '@lucide/svelte/icons/settings';
 
 	// A queue item shows its count, and only to staff who work that queue (count is not null).
 	export const navItems = [
 		{ href: '/dashboard', label: m.nav_dashboard, icon: LayoutDashboard, queue: false },
 		{ href: '/members', label: m.nav_members, icon: Users, queue: false, members: true },
 		{ href: '/registrations', label: m.nav_registrations, icon: Inbox, queue: true },
-		{ href: '/branches', label: m.nav_branches, icon: Building2, queue: false }
+		{ href: '/branches', label: m.nav_branches, icon: Building2, queue: false },
+		{ href: '/settings', label: m.nav_settings, icon: Settings, queue: false, settings: true }
 	] as const;
 
-	export const visibleNav = (pendingCount: number | null, canSeeMembers: boolean) =>
+	export const visibleNav = (
+		pendingCount: number | null,
+		canSeeMembers: boolean,
+		canEditSettings: boolean
+	) =>
 		navItems.filter(
-			(i) => (!i.queue || pendingCount !== null) && (!('members' in i) || canSeeMembers)
+			(i) =>
+				(!i.queue || pendingCount !== null) &&
+				(!('members' in i) || canSeeMembers) &&
+				(!('settings' in i) || canEditSettings)
 		);
 </script>
 
@@ -25,8 +34,11 @@
 	import BrandMark from './BrandMark.svelte';
 	import NavCount from './NavCount.svelte';
 
-	let { pendingCount, canSeeMembers }: { pendingCount: number | null; canSeeMembers: boolean } =
-		$props();
+	let {
+		pendingCount,
+		canSeeMembers,
+		canEditSettings
+	}: { pendingCount: number | null; canSeeMembers: boolean; canEditSettings: boolean } = $props();
 </script>
 
 <nav
@@ -34,10 +46,11 @@
 	class="sticky top-0 hidden h-dvh w-57 shrink-0 flex-col gap-3 p-2 min-[1100px]:flex"
 >
 	<BrandMark height={32} class="w-full" />
-	<ul class="flex flex-col gap-0.5">
-		{#each visibleNav(pendingCount, canSeeMembers) as item (item.href)}
+	<ul class="flex flex-1 flex-col gap-0.5 pb-2">
+		{#each visibleNav(pendingCount, canSeeMembers, canEditSettings) as item (item.href)}
 			{@const active = page.url.pathname.startsWith(item.href)}
-			<li>
+			<!-- Settings sits at the bottom of the sidebar (admin DESIGN.md §1). -->
+			<li class={'settings' in item ? 'mt-auto' : undefined}>
 				<a
 					href={resolve(item.href)}
 					aria-current={active ? 'page' : undefined}

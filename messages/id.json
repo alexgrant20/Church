@@ -278,5 +278,12 @@
 	"member_login_status": "Akun",
 	"member_login_activated": "Sudah aktif",
 	"member_login_not_activated": "Belum diaktifkan",
-	"member_login_none": "Tidak punya akun"
+	"member_login_none": "Tidak punya akun",
+	"nav_settings": "Pengaturan",
+	"settings_title": "Pengaturan",
+	"settings_family_tree_title": "Silsilah keluarga",
+	"settings_family_tree_description": "Staf dapat membuka diagram seluruh keluarga seorang jemaat. Matikan untuk menyembunyikannya di semua cabang.",
+	"settings_save": "Simpan",
+	"settings_saved": "Tersimpan",
+	"settings_family_tree_enabled": "Izinkan silsilah keluarga"
 }

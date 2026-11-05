@@ -45,34 +45,36 @@
 
 ## File Map
 
-| File | Responsibility |
-| --- | --- |
-| `src/lib/server/modules/settings/keys.ts` | `SETTINGS` map, `SettingKey`, `SettingValue<K>` |
-| `src/lib/server/modules/settings/repository.ts` | `findSetting()`, `upsertSetting()` |
-| `src/lib/server/modules/settings/service.ts` | `getSetting()`, `setSetting()`, `canEditSettings()` |
-| `src/lib/server/modules/member/tree-repository.ts` | `connectedPersonIds()`, `treePeople()`, `treeLinks()` |
-| `src/lib/server/modules/member/tree-layout.ts` | `layoutTree()`, pure |
-| `src/lib/server/modules/member/tree-service.ts` | `getFamilyTree()`, `TREE_LIMIT` |
-| `src/lib/server/modules/member/record-service.ts` | add `treeEnabled` to `getMember()` |
-| `src/lib/settings/schema.ts` | `settingsFormSchema` (shared client/server) |
-| `src/lib/components/FamilyTree.svelte` | diagram |
-| `src/routes/(admin)/members/[id]/tree/+page.server.ts`, `+page.svelte` | tree screen |
-| `src/routes/(admin)/members/[id]/+page.svelte` | "Family tree" header action |
-| `src/routes/(admin)/settings/+page.server.ts`, `+page.svelte` | settings screen |
-| `src/routes/(admin)/+layout.server.ts`, `src/lib/components/StaffSidebar.svelte`, `StaffMenuSheet.svelte` | Settings nav item for superadmin |
-| `scripts/seed/dev-data.ts` | seed `membership.family_tree_enabled: true` |
-| `messages/*.json` | new keys in 4 locales |
+| File                                                                                                      | Responsibility                                        |
+| --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `src/lib/server/modules/settings/keys.ts`                                                                 | `SETTINGS` map, `SettingKey`, `SettingValue<K>`       |
+| `src/lib/server/modules/settings/repository.ts`                                                           | `findSetting()`, `upsertSetting()`                    |
+| `src/lib/server/modules/settings/service.ts`                                                              | `getSetting()`, `setSetting()`, `canEditSettings()`   |
+| `src/lib/server/modules/member/tree-repository.ts`                                                        | `connectedPersonIds()`, `treePeople()`, `treeLinks()` |
+| `src/lib/server/modules/member/tree-layout.ts`                                                            | `layoutTree()`, pure                                  |
+| `src/lib/server/modules/member/tree-service.ts`                                                           | `getFamilyTree()`, `TREE_LIMIT`                       |
+| `src/lib/server/modules/member/record-service.ts`                                                         | add `treeEnabled` to `getMember()`                    |
+| `src/lib/settings/schema.ts`                                                                              | `settingsFormSchema` (shared client/server)           |
+| `src/lib/components/FamilyTree.svelte`                                                                    | diagram                                               |
+| `src/routes/(admin)/members/[id]/tree/+page.server.ts`, `+page.svelte`                                    | tree screen                                           |
+| `src/routes/(admin)/members/[id]/+page.svelte`                                                            | "Family tree" header action                           |
+| `src/routes/(admin)/settings/+page.server.ts`, `+page.svelte`                                             | settings screen                                       |
+| `src/routes/(admin)/+layout.server.ts`, `src/lib/components/StaffSidebar.svelte`, `StaffMenuSheet.svelte` | Settings nav item for superadmin                      |
+| `scripts/seed/dev-data.ts`                                                                                | seed `membership.family_tree_enabled: true`           |
+| `messages/*.json`                                                                                         | new keys in 4 locales                                 |
 
 ---
 
 ### Task 1: Settings module
 
 **Files:**
+
 - Create: `src/lib/server/modules/settings/keys.ts`, `repository.ts`, `service.ts`
 - Create: `src/lib/server/modules/settings/settings.int.test.ts`
 - Modify: `scripts/seed/dev-data.ts` (insert both known keys)
 
 **Interfaces:**
+
 - Produces:
   - `SETTINGS = { 'household.adults_act_for_activated_adults': { schema: z.boolean(), default: true }, 'membership.family_tree_enabled': { schema: z.boolean(), default: true } } as const`
   - `type SettingKey = keyof typeof SETTINGS`, `type SettingValue<K extends SettingKey> = z.infer<(typeof SETTINGS)[K]['schema']>`
@@ -105,10 +107,12 @@
 ### Task 2: Tree repository
 
 **Files:**
+
 - Create: `src/lib/server/modules/member/tree-repository.ts`
 - Create: `src/lib/server/modules/member/tree-repository.int.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `connectedPersonIds(rootId: string, limit: number): Promise<string[]>`. The root comes first, then the rest in rough nearest-first order. At most `limit` ids are returned.
   - `treePeople(ids: string[])` returns `{ id, fullName, memberCode, isMember, deceasedOn, householdId, homeBranchId }[]`.
@@ -142,7 +146,7 @@ with recursive tree(id) as (
 select id from tree limit ${limit}
 ```
 
-  The seed row is not checked for `deleted_at`: the service only calls this after `findPersonDetail` found a live root. `treePeople` and `treeLinks` use the Drizzle builder with `inArray` and return `[]` for empty `ids`.
+The seed row is not checked for `deleted_at`: the service only calls this after `findPersonDetail` found a live root. `treePeople` and `treeLinks` use the Drizzle builder with `inArray` and return `[]` for empty `ids`.
 
 - [ ] **Step 4: Run** the tests → PASS. Run `EXPLAIN` on the CTE against the seeded dev DB and confirm both `person_relationships` indexes (`person_id`, `related_person_id`) are used.
 
@@ -153,10 +157,12 @@ select id from tree limit ${limit}
 ### Task 3: Tree layout
 
 **Files:**
+
 - Create: `src/lib/server/modules/member/tree-layout.ts`
 - Create: `src/lib/server/modules/member/tree-layout.test.ts` (unit project)
 
 **Interfaces:**
+
 - Produces:
   - `type TreeLink = { kind: 'parent' | 'spouse'; from: string; to: string }`. For a `parent` link, `from` is the parent and `to` is the child. This matches the `person_relationships` row: `personId` = parent and `relatedPersonId` = child.
   - `layoutTree(ids: string[], links: TreeLink[], rootId: string): Map<string, { row: number; col: number }>`. `row` 0 is the oldest generation present. `col` is an integer slot within the row, starting at 0.
@@ -188,12 +194,14 @@ select id from tree limit ${limit}
 ### Task 4: Tree service and record flag
 
 **Files:**
+
 - Create: `src/lib/server/modules/member/tree-service.ts`
 - Create: `src/lib/server/modules/member/tree.int.test.ts`
 - Modify: `src/lib/server/modules/member/record-service.ts` (`getMember` adds `treeEnabled: boolean`)
 - Modify: `src/lib/server/modules/member/record.int.test.ts` (one case)
 
 **Interfaces:**
+
 - Consumes: `getSetting` (Task 1); `connectedPersonIds`, `treePeople`, `treeLinks` (Task 2); `layoutTree` (Task 3); `memberScope`, `viewAccess`, `findPersonDetail`, `householdBranchIds`, `recordAudit` (existing).
 - Produces:
   - `TREE_LIMIT = 200`
@@ -233,6 +241,7 @@ select id from tree limit ${limit}
 ### Task 5: Settings screen
 
 **Files:**
+
 - Create: `src/lib/settings/schema.ts`: `settingsFormSchema = z.object({ familyTreeEnabled: z.boolean() })`
 - Create: `src/routes/(admin)/settings/+page.server.ts`, `+page.svelte`
 - Create: `src/routes/(admin)/settings/settings.e2e.ts`
@@ -240,6 +249,7 @@ select id from tree limit ${limit}
 - Modify: `messages/{en,id,zh-Hans,zh-Hant}.json`
 
 **Interfaces:**
+
 - Consumes: `getSetting`, `setSetting`, `canEditSettings` (Task 1).
 - Produces: route `/settings`, superadmin only.
 
@@ -265,6 +275,7 @@ select id from tree limit ${limit}
 ### Task 6: Family tree screen
 
 **Files:**
+
 - Create: `src/lib/components/FamilyTree.svelte`
 - Create: `src/routes/(admin)/members/[id]/tree/+page.server.ts`, `+page.svelte`, `page.server.test.ts`
 - Create: `src/routes/(admin)/members/family-tree.e2e.ts`
@@ -272,6 +283,7 @@ select id from tree limit ${limit}
 - Modify: `messages/{en,id,zh-Hans,zh-Hant}.json`
 
 **Interfaces:**
+
 - Consumes: `getFamilyTree`, `FamilyTree`, `TreeNode` (Task 4).
 - Produces: route `/members/<id>/tree`. `FamilyTree.svelte` takes props `{ tree: FamilyTree }`.
 

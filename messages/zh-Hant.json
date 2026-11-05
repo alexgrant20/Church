@@ -278,5 +278,12 @@
 	"member_login_status": "帳戶",
 	"member_login_activated": "已啟用",
 	"member_login_not_activated": "尚未啟用",
-	"member_login_none": "無登入帳戶"
+	"member_login_none": "無登入帳戶",
+	"nav_settings": "設定",
+	"settings_title": "設定",
+	"settings_family_tree_title": "家譜",
+	"settings_family_tree_description": "讓同工打開會員整個家庭的關係圖。關閉後所有分支都將隱藏。",
+	"settings_save": "儲存",
+	"settings_saved": "已儲存",
+	"settings_family_tree_enabled": "允許使用家譜"
 }
