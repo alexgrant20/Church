@@ -10,7 +10,10 @@
 
 	const tree = $derived(data.tree);
 	const finding = $derived(
-		tree.truncated ? m.member_family_tree_truncated({ count: tree.nodes.length }) : tree.rootName
+		// The root is not one of their own relatives, so the count leaves them out.
+		tree.truncated
+			? `${tree.rootName} · ${m.member_family_tree_truncated({ count: tree.nodes.length - 1 })}`
+			: tree.rootName
 	);
 </script>
 

@@ -38,11 +38,20 @@ function spouseLine(a: TreeNode, b: TreeNode, ended: boolean) {
 	return { y, ended, d: `M${centre(left.col)} ${top}V${y}H${centre(right.col)}V${top}` };
 }
 
+// Big intermarried families can put two spouses on different rows; join them through the gap.
+function crossRowLine(a: TreeNode, b: TreeNode, ended: boolean) {
+	const [upper, lower] = a.row < b.row ? [a, b] : [b, a];
+	const y = lower.row * ROW - GAP / 2;
+	const d = `M${centre(upper.col)} ${upper.row * ROW + H}V${y}H${centre(lower.col)}V${lower.row * ROW}`;
+	return { y, ended, d };
+}
+
 function spouseLines(t: FamilyTreeView, at: Map<string, TreeNode>) {
 	return t.links.flatMap((l) => {
 		const [a, b] = [at.get(l.from), at.get(l.to)];
-		if (l.kind !== 'spouse' || !a || !b || a.row !== b.row) return [];
-		return [{ key: `${l.from}-${l.to}`, ...spouseLine(a, b, l.ended) }];
+		if (l.kind !== 'spouse' || !a || !b) return [];
+		const line = a.row === b.row ? spouseLine(a, b, l.ended) : crossRowLine(a, b, l.ended);
+		return [{ key: `${l.from}-${l.to}`, ...line }];
 	});
 }
 

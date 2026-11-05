@@ -5,7 +5,8 @@ import { NotFoundError } from '$lib/server/errors';
 import { recordAudit } from '$lib/server/modules/audit/service';
 import { getSetting } from '$lib/server/modules/settings/service';
 import { viewAccess } from './access';
-import { findPersonDetail, householdBranchIds } from './record-repository';
+import { findSubject } from './life-change-repository';
+import { householdBranchIds } from './record-repository';
 import { memberScope } from './scope';
 import { layoutTree, type TreeLink } from './tree-layout';
 import * as repo from './tree-repository';
@@ -17,9 +18,9 @@ async function findRoot(id: string) {
 	if (!z.uuid().safeParse(id).success) throw new NotFoundError('Person', id);
 	if (!(await getSetting('membership.family_tree_enabled'))) throw new NotFoundError('Person', id);
 	const scope = memberScope();
-	const d = await findPersonDetail(id);
-	if (!d) throw new NotFoundError('Person', id);
-	const access = viewAccess(d.person, scope, await householdBranchIds([d.person.householdId]));
+	const person = await findSubject(id);
+	if (!person) throw new NotFoundError('Person', id);
+	const access = viewAccess(person, scope, await householdBranchIds([person.householdId]));
 	if (!access) throw new NotFoundError('Person', id);
 	if (access === 'cross') {
 		await db.transaction((tx) =>
@@ -27,11 +28,11 @@ async function findRoot(id: string) {
 				action: 'person.viewed_cross_branch',
 				entityType: 'person',
 				entityId: id,
-				branchId: d.person.homeBranchId
+				branchId: person.homeBranchId
 			})
 		);
 	}
-	return { person: d.person, access, scope };
+	return { person, access, scope };
 }
 
 export async function getFamilyTree(id: string): Promise<FamilyTree> {

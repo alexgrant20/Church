@@ -2,11 +2,13 @@ import { eq } from 'drizzle-orm';
 import { db, type Transaction } from '$lib/server/db/client';
 import { systemSettings } from '$lib/server/db/schema';
 
-export async function findSetting(key: string) {
-	const [row] = await db
+// Inside a save it locks the row; plain reads (every member record) take no lock.
+export async function findSetting(key: string, tx?: Transaction) {
+	const query = (tx ?? db)
 		.select({ id: systemSettings.id, value: systemSettings.value })
 		.from(systemSettings)
 		.where(eq(systemSettings.key, key));
+	const [row] = await (tx ? query.for('update') : query);
 	return row;
 }
 

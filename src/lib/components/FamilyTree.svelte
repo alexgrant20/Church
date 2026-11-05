@@ -81,7 +81,9 @@
 							? 'border-2 border-brand'
 							: 'border border-border'} {n.linkable ? 'hover:bg-raised' : ''}"
 					>
-						<span class="truncate text-sm font-medium">{n.fullName}</span>
+						<span class="line-clamp-2 text-sm font-medium break-words" title={n.fullName}
+							>{n.fullName}</span
+						>
 						<span class="flex flex-wrap items-center gap-1">
 							{#if n.memberCode}
 								<span class="font-mono text-xs text-muted">{n.memberCode}</span>

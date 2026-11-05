@@ -113,6 +113,20 @@ describe('treeLines', () => {
 		expect(of('r', 's3').y).toBeLessThan(0);
 		expect(of('r', 's3').ended).toBe(true);
 	});
+
+	it('draws a marriage between spouses who landed on different rows', () => {
+		const t = view(
+			[
+				['a', 0, 0],
+				['b', 1, 2]
+			],
+			[spouse('a', 'b')]
+		);
+		const [line] = treeLines(t).spouses;
+		expect(line.key).toBe('a-b');
+		expect(line.d.startsWith(`M${centre(0)} ${H}`)).toBe(true);
+		expect(line.d.endsWith(`V${ROW}`)).toBe(true);
+	});
 });
 
 describe('relationsOf', () => {

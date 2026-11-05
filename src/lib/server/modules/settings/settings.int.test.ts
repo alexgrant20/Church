@@ -8,7 +8,7 @@ import { resetDb } from '$lib/server/db/test/reset';
 import { makeBranch, makePerson } from '$lib/server/db/test/factories';
 import { ForbiddenError } from '$lib/server/errors';
 import { asStaff } from '$lib/server/modules/registration/test-support';
-import { canEditSettings, getSetting, setSetting } from './service';
+import { canEditSettings, getEditableSettings, getSetting, setSetting } from './service';
 
 const KEY = 'membership.family_tree_enabled';
 const changes = () => db.select().from(auditLogs).where(eq(auditLogs.action, 'setting.changed'));
@@ -75,5 +75,15 @@ describe('settings', () => {
 		expect(asStaff('superadmin', null, canEditSettings)).toBe(true);
 		expect(asStaff('branch_admin', branch.id, canEditSettings)).toBe(false);
 		expect(asStaff('pastor', branch.id, canEditSettings)).toBe(false);
+	});
+
+	it('gives a superadmin the editable settings and refuses anyone else', async () => {
+		const branch = await makeBranch();
+		expect(await asStaff('superadmin', null, getEditableSettings)).toEqual({
+			familyTreeEnabled: true
+		});
+		await expect(asStaff('branch_admin', branch.id, getEditableSettings)).rejects.toThrow(
+			ForbiddenError
+		);
 	});
 });
