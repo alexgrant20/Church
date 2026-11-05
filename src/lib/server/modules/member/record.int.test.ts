@@ -120,7 +120,12 @@ describe('member record', () => {
 	it('says whether staff may change the person and move them back', async () => {
 		const f = await familyOfBudi();
 		const own = await asAdminOf(f.a.id, () => getMember(f.budi.id));
-		expect(own.changes).toEqual({ canChange: true, canMoveOut: true, canUndoMoveOut: false });
+		expect(own.changes).toEqual({
+			canChange: true,
+			canMarry: false,
+			canMoveOut: true,
+			canUndoMoveOut: false
+		});
 		const pastor = await asStaff('pastor', f.a.id, () => getMember(f.budi.id));
 		expect(pastor.changes.canChange).toBe(false);
 		const cross = await asAdminOf(f.b.id, () => getMember(f.budi.id));
@@ -162,5 +167,14 @@ describe('member record', () => {
 		const { changes } = await asAdminOf(f.a.id, () => getMember(f.budi.id));
 		expect(changes.canUndoMoveOut).toBe(true);
 		expect(changes.canMoveOut).toBe(false);
+	});
+
+	it('offers got married only to an unmarried adult', async () => {
+		const f = await familyOfBudi();
+		const canMarry = async (role: 'branch_admin' | 'pastor', id: string) =>
+			(await asStaff(role, f.a.id, () => getMember(id))).changes.canMarry;
+		expect(await canMarry('branch_admin', f.mother.id)).toBe(true);
+		expect(await canMarry('branch_admin', f.budi.id)).toBe(false);
+		expect(await canMarry('pastor', f.mother.id)).toBe(false);
 	});
 });

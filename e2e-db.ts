@@ -198,11 +198,26 @@ export async function e2eFamily(): Promise<{
 		};
 		const adult = await add(names.adult, `${year - 45}-03-01`, `E2E-${tag}-1`);
 		const spouse = await add(names.spouse, `${year - 40}-03-01`, `E2E-${tag}-2`);
-		const child = await add(names.child, `${year - 20}-03-01`, `E2E-${tag}-3`);
+		const child = await add(names.child, `${year - 25}-03-01`, `E2E-${tag}-3`);
 		await tx`
 			insert into accounts (person_id, email, password_hash, activated_at)
 			select ${adult}, ${adultEmail}, password_hash, now() from accounts
 			where email = 'rina@grii.test'`;
 		return { adult, spouse, child, adultEmail, names };
 	});
+}
+
+// An unmarried JKT adult living alone, to be married to someone in another household.
+export async function e2eSingle(): Promise<{ id: string; name: string }> {
+	const tag = uniq();
+	const branch = await branchByCode('JKT');
+	const name = `Single ${tag}`;
+	const [household] = await sql`insert into households default values returning id`;
+	const [p] = await sql`
+		insert into people (member_code, full_name, sex, birth_date, home_branch_id, household_id,
+			address_line, postal_code, city_id)
+		select ${'E2E-' + tag + '-S'}, ${name}, 'female', '1996-04-04', id, ${household.id},
+			'Jl. Sendiri 1', '10110', city_id from branches where id = ${branch.id}
+		returning id`;
+	return { id: p.id, name };
 }

@@ -45,6 +45,8 @@ export function listMemberRows({ filters, scope, cursor, limit }: ListInput) {
 			id: people.id,
 			memberCode: sql<string>`${people.memberCode}`,
 			fullName: people.fullName,
+			// SearchSelect shows and remembers a choice by `name`.
+			name: people.fullName,
 			nickname: people.nickname,
 			cityName: cities.name,
 			branchName: branches.name,

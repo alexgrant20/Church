@@ -8,6 +8,7 @@
 	import StatusPill from '$lib/components/StatusPill.svelte';
 	import UnderlineTabs from '$lib/components/UnderlineTabs.svelte';
 	import LifeChangeDialogs from '$lib/components/LifeChangeDialogs.svelte';
+	import MarriageDialog from '$lib/components/MarriageDialog.svelte';
 	import FamilyList from './FamilyList.svelte';
 	import type { PageData } from './$types';
 
@@ -97,6 +98,7 @@
 				address={p.address}
 			/>
 		{/if}
+		{#if r.changes.canMarry}<MarriageDialog address={p.address} />{/if}
 		{#if r.treeEnabled}
 			<Button variant="outline" href={resolve(`/members/${p.id}/tree`)}>
 				{m.member_family_tree()}

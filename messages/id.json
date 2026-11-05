@@ -321,5 +321,17 @@
 	"household_done_moved_out": "Sudah pindah. Kini memiliki rumah tangga sendiri.",
 	"household_done_passed_away": "Tercatat telah meninggal dunia.",
 	"household_move_out_named": "Pindah keluar: {name}",
-	"household_passed_away_named": "Meninggal dunia: {name}"
+	"household_passed_away_named": "Meninggal dunia: {name}",
+	"member_married": "Menikah",
+	"member_married_title": "Catat pernikahan",
+	"member_married_who": "Menikah dengan siapa?",
+	"member_married_new": "Orang baru",
+	"member_married_existing": "Sudah jemaat",
+	"member_married_spouse": "Pasangan",
+	"member_married_wedding_on": "Tanggal pernikahan",
+	"member_married_new_note": "Disimpan sebagai bukan jemaat, untuk silsilah keluarga.",
+	"member_married_submit": "Catat pernikahan",
+	"error_not_marriage_age": "Keduanya harus berusia 19 tahun atau lebih pada tanggal pernikahan.",
+	"error_already_married": "Orang ini sudah menikah.",
+	"error_same_person": "Pilih orang lain untuk dinikahi."
 }

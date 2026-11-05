@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { signIn } from '../../login/sign-in';
-import { e2eFamily, ensureStaff } from '../../../../e2e-db';
+import { e2eFamily, e2eSingle, ensureStaff } from '../../../../e2e-db';
 
 const ADMIN = 'e2e-life-admin@grii.test';
 const PASTOR = 'e2e-life-pastor@grii.test';
@@ -49,4 +49,39 @@ test('a pastor sees no life-change actions', async ({ page }) => {
 	await expect(page.getByRole('heading', { level: 1, name: fam.names.child })).toBeVisible();
 	await expect(page.getByRole('button', { name: 'Passed away' })).toHaveCount(0);
 	await expect(page.getByRole('button', { name: 'Move out' })).toHaveCount(0);
+});
+
+test('an admin records a marriage to someone new', async ({ page }) => {
+	const fam = await e2eFamily();
+	await signIn(page, ADMIN);
+	await page.goto(`/members/${fam.child}`);
+	await page.getByRole('button', { name: 'Got married' }).click();
+	const dialog = page.getByRole('dialog');
+	await dialog.getByLabel('Full name').fill(`Bride of ${fam.names.child}`);
+	await dialog.getByLabel('Nickname').fill('Bride');
+	await dialog.getByLabel('Female').check();
+	await dialog.getByLabel('Birth date').fill('1998-02-02');
+	await dialog.getByLabel('Wedding date').fill('2026-06-01');
+	await dialog.getByRole('button', { name: 'Record the marriage' }).click();
+	await expect(page.getByText('Saved')).toBeVisible();
+	await page.getByRole('link', { name: 'Family', exact: true }).click();
+	await expect(page.getByText(`Bride of ${fam.names.child}`)).toBeVisible();
+	await expect(page.getByText('Not a member').first()).toBeVisible();
+});
+
+test('an admin marries two members', async ({ page }) => {
+	const fam = await e2eFamily();
+	const single = await e2eSingle();
+	await signIn(page, ADMIN);
+	await page.goto(`/members/${fam.child}`);
+	await page.getByRole('button', { name: 'Got married' }).click();
+	const dialog = page.getByRole('dialog');
+	await dialog.getByLabel('Already a member').check();
+	await dialog.getByRole('combobox', { name: 'Spouse' }).fill(single.name);
+	await page.getByRole('option', { name: new RegExp(single.name) }).click();
+	await dialog.getByLabel('Wedding date').fill('2026-06-01');
+	await dialog.getByRole('button', { name: 'Record the marriage' }).click();
+	await expect(page.getByText('Saved')).toBeVisible();
+	await page.getByRole('link', { name: 'Family', exact: true }).click();
+	await expect(page.getByRole('link', { name: single.name })).toBeVisible();
 });

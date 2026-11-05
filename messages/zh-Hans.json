@@ -321,5 +321,17 @@
 	"household_done_moved_out": "已迁出，现已拥有自己的家庭。",
 	"household_done_passed_away": "已记录为离世。",
 	"household_move_out_named": "迁出：{name}",
-	"household_passed_away_named": "已离世：{name}"
+	"household_passed_away_named": "已离世：{name}",
+	"member_married": "已结婚",
+	"member_married_title": "记录婚姻",
+	"member_married_who": "与谁结婚？",
+	"member_married_new": "新的人",
+	"member_married_existing": "已是会员",
+	"member_married_spouse": "配偶",
+	"member_married_wedding_on": "结婚日期",
+	"member_married_new_note": "此人将保存为非会员，用于家谱。",
+	"member_married_submit": "记录婚姻",
+	"error_not_marriage_age": "双方在结婚日期时都必须年满19岁。",
+	"error_already_married": "此人已婚。",
+	"error_same_person": "请选择另一个人。"
 }

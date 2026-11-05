@@ -6,6 +6,7 @@ import { recordAudit } from '$lib/server/modules/audit/service';
 import { findAudits } from '$lib/server/modules/audit/service';
 import { getSetting } from '$lib/server/modules/settings/service';
 import { isStaffFor } from './life-change-access';
+import { canMarry } from './married';
 import { canMoveOut, moveToUndo } from './moved-out';
 import type { AccessibleBranches } from '$lib/server/modules/branch/access';
 import { viewAccess, type HouseholdBranch } from './access';
@@ -142,6 +143,7 @@ export async function getMember(id: string) {
 		access,
 		changes: {
 			canChange,
+			canMarry: canChange && (await canMarry(id)),
 			canMoveOut: canChange && (await canMoveOut(id)),
 			canUndoMoveOut: canChange && moveToUndo(d.person, moves) !== undefined
 		},
