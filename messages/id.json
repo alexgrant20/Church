@@ -311,5 +311,13 @@
 	"error_not_adult": "Hanya yang berusia 17 tahun ke atas yang dapat pindah keluar.",
 	"error_already_alone": "Orang ini sudah tinggal sendiri dalam rumah tangganya.",
 	"error_cannot_record_own_death": "Anda tidak dapat mencatat kematian Anda sendiri.",
-	"error_nothing_to_undo": "Tidak ada yang dapat dibatalkan."
+	"error_nothing_to_undo": "Tidak ada yang dapat dibatalkan.",
+	"household_title": "Rumah tangga saya",
+	"household_link": "Rumah tangga saya",
+	"household_you": "Anda",
+	"household_passed_away_submit": "Catat telah meninggal dunia",
+	"household_passed_away_confirm": "Catat {name} telah meninggal dunia?",
+	"household_passed_away_description": "Akunnya tidak dapat dipakai lagi. Admin gereja dapat membatalkannya bila keliru.",
+	"household_done_moved_out": "Sudah pindah. Kini memiliki rumah tangga sendiri.",
+	"household_done_passed_away": "Tercatat telah meninggal dunia."
 }

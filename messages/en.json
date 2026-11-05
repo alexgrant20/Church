@@ -311,5 +311,13 @@
 	"error_not_adult": "Only someone aged 17 or over can move out.",
 	"error_already_alone": "This person already lives in a household on their own.",
 	"error_cannot_record_own_death": "You cannot record your own death.",
-	"error_nothing_to_undo": "There is nothing to undo."
+	"error_nothing_to_undo": "There is nothing to undo.",
+	"household_title": "My household",
+	"household_link": "My household",
+	"household_you": "you",
+	"household_passed_away_submit": "Record as passed away",
+	"household_passed_away_confirm": "Record {name} as passed away?",
+	"household_passed_away_description": "Their sign-in will stop working. A church admin can undo this if it was a mistake.",
+	"household_done_moved_out": "Moved out. They now have a household of their own.",
+	"household_done_passed_away": "Recorded as passed away."
 }

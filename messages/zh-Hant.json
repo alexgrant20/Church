@@ -311,5 +311,13 @@
 	"error_not_adult": "只有17歲及以上的人才能遷出。",
 	"error_already_alone": "此人已獨自組成一個家庭。",
 	"error_cannot_record_own_death": "您不能記錄自己的離世。",
-	"error_nothing_to_undo": "沒有可撤銷的操作。"
+	"error_nothing_to_undo": "沒有可撤銷的操作。",
+	"household_title": "我的家庭",
+	"household_link": "我的家庭",
+	"household_you": "您",
+	"household_passed_away_submit": "記錄為已離世",
+	"household_passed_away_confirm": "將{name}記錄為已離世？",
+	"household_passed_away_description": "其帳戶將無法登入。若有誤，教會管理員可撤銷。",
+	"household_done_moved_out": "已遷出，現已擁有自己的家庭。",
+	"household_done_passed_away": "已記錄為離世。"
 }

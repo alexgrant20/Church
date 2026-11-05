@@ -1,27 +1,38 @@
-import { and, count, eq, isNotNull, isNull } from 'drizzle-orm';
+import { and, asc, count, eq, isNotNull, isNull } from 'drizzle-orm';
 import { db, type Transaction } from '$lib/server/db/client';
 import { branches, households, people } from '$lib/server/db/schema';
 
 export type Address = { addressLine: string; postalCode: string | null; cityId: string };
 
+const subjectColumns = {
+	id: people.id,
+	fullName: people.fullName,
+	householdId: people.householdId,
+	homeBranchId: people.homeBranchId,
+	birthDate: people.birthDate,
+	deceasedOn: people.deceasedOn,
+	addressLine: people.addressLine,
+	postalCode: people.postalCode,
+	cityId: people.cityId,
+	timezone: branches.timezone
+};
+
 export async function findSubject(id: string) {
 	const [row] = await db
-		.select({
-			id: people.id,
-			fullName: people.fullName,
-			householdId: people.householdId,
-			homeBranchId: people.homeBranchId,
-			birthDate: people.birthDate,
-			deceasedOn: people.deceasedOn,
-			addressLine: people.addressLine,
-			postalCode: people.postalCode,
-			cityId: people.cityId,
-			timezone: branches.timezone
-		})
+		.select(subjectColumns)
 		.from(people)
 		.innerJoin(branches, eq(branches.id, people.homeBranchId))
 		.where(and(eq(people.id, id), isNull(people.deletedAt)));
 	return row;
+}
+
+export function householdMembers(householdId: string) {
+	return db
+		.select(subjectColumns)
+		.from(people)
+		.innerJoin(branches, eq(branches.id, people.homeBranchId))
+		.where(and(eq(people.householdId, householdId), isNull(people.deletedAt)))
+		.orderBy(asc(people.birthDate), asc(people.id));
 }
 
 export type Subject = NonNullable<Awaited<ReturnType<typeof findSubject>>>;

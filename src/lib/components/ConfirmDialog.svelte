@@ -10,7 +10,8 @@
 		description,
 		confirm,
 		form,
-		disabled = false
+		disabled = false,
+		size = 'staff'
 	}: {
 		label: string;
 		title: string;
@@ -18,13 +19,16 @@
 		confirm: string;
 		form: string;
 		disabled?: boolean;
+		size?: 'staff' | 'member';
 	} = $props();
 </script>
 
 <AlertDialog.Root>
 	<AlertDialog.Trigger {disabled}>
 		{#snippet child({ props })}
-			<Button {...props} variant="destructive">{label}</Button>
+			<Button {...props} variant="destructive" {size} class={size === 'member' ? 'h-14 w-full' : ''}
+				>{label}</Button
+			>
 		{/snippet}
 	</AlertDialog.Trigger>
 	<AlertDialog.Content>

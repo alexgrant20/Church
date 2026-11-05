@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages';
 	import SignOutButton from '$lib/components/SignOutButton.svelte';
 	import type { PageData } from './$types';
@@ -8,6 +9,12 @@
 
 <h1 class="text-2xl font-semibold">{m.profile_title()}</h1>
 <p class="mt-2">{data.person.fullName}</p>
+
+<a
+	href={resolve('/profile/household')}
+	class="mt-6 flex min-h-12 items-center rounded-md border border-control px-4 text-lg hover:bg-raised"
+	>{m.household_link()}</a
+>
 
 <div class="mt-8">
 	<SignOutButton size="member" />
