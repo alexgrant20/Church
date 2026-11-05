@@ -15,7 +15,7 @@ import { makeBranch, makeCity, makeHousehold, makePerson } from '$lib/server/db/
 import { NotFoundError, ValidationError } from '$lib/server/errors';
 import { asStaff } from '$lib/server/modules/registration/test-support';
 import { insertSpouseLink } from './life-change-repository';
-import { recordMarriage } from './married';
+import { recordMarriage, recordMarriageToMember } from './married';
 
 const asPerson = <T>(personId: string, fn: () => T) =>
 	runWithContext({ personId, actingAsPersonId: null, ip: '127.0.0.1', roleAssignments: [] }, fn);
@@ -181,6 +181,94 @@ describe('got married, new non-member spouse', () => {
 		const stranger = await makePerson({ birthDate: '1980-01-01' });
 		await expect(
 			asPerson(stranger.id, () => recordMarriage(f.subject.id, input(f)))
+		).rejects.toThrow(NotFoundError);
+	});
+});
+
+describe('got married, two people on record', () => {
+	beforeEach(resetDb);
+
+	async function couple() {
+		const f = await family();
+		const bride = await makePerson({ homeBranchId: f.branch.id, birthDate: '1999-09-09' });
+		const toMember = (spouseId: string) => ({
+			weddingOn: '2026-06-01',
+			spouseId,
+			address: { line: 'Jl. Nikah 2', postalCode: '10220', cityId: f.city.id }
+		});
+		return { ...f, bride, toMember };
+	}
+
+	it('staff marries two people from different households', async () => {
+		const c = await couple();
+		const { householdId } = await asAdmin(c.branch.id, () =>
+			recordMarriageToMember(c.subject.id, c.toMember(c.bride.id))
+		);
+		const [groom, bride] = [await reread(c.subject.id), await reread(c.bride.id)];
+		expect(groom).toMatchObject({ householdId, addressLine: 'Jl. Nikah 2' });
+		expect(bride).toMatchObject({ householdId, addressLine: 'Jl. Nikah 2' });
+		expect(await db.select().from(personRelationships)).toHaveLength(1);
+		const rows = await audits('person.married');
+		expect(rows).toHaveLength(2);
+		const spouseOf = (id: string) =>
+			(rows.find((r) => r.entityId === id)!.diff as { spouseId: { after: string } }).spouseId.after;
+		expect(spouseOf(c.subject.id)).toBe(c.bride.id);
+		expect(spouseOf(c.bride.id)).toBe(c.subject.id);
+	});
+
+	it('a household left with someone stays live; one left empty is closed', async () => {
+		const c = await couple();
+		await asAdmin(c.branch.id, () => recordMarriageToMember(c.subject.id, c.toMember(c.bride.id)));
+		const live = async (id: string) =>
+			(await db.select().from(households).where(eq(households.id, id)))[0].deletedAt === null;
+		expect(await live(c.home.id)).toBe(true);
+		expect(await live(c.bride.householdId)).toBe(false);
+	});
+
+	it('the same person twice is refused', async () => {
+		const c = await couple();
+		await rejectsWith(
+			asAdmin(c.branch.id, () => recordMarriageToMember(c.subject.id, c.toMember(c.subject.id))),
+			'error_same_person'
+		);
+	});
+
+	it('the other person must be marriage age, alive and unmarried', async () => {
+		const c = await couple();
+		const young = await makePerson({ homeBranchId: c.branch.id, birthDate: '2010-01-01' });
+		await rejectsWith(
+			asAdmin(c.branch.id, () => recordMarriageToMember(c.subject.id, c.toMember(young.id))),
+			'error_not_marriage_age'
+		);
+		const late = await makePerson({
+			homeBranchId: c.branch.id,
+			birthDate: '1990-01-01',
+			deceasedOn: '2024-01-01'
+		});
+		await rejectsWith(
+			asAdmin(c.branch.id, () => recordMarriageToMember(c.subject.id, c.toMember(late.id))),
+			'error_already_deceased'
+		);
+		const wed = await makePerson({ homeBranchId: c.branch.id, birthDate: '1990-01-01' });
+		await db.transaction((tx) => insertSpouseLink(tx, wed.id, c.bride.id, '2020-01-01'));
+		await rejectsWith(
+			asAdmin(c.branch.id, () => recordMarriageToMember(c.subject.id, c.toMember(wed.id))),
+			'error_already_married'
+		);
+	});
+
+	it('staff whose scope covers only one of them gets NotFoundError', async () => {
+		const c = await couple();
+		const elsewhere = await makePerson({ birthDate: '1999-01-01' });
+		await expect(
+			asAdmin(c.branch.id, () => recordMarriageToMember(c.subject.id, c.toMember(elsewhere.id)))
+		).rejects.toThrow(NotFoundError);
+	});
+
+	it('a family adult cannot use it', async () => {
+		const c = await couple();
+		await expect(
+			asPerson(c.parent.id, () => recordMarriageToMember(c.subject.id, c.toMember(c.bride.id)))
 		).rejects.toThrow(NotFoundError);
 	});
 });

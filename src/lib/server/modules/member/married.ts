@@ -1,10 +1,10 @@
 import type { z } from 'zod';
-import { marriedNewSchema } from '$lib/life-change/schema';
+import { marriedExistingSchema, marriedNewSchema } from '$lib/life-change/schema';
 import { db, type Transaction } from '$lib/server/db/client';
 import { ValidationError } from '$lib/server/errors';
 import { recordAudits } from '$lib/server/modules/audit/service';
 import { ageOn, todayIn } from '$lib/server/time';
-import { lifeChangeActor } from './life-change-access';
+import { lifeChangeActor, staffOnly } from './life-change-access';
 import * as repo from './life-change-repository';
 import { diffOf, placeOf } from './moved-out';
 import { subjectOf } from './passed-away';
@@ -105,4 +105,20 @@ export async function recordMarriage(personId: string, input: unknown) {
 		throw new ValidationError('error_not_marriage_age');
 	const wedding = { weddingOn: data.weddingOn, address: toAddress(data.address) };
 	return db.transaction((tx) => marry(tx, [subject], wedding, data.spouse));
+}
+
+// Staff only: the other person belongs to another household, which a family cannot act on.
+export async function recordMarriageToMember(personId: string, input: unknown) {
+	const subject = await subjectOf(personId);
+	staffOnly(subject);
+	const data = parseWith(marriedExistingSchema, input);
+	if (data.spouseId === subject.id) throw new ValidationError('error_same_person');
+	const spouse = await subjectOf(data.spouseId);
+	staffOnly(spouse);
+	await assertMayMarry(subject, data.weddingOn);
+	const refusal = await marriageRefusal(spouse, data.weddingOn);
+	if (refusal) throw new ValidationError(refusal);
+	const wedding = { weddingOn: data.weddingOn, address: toAddress(data.address) };
+	const { householdId } = await db.transaction((tx) => marry(tx, [subject, spouse], wedding));
+	return { householdId };
 }
