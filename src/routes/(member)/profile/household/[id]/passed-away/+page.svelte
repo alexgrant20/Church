@@ -8,6 +8,9 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let busy = $state(false);
+	let confirming = $state(false);
+	let deceasedOn = $state('');
+	const today = new Date().toISOString().slice(0, 10);
 </script>
 
 <svelte:head><title>{data.person.fullName}</title></svelte:head>
@@ -20,6 +23,8 @@
 	method="POST"
 	class="mt-6 flex flex-col gap-2"
 	use:enhance={() => {
+		// Close the confirmation so a refusal shows on the screen, not behind the overlay.
+		confirming = false;
 		busy = true;
 		return async ({ update }) => {
 			await update();
@@ -33,13 +38,14 @@
 		name="deceasedOn"
 		type="date"
 		required
-		value={form?.deceasedOn ?? ''}
+		max={today}
+		bind:value={deceasedOn}
 		aria-invalid={form?.error ? true : undefined}
 		aria-describedby={form?.error ? 'deceased-on-error' : undefined}
 		class="h-12 text-lg"
 	/>
 	{#if form?.error}
-		<p id="deceased-on-error" class="text-[0.9375rem] text-negative">
+		<p id="deceased-on-error" role="alert" class="text-[0.9375rem] text-negative">
 			{translateError(form.error)}
 		</p>
 	{/if}
@@ -52,6 +58,7 @@
 		description={m.household_passed_away_description()}
 		confirm={m.household_passed_away_submit()}
 		form="passed-away"
-		disabled={busy}
+		bind:open={confirming}
+		disabled={busy || !deceasedOn}
 	/>
 </div>

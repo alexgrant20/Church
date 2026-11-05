@@ -3,10 +3,10 @@ import { db } from '$lib/server/db/client';
 import { decryptNik, maskNik } from '$lib/server/crypto';
 import { NotFoundError } from '$lib/server/errors';
 import { recordAudit } from '$lib/server/modules/audit/service';
-import { findLatestAudit } from '$lib/server/modules/audit/service';
+import { findAudits } from '$lib/server/modules/audit/service';
 import { getSetting } from '$lib/server/modules/settings/service';
 import { isStaffFor } from './life-change-access';
-import { canMoveBack } from './moved-out';
+import { moveToUndo } from './moved-out';
 import type { AccessibleBranches } from '$lib/server/modules/branch/access';
 import { viewAccess, type HouseholdBranch } from './access';
 import * as repo from './record-repository';
@@ -137,10 +137,10 @@ export async function getMember(id: string) {
 		);
 	}
 	const canChange = access === 'own' && isStaffFor(d.person);
-	const latestMove = canChange ? await findLatestAudit('person.moved_out', id) : undefined;
+	const moves = canChange ? await findAudits('person', id, 'person.moved_out') : [];
 	return {
 		access,
-		changes: { canChange, canUndoMoveOut: canChange && canMoveBack(d.person, latestMove) },
+		changes: { canChange, canUndoMoveOut: canChange && moveToUndo(d.person, moves) !== undefined },
 		treeEnabled: await getSetting('membership.family_tree_enabled'),
 		person: toPerson(d),
 		profile: toProfile(d.profile),

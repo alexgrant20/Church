@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { db } from '$lib/server/db/client';
 import { resetDb } from '$lib/server/db/test/reset';
-import { findLatestAudit, recordAudit } from './service';
+import { findAudits, recordAudit } from './service';
 
 const write = (entityId: string, diff: unknown) =>
 	db.transaction((tx) =>
@@ -15,18 +15,19 @@ const write = (entityId: string, diff: unknown) =>
 		})
 	);
 
-describe('findLatestAudit', () => {
+describe('findAudits', () => {
 	beforeEach(resetDb);
 
-	it('returns the newest row for the action and entity', async () => {
+	it('lists the rows for the entity and action, newest first', async () => {
 		const id = randomUUID();
 		await write(id, { n: 1 });
 		await write(id, { n: 2 });
-		expect((await findLatestAudit('person.moved_out', id))?.diff).toEqual({ n: 2 });
+		const rows = await findAudits('person', id, 'person.moved_out');
+		expect(rows.map((r) => r.diff)).toEqual([{ n: 2 }, { n: 1 }]);
 	});
 
-	it('returns undefined for another entity', async () => {
+	it('lists nothing for another entity', async () => {
 		await write(randomUUID(), { n: 1 });
-		expect(await findLatestAudit('person.moved_out', randomUUID())).toBeUndefined();
+		expect(await findAudits('person', randomUUID(), 'person.moved_out')).toEqual([]);
 	});
 });

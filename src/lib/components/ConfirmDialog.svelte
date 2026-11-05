@@ -11,7 +11,8 @@
 		confirm,
 		form,
 		disabled = false,
-		size = 'staff'
+		size = 'staff',
+		open = $bindable(false)
 	}: {
 		label: string;
 		title: string;
@@ -20,10 +21,11 @@
 		form: string;
 		disabled?: boolean;
 		size?: 'staff' | 'member';
+		open?: boolean;
 	} = $props();
 </script>
 
-<AlertDialog.Root>
+<AlertDialog.Root bind:open>
 	<AlertDialog.Trigger {disabled}>
 		{#snippet child({ props })}
 			<Button {...props} variant="destructive" {size} class={size === 'member' ? 'h-14 w-full' : ''}

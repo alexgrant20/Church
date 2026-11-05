@@ -68,11 +68,36 @@ export async function insertHousehold(tx: Transaction) {
 	return row.id;
 }
 
-export async function moveTo(tx: Transaction, id: string, householdId: string, address: Address) {
-	await tx
+// Moves only a living person still in `from`, so a request that lost a race changes nothing.
+export async function moveTo(
+	tx: Transaction,
+	id: string,
+	from: string,
+	to: string,
+	address: Address
+) {
+	const rows = await tx
 		.update(people)
-		.set({ householdId, ...address })
-		.where(eq(people.id, id));
+		.set({ householdId: to, ...address })
+		.where(
+			and(
+				eq(people.id, id),
+				eq(people.householdId, from),
+				isNull(people.deceasedOn),
+				isNull(people.deletedAt)
+			)
+		)
+		.returning({ id: people.id });
+	return rows.length === 1;
+}
+
+// Moves out of one household take turns, so two of them cannot both see "someone stays".
+export async function lockHousehold(tx: Transaction, householdId: string) {
+	await tx
+		.select({ id: households.id })
+		.from(households)
+		.where(eq(households.id, householdId))
+		.for('update');
 }
 
 export async function softDeleteHousehold(tx: Transaction, householdId: string) {

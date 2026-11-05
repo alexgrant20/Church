@@ -33,3 +33,17 @@ test('a member records a death with a confirmation naming the person', async ({ 
 	await expect(page.getByText('Recorded as passed away.')).toBeVisible();
 	await expect(row(page, fam.names.spouse)).toContainText('Deceased');
 });
+
+test('a refused death date is shown, not hidden behind the confirmation', async ({ page }) => {
+	const fam = await e2eFamily();
+	await signIn(page, fam.adultEmail);
+	await page.goto(`/profile/household/${fam.spouse}/passed-away`);
+	await page.getByLabel('Date of death').fill('1950-01-01');
+	await page.getByRole('button', { name: 'Record as passed away' }).click();
+	await page
+		.getByRole('alertdialog')
+		.getByRole('button', { name: 'Record as passed away' })
+		.click();
+	await expect(page.getByRole('alert')).toHaveText('The date is before their birth date.');
+	await expect(page.getByRole('alertdialog')).toBeHidden();
+});

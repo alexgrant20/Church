@@ -46,14 +46,19 @@ export async function withAudit<T>(
 }
 
 // Lets an undo find what the change it reverses recorded, without a column kept just for that.
-export async function findLatestAudit(action: string, entityId: string) {
-	const [row] = await db
+export function findAudits(entityType: string, entityId: string, action: string) {
+	return db
 		.select({ diff: auditLogs.diff, createdAt: auditLogs.createdAt })
 		.from(auditLogs)
-		.where(and(eq(auditLogs.action, action), eq(auditLogs.entityId, entityId)))
+		.where(
+			and(
+				eq(auditLogs.entityType, entityType),
+				eq(auditLogs.entityId, entityId),
+				eq(auditLogs.action, action)
+			)
+		)
 		.orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
-		.limit(1);
-	return row;
+		.limit(50);
 }
 
 function safeGetContext() {

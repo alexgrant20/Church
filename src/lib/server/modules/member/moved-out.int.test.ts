@@ -188,4 +188,34 @@ describe('moved out', () => {
 			NotFoundError
 		);
 	});
+
+	it('moving the same person out twice at once moves them once', async () => {
+		const f = await family();
+		await makePerson({ homeBranchId: f.branch.id, householdId: f.home.id });
+		const run = () =>
+			asAdmin(f.branch.id, () => recordMovedOut(f.child.id, { address: f.address }));
+		const results = await Promise.allSettled([run(), run(), run(), run()]);
+		expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+		expect(await audits('person.moved_out')).toHaveLength(1);
+	});
+
+	it('the last two people moving out at once never leave the household empty', async () => {
+		const f = await family();
+		const run = (id: string) =>
+			asAdmin(f.branch.id, () => recordMovedOut(id, { address: f.address }));
+		const results = await Promise.allSettled([run(f.parent.id), run(f.child.id)]);
+		expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+		const left = await db.select().from(people).where(eq(people.householdId, f.home.id));
+		expect(left).toHaveLength(1);
+	});
+
+	it('two move backs at once move the person back once', async () => {
+		const f = await family();
+		await asAdmin(f.branch.id, () => recordMovedOut(f.child.id, { address: f.address }));
+		const run = () => asAdmin(f.branch.id, () => undoMovedOut(f.child.id));
+		const results = await Promise.allSettled([run(), run()]);
+		expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+		expect(await audits('person.moved_out_undone')).toHaveLength(1);
+		expect((await reread(f.child.id)).householdId).toBe(f.home.id);
+	});
 });
