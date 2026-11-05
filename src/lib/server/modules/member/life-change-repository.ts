@@ -1,6 +1,6 @@
-import { and, asc, count, eq, isNotNull, isNull } from 'drizzle-orm';
+import { and, asc, count, eq, isNotNull, isNull, or } from 'drizzle-orm';
 import { db, type Transaction } from '$lib/server/db/client';
-import { branches, households, people } from '$lib/server/db/schema';
+import { branches, households, people, personRelationships } from '$lib/server/db/schema';
 
 export type Address = { addressLine: string; postalCode: string | null; cityId: string };
 
@@ -110,4 +110,49 @@ export async function householdExists(householdId: string) {
 		.from(households)
 		.where(and(eq(households.id, householdId), isNull(households.deletedAt)));
 	return row !== undefined;
+}
+
+const liveSpouseRow = (personId: string) =>
+	and(
+		eq(personRelationships.kind, 'spouse'),
+		isNull(personRelationships.endedOn),
+		isNull(personRelationships.deletedAt),
+		or(
+			eq(personRelationships.personId, personId),
+			eq(personRelationships.relatedPersonId, personId)
+		)
+	);
+
+export async function hasLiveSpouse(personId: string, tx: Transaction | typeof db = db) {
+	const [row] = await tx
+		.select({ id: personRelationships.id })
+		.from(personRelationships)
+		.where(liveSpouseRow(personId))
+		.limit(1);
+	return row !== undefined;
+}
+
+export type NewPerson = Address & {
+	fullName: string;
+	nickname: string;
+	sex: 'male' | 'female';
+	birthDate: string;
+	homeBranchId: string;
+	householdId: string;
+};
+
+export async function insertPerson(tx: Transaction, row: NewPerson) {
+	const [p] = await tx
+		.insert(people)
+		.values({ ...row, isMember: false, memberCode: null })
+		.returning({ id: people.id });
+	return p.id;
+}
+
+// The spouse_order check wants the smaller id first.
+export async function insertSpouseLink(tx: Transaction, a: string, b: string, startedOn: string) {
+	const [personId, relatedPersonId] = [a, b].sort();
+	await tx
+		.insert(personRelationships)
+		.values({ kind: 'spouse', personId, relatedPersonId, startedOn });
 }
