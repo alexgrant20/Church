@@ -37,7 +37,9 @@ test('an admin moves an adult out and back', async ({ page }) => {
 	await expect(page.getByText('Saved')).toBeVisible();
 	await page.getByRole('link', { name: 'Family', exact: true }).click();
 	// The parent is still family, listed outside the household, so look in the household list only.
-	const household = page.getByRole('heading', { name: 'This household' }).locator('..');
+	const household = page
+		.getByRole('heading', { name: 'This household', exact: true })
+		.locator('..');
 	await expect(household.getByRole('link', { name: fam.names.adult })).toHaveCount(0);
 	await page.getByRole('button', { name: 'Move back' }).click();
 	await page.getByRole('alertdialog').getByRole('button', { name: 'Move back' }).click();
