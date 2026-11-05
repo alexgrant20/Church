@@ -3,6 +3,7 @@ import { db } from '$lib/server/db/client';
 import { decryptNik, maskNik } from '$lib/server/crypto';
 import { NotFoundError } from '$lib/server/errors';
 import { recordAudit } from '$lib/server/modules/audit/service';
+import { getSetting } from '$lib/server/modules/settings/service';
 import type { AccessibleBranches } from '$lib/server/modules/branch/access';
 import { viewAccess, type HouseholdBranch } from './access';
 import * as repo from './record-repository';
@@ -128,6 +129,7 @@ export async function getMember(id: string) {
 	}
 	return {
 		access,
+		treeEnabled: await getSetting('membership.family_tree_enabled'),
 		person: toPerson(d),
 		profile: toProfile(d.profile),
 		login:

@@ -1,56 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db/client';
-import { auditLogs, personRelationships } from '$lib/server/db/schema';
-import { encryptNik, keyedHash } from '$lib/server/crypto';
+import { auditLogs, personRelationships, systemSettings } from '$lib/server/db/schema';
 import { resetDb } from '$lib/server/db/test/reset';
-import {
-	makeAccount,
-	makeBranch,
-	makeHousehold,
-	makeMemberProfile,
-	makePerson
-} from '$lib/server/db/test/factories';
+import { makePerson } from '$lib/server/db/test/factories';
 import { NotFoundError } from '$lib/server/errors';
 import { asStaff } from '$lib/server/modules/registration/test-support';
 import * as recordRepo from './record-repository';
 import { getMember } from './record-service';
-
-const nik = '3174012345670001';
-
-async function familyOfBudi() {
-	const [a, b] = [await makeBranch(), await makeBranch()];
-	const home = await makeHousehold();
-	const budi = await makePerson({
-		homeBranchId: a.id,
-		householdId: home.id,
-		fullName: 'Budi',
-		nikEncrypted: encryptNik(nik),
-		nikHash: keyedHash(nik)
-	});
-	await makeMemberProfile(budi.id);
-	await makeAccount(budi.id, { email: 'budi@mail.test' });
-	const sari = await makePerson({ homeBranchId: b.id, householdId: home.id, fullName: 'Sari' });
-	const andi = await makePerson({ homeBranchId: b.id, householdId: home.id, fullName: 'Andi' });
-	const aunt = await makePerson({
-		homeBranchId: a.id,
-		householdId: home.id,
-		fullName: 'Aunt',
-		isMember: false,
-		memberCode: null
-	});
-	const mother = await makePerson({ homeBranchId: a.id, fullName: 'Mother' });
-	const son = await makePerson({ homeBranchId: b.id, fullName: 'Son' });
-	const [x, y] = [budi.id, sari.id].sort();
-	await db.insert(personRelationships).values([
-		{ kind: 'spouse', personId: x, relatedPersonId: y },
-		{ kind: 'parent', personId: budi.id, relatedPersonId: andi.id },
-		{ kind: 'parent', personId: sari.id, relatedPersonId: andi.id },
-		{ kind: 'parent', personId: mother.id, relatedPersonId: budi.id },
-		{ kind: 'parent', personId: budi.id, relatedPersonId: son.id }
-	]);
-	return { a, b, budi, sari, andi, aunt, mother, son };
-}
+import { familyOfBudi } from './test-family';
 
 const asAdminOf = <T>(branchId: string, fn: () => T) => asStaff('branch_admin', branchId, fn);
 const viewAudits = () =>
@@ -149,5 +107,12 @@ describe('member record', () => {
 		];
 		await asAdminOf(f.a.id, () => getMember(f.budi.id));
 		expect(spies.map((s) => s.mock.calls.length)).toEqual([1, 1, 1, 1]);
+	});
+
+	it('says whether the family tree is switched on', async () => {
+		const f = await familyOfBudi();
+		expect((await asAdminOf(f.a.id, () => getMember(f.budi.id))).treeEnabled).toBe(true);
+		await db.insert(systemSettings).values({ key: 'membership.family_tree_enabled', value: false });
+		expect((await asAdminOf(f.a.id, () => getMember(f.budi.id))).treeEnabled).toBe(false);
 	});
 });

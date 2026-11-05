@@ -25,7 +25,11 @@ function generations(ids: string[], adj: Map<string, Edge[]>, rootId: string) {
 			order.push(e.id);
 		}
 	}
-	for (const id of ids) if (!gen.has(id)) (gen.set(id, 0), order.push(id));
+	for (const id of ids) {
+		if (gen.has(id)) continue;
+		gen.set(id, 0);
+		order.push(id);
+	}
 	const min = Math.min(...gen.values());
 	for (const [id, g] of gen) gen.set(id, g - min);
 	return { gen, order };
@@ -58,7 +62,9 @@ function chainEnd(id: string, spouses: (id: string) => Edge[]) {
 	const seen = new Set(component);
 	for (let i = 0; i < component.length; i++) {
 		for (const e of spouses(component[i])) {
-			if (!seen.has(e.id)) (seen.add(e.id), component.push(e.id));
+			if (seen.has(e.id)) continue;
+			seen.add(e.id);
+			component.push(e.id);
 		}
 	}
 	return component.find((p) => spouses(p).length <= 1) ?? id;
