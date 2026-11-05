@@ -6,12 +6,12 @@ import { isAdult, lifeChangeActor, staffOnly } from './life-change-access';
 import * as repo from './life-change-repository';
 import { subjectOf } from './passed-away';
 
-type Place = repo.Address & { householdId: string };
+export type Place = repo.Address & { householdId: string };
 type Change<T> = { before: T; after: T };
 type MoveDiff = Partial<Record<keyof Place, Change<string | null>>>;
 type Move = { dest: repo.Address & { householdId?: string }; failure: string; keepOne: boolean };
 
-const placeOf = (s: repo.Subject): Place => ({
+export const placeOf = (s: repo.Subject): Place => ({
 	householdId: s.householdId,
 	addressLine: s.addressLine,
 	postalCode: s.postalCode,
@@ -19,7 +19,7 @@ const placeOf = (s: repo.Subject): Place => ({
 });
 
 // Only the fields that changed, per the audit rule.
-function diffOf(before: Place, after: Place): MoveDiff {
+export function diffOf(before: Place, after: Place): MoveDiff {
 	const keys = Object.keys(after) as (keyof Place)[];
 	return Object.fromEntries(
 		keys
